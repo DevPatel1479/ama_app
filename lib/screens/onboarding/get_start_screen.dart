@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GetStartedScreen extends StatelessWidget {
@@ -7,6 +8,13 @@ class GetStartedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // transparent status bar
+        statusBarIconBrightness: Brightness.light, // white icons
+        statusBarBrightness: Brightness.dark, // iOS: white icons
+      ),
+    );
     final List<String> images = [
       AppAssets.img1,
       AppAssets.img2,
@@ -22,231 +30,250 @@ class GetStartedScreen extends StatelessWidget {
     ];
 
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final horizontalPadding = screenWidth * 0.04; // ~16px on 400 width screen
+    final imageWidth =
+        (screenWidth - horizontalPadding * 2 - 12 * 3) / 4; // 4 images + gaps
+    final imageHeight = imageWidth * 1.25; // maintain aspect ratio
 
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
-      body: Stack(
-        children: [
-          // Grid background
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Column(
-              children: [
-                for (int row = 0; row < 4; row++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(4, (col) {
-                        final index = row * 4 + col;
-                        final imgPath = images[index % images.length];
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Grid background
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: screenHeight * 0.02,
+              ),
+              child: Column(
+                children: [
+                  for (int row = 0; row < 4; row++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: screenHeight * 0.015),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(4, (col) {
+                          final index = row * 4 + col;
+                          final imgPath = images[index % images.length];
 
-                        // Only last row images get subtle fade overlay
-                        if (row == 3) {
-                          return Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: Image.asset(
-                                  imgPath,
-                                  width: 80,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              // Fade overlay using background color 171717
-                              Container(
-                                width: 80,
-                                height: 100,
-                                decoration: BoxDecoration(
+                          // Last row gets subtle fade overlay
+                          if (row == 3) {
+                            return Stack(
+                              children: [
+                                ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Color(0xFF171717), // fade effect
-                                    ],
+                                  child: Image.asset(
+                                    imgPath,
+                                    width: imageWidth,
+                                    height: imageHeight,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
+                                Container(
+                                  width: imageWidth,
+                                  height: imageHeight,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Color(0xFF171717),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.asset(
+                                imgPath,
+                                width: imageWidth,
+                                height: imageHeight,
+                                fit: BoxFit.cover,
                               ),
-                            ],
-                          );
-                        } else {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.asset(
-                              imgPath,
-                              width: 80,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          );
-                        }
-                      }),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Bottom layout overlapping last row with vertical gradient
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0x00171717), // fully transparent at top
-                    Color(0xFF2D2319), // bottom layout color
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 100), // extra space above logo
-                  // Centered Logo Box (moved down)
-                  Center(
-                    child: SizedBox(
-                      width: 150,
-                      height: 150,
-                      child: Image.asset(
-                        AppAssets.appLogoWithText,
-                        fit: BoxFit.contain,
+                            );
+                          }
+                        }),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  // Title texts
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        fontSize: 25,
-                        height: 1.2,
-                        color: Colors.white,
-                      ),
-                      children: [
-                        const TextSpan(text: "Law made "),
-                        TextSpan(
-                          text: "simple",
-                          style: GoogleFonts.satisfy(
-                            color: const Color(0xFFD29F2A),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        fontSize: 25,
-                        height: 1.2,
-                        color: Colors.white,
-                      ),
-                      children: [
-                        const TextSpan(text: "advice made "),
-                        TextSpan(
-                          text: "personal",
-                          style: GoogleFonts.satisfy(
-                            color: const Color(0xFFD29F2A),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // Subtitle
-                  const Text(
-                    "From small queries to big decisions, our experts\nare here to guide you every step of the way.",
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontWeight: FontWeight.w300,
-                      fontSize: 10,
-                      height: 1.4,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Get Started Button
-                  Center(
-                    child: Container(
-                      width: screenWidth * 0.9,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.centerRight,
-                          colors: [Color(0xFFD29F2A), Colors.white],
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Get Started",
-                            style: TextStyle(
-                              fontFamily: 'Outfit',
-                              fontWeight: FontWeight.w500,
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Image.asset(
-                            AppAssets.rightArrow,
-                            width: 17,
-                            height: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Login text
-                  Center(
-                    child: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                        children: [
-                          TextSpan(text: "Have an account? "),
-                          TextSpan(
-                            text: "Login",
-                            style: TextStyle(
-                              color: Color(0xFFD29F2A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // Bottom layout
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  screenHeight * 0.03,
+                  horizontalPadding,
+                  MediaQuery.of(context).padding.bottom + screenHeight * 0.02,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x00171717), // fully transparent
+
+                      Color(0xFF2D2319), // solid color from 30% to bottom
+                      // Color(0xFF2D2319), // solid color from 30% to bottom
+                    ],
+                    
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start, // left align all
+                  children: [
+                    Center(
+                      child: SizedBox(
+                        width: screenWidth * 0.4,
+                        height: screenWidth * 0.4,
+                        child: Image.asset(
+                          AppAssets.appLogoWithText,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.001),
+
+                    // Title texts
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: screenWidth * 0.06,
+                          height: 1.2,
+                          color: Colors.white,
+                        ),
+                        children: [
+                          const TextSpan(text: "Law made "),
+                          TextSpan(
+                            text: "simple",
+                            style: GoogleFonts.satisfy(
+                              color: const Color(0xFFD29F2A),
+                              fontSize: screenWidth * 0.06,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.008),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: screenWidth * 0.06,
+                          height: 1.2,
+                          color: Colors.white,
+                        ),
+                        children: [
+                          const TextSpan(text: "advice made "),
+                          TextSpan(
+                            text: "personal",
+                            style: GoogleFonts.satisfy(
+                              color: const Color(0xFFD29F2A),
+                              fontSize: screenWidth * 0.06,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.015),
+
+                    // Subtitle - LEFT ALIGNED
+                    Text(
+                      "From small queries to big decisions, our experts\nare here to guide you every step of the way.",
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        fontWeight: FontWeight.w300,
+                        fontSize: screenWidth * 0.025,
+                        height: 1.4,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+
+                    SizedBox(height: screenHeight * 0.03),
+
+                    // Get Started Button
+                    Center(
+                      child: Container(
+                        width: screenWidth * 0.85,
+                        height: screenHeight * 0.06,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.centerRight,
+                            colors: [Color(0xFFD29F2A), Colors.white],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Get Started",
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                fontWeight: FontWeight.w500,
+                                fontSize: screenWidth * 0.05,
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(width: screenWidth * 0.025),
+                            Image.asset(
+                              AppAssets.rightArrow,
+                              width: screenWidth * 0.04,
+                              height: screenWidth * 0.045,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.025),
+
+                    // Login text
+                    Center(
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: screenWidth * 0.045,
+                            color: Colors.white,
+                          ),
+                          children: const [
+                            TextSpan(text: "Have an account? "),
+                            TextSpan(
+                              text: "Login",
+                              style: TextStyle(
+                                color: Color(0xFFD29F2A),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

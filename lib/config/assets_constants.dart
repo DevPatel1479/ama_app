@@ -19,4 +19,7 @@ class AppAssets {
   static const String rightArrow = "assets/images/right_arrow.png";
 
   static const String appLogoWithText = "assets/icons/app_logo_with_text.png";
+
+  static const String googleIcon = "assets/icons/google_icon.png";
+  static const String appleIcon = "assets/icons/apple_icon.png";
 }

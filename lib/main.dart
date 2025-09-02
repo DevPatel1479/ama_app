@@ -1,3 +1,5 @@
+import 'package:ama_legal_solutions/screens/auth/login_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
 import 'package:ama_legal_solutions/screens/onboarding/get_start_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +33,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const GetStartedScreen(),
+      home: const LoginScreen(),
     );
   }
 }
