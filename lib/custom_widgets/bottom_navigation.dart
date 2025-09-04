@@ -31,7 +31,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     // compute nav height relative to screen size but clamp reasonably
-    final navHeight = (screenWidth * 0.14).clamp(56.0, 84.0);
+    final navHeight = (screenWidth * 0.16).clamp(56.0, 84.0);
 
     return SizedBox(
       height: navHeight,

@@ -1,7 +1,10 @@
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/screens/auth/login_screen.dart';
 import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:ama_legal_solutions/screens/features/ama_screen.dart';
 import 'package:ama_legal_solutions/screens/features/casedesk_screen.dart';
+import 'package:ama_legal_solutions/screens/features/profile/portfolio_screen.dart';
+import 'package:ama_legal_solutions/screens/features/raise_query_screen.dart';
 import 'package:ama_legal_solutions/screens/features/services_screen.dart';
 import 'package:ama_legal_solutions/screens/onboarding/get_start_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/home_screen.dart';
@@ -37,7 +40,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomeScreen(),
+      home: const PortfolioScreen(),
     );
   }
 }

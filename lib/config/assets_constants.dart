@@ -48,4 +48,14 @@ class AppAssets {
   static const String searchIcon = "assets/icons/search_icon.png";
 
   static const String backArrowIcon = "assets/icons/back_arrow.png";
+
+  static const String userIcon = "assets/icons/user_icon.png";
+
+  static const String appLogoIcon2 = "assets/icons/app_logo2.png";
+
+  static const String closeBtnIcon = "assets/icons/close_btn_icon.png";
+
+  static const String unExpandedIcon = "assets/icons/unexpanded_icon.png";
+
+  static const String editIcon = "assets/icons/edit_icon.png";
 }
