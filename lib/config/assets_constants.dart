@@ -58,4 +58,19 @@ class AppAssets {
   static const String unExpandedIcon = "assets/icons/unexpanded_icon.png";
 
   static const String editIcon = "assets/icons/edit_icon.png";
+
+  static const String userCameraIcon = "assets/icons/user_camera_icon.png";
+
+  static const String portfolioIcon = "assets/icons/portfolio_icon.png";
+  static const String qrIcon = "assets/icons/qr_icon.png";
+  static const String emailIcon = "assets/icons/email_icon.png";
+  static const String notificationIcon = "assets/icons/notification_icon.png";
+  static const String rateIcon = "assets/icons/rate_icon.png";
+  static const String helpIcon = "assets/icons/help_icon.png";
+
+  static String locationIcon = "assets/icons/location_icon.png";
+
+  static String phoneIcon = "assets/icons/phone_icon.png";
+
+  static String companyEmailIcon = "assets/icons/company_mail_icon.png";
 }

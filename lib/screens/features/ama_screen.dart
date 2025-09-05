@@ -10,8 +10,40 @@ class AmaScreen extends StatefulWidget {
   _AmaScreenState createState() => _AmaScreenState();
 }
 
-class _AmaScreenState extends State<AmaScreen> {
+class _AmaScreenState extends State<AmaScreen>
+    with SingleTickerProviderStateMixin {
   bool _expanded = false; // for view more/less toggle
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpansion() {
+    setState(() {
+      _expanded = !_expanded;
+      if (_expanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +185,7 @@ class _AmaScreenState extends State<AmaScreen> {
                     ),
                   ),
 
-                  /// Custom Question Card
                   /// Custom Question Card with gradient border
-                  /// inside your ListView children:
-
-                  /// Custom Question Card with gradient border
-                  /// Custom Question Card
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
@@ -227,15 +254,15 @@ class _AmaScreenState extends State<AmaScreen> {
                           ),
                           const SizedBox(height: 12),
 
-                          /// Animated expandable question text
                           /// Animated expandable question text with bottom fade overlay
                           Stack(
                             children: [
                               // The actual text
                               ClipRect(
                                 child: AnimatedSize(
-                                  duration: const Duration(milliseconds: 600),
+                                  duration: const Duration(milliseconds: 300),
                                   curve: Curves.easeInOut,
+                                  alignment: Alignment.topCenter,
                                   child: ConstrainedBox(
                                     constraints: _expanded
                                         ? const BoxConstraints()
@@ -285,77 +312,65 @@ class _AmaScreenState extends State<AmaScreen> {
 
                           const SizedBox(height: 8),
 
-                          /// Nested layout (Author info + text) - visible only when expanded
-                          if (_expanded)
-                            // Nested layout (Author info + text) - always in tree
-                            ClipRect(
-                              child: AnimatedSize(
-                                duration: const Duration(milliseconds: 600),
-                                curve: Curves.easeInOut,
-                                child: ConstrainedBox(
-                                  constraints: _expanded
-                                      ? const BoxConstraints()
-                                      : BoxConstraints(
-                                          maxHeight: 0,
-                                        ), // start collapsed
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: screenHeight * 0.015),
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            AppAssets.appLogoIcon2,
-                                            width: screenWidth * 0.15,
-                                            height: screenHeight * 0.05,
-                                            fit: BoxFit.contain,
-                                          ),
-                                          SizedBox(width: screenWidth * 0.03),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: screenHeight * 0.005,
-                                              horizontal: screenWidth * 0.045,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0x33FFFFFF),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              "From Author",
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w400,
-                                                color: const Color(0xFFD29F2A),
-                                                height: 1.0,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                          /// Author info section - always in widget tree but collapsed when not expanded
+                          /// Author info section with SizeTransition animation
+                          SizeTransition(
+                            sizeFactor: _animation,
+                            axisAlignment: 1.0,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: screenHeight * 0.015),
+                                Row(
+                                  children: [
+                                    Image.asset(
+                                      AppAssets.appLogoIcon2,
+                                      width: screenWidth * 0.15,
+                                      height: screenHeight * 0.05,
+                                      fit: BoxFit.contain,
+                                    ),
+                                    SizedBox(width: screenWidth * 0.03),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: screenHeight * 0.005,
+                                        horizontal: screenWidth * 0.045,
                                       ),
-                                      SizedBox(height: screenHeight * 0.015),
-                                      Text(
-                                        "Lorem ipsum dolor sit amet, consectetur adipiscing "
-                                        "elit. Sed euismod, purus at facilisis gravida, mauris "
-                                        "nulla dapibus lectus, sed ultricies magna elit nec "
-                                        "purus. Nullam id neque sit amet nibh bibendum porttitor.",
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                          color: const Color(0xFFD29F2A),
-                                          height: 1.3,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0x33FFFFFF),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 1,
                                         ),
                                       ),
-                                    ],
+                                      child: Text(
+                                        "From Author",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFFD29F2A),
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: screenHeight * 0.015),
+                                Text(
+                                  "Lorem ipsum dolor sit amet, consectetur adipiscing "
+                                  "elit. Sed euismod, purus at facilisis gravida, mauris "
+                                  "nulla dapibus lectus, sed ultricies magna elit nec "
+                                  "purus. Nullam id neque sit amet nibh bibendum porttitor.",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFFD29F2A),
+                                    height: 1.3,
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
+                          ),
 
                           const SizedBox(height: 8),
 
@@ -367,11 +382,7 @@ class _AmaScreenState extends State<AmaScreen> {
                               children: [
                                 // Centered text + expand_more (only when collapsed)
                                 GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _expanded = !_expanded;
-                                    });
-                                  },
+                                  onTap: _toggleExpansion,
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -387,7 +398,7 @@ class _AmaScreenState extends State<AmaScreen> {
                                       ),
                                       if (!_expanded) // show expand_more only in collapsed state
                                         const SizedBox(width: 4),
-                                      // if (!_expanded)
+
                                       const Icon(
                                         Icons.expand_more,
                                         color: Colors.white,
@@ -402,17 +413,11 @@ class _AmaScreenState extends State<AmaScreen> {
                                   Positioned(
                                     right: 0,
                                     child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _expanded =
-                                              false; // collapse the card
-                                        });
-                                      },
+                                      onTap: _toggleExpansion,
                                       child: Image.asset(
                                         AppAssets.unExpandedIcon,
                                         width: 20,
                                         height: 20,
-                                        // fit: BoxFit.contain,
                                       ),
                                     ),
                                   ),
