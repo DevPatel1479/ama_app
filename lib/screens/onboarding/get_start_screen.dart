@@ -1,10 +1,19 @@
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
-import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class GetStartedScreen extends StatelessWidget {
+class GetStartedScreen extends StatefulWidget {
   const GetStartedScreen({super.key});
+
+  @override
+  _GetStartedScreen createState() => _GetStartedScreen();
+}
+
+class _GetStartedScreen extends State<GetStartedScreen> {
+  double _scale = 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +136,6 @@ class GetStartedScreen extends StatelessWidget {
                       Color(0xFF2D2319), // solid color from 30% to bottom
                       // Color(0xFF2D2319), // solid color from 30% to bottom
                     ],
-                    
                   ),
                 ),
                 child: Column(
@@ -208,38 +216,60 @@ class GetStartedScreen extends StatelessWidget {
 
                     SizedBox(height: screenHeight * 0.03),
 
-                    // Get Started Button
                     Center(
-                      child: Container(
-                        width: screenWidth * 0.85,
-                        height: screenHeight * 0.06,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.centerRight,
-                            colors: [Color(0xFFD29F2A), Colors.white],
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Get Started",
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
-                                fontWeight: FontWeight.w500,
-                                fontSize: screenWidth * 0.05,
-                                color: Colors.black,
+                      child: GestureDetector(
+                        onTapDown: (_) {
+                          setState(() {
+                            _scale = 0.95; // Scale down on tap
+                          });
+                        },
+                        onTapUp: (_) {
+                          setState(() {
+                            _scale = 1.0; // Return to normal
+                          });
+                          context.go("/signUp");
+                        },
+                        onTapCancel: () {
+                          setState(() {
+                            _scale = 1.0; // Reset if tap is canceled
+                          });
+                        },
+                        child: AnimatedScale(
+                          scale: _scale,
+                          duration: const Duration(milliseconds: 100),
+                          curve: Curves.easeOut,
+                          child: Container(
+                            width: screenWidth * 0.85,
+                            height: screenHeight * 0.06,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.centerRight,
+                                colors: [Color(0xFFD29F2A), Colors.white],
                               ),
                             ),
-                            SizedBox(width: screenWidth * 0.025),
-                            Image.asset(
-                              AppAssets.rightArrow,
-                              width: screenWidth * 0.04,
-                              height: screenWidth * 0.045,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Get Started",
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: screenWidth * 0.05,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.025),
+                                Image.asset(
+                                  AppAssets.rightArrow,
+                                  width: screenWidth * 0.04,
+                                  height: screenWidth * 0.045,
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -255,14 +285,20 @@ class GetStartedScreen extends StatelessWidget {
                             fontSize: screenWidth * 0.045,
                             color: Colors.white,
                           ),
-                          children: const [
-                            TextSpan(text: "Have an account? "),
+                          children: [
+                            const TextSpan(text: "Have an account? "),
                             TextSpan(
                               text: "Login",
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Color(0xFFD29F2A),
                                 fontWeight: FontWeight.w500,
                               ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  // Handle login tap here
+
+                                  context.go('/logIn');
+                                },
                             ),
                           ],
                         ),

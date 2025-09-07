@@ -22,6 +22,19 @@ class AppAssets {
   static const String r4 = "assets/images/r4.png";
   static const String r5 = "assets/images/r5.png";
 
+  static const String locationImg1 = "assets/images/location_img1.png";
+  static const String locationImg2 = "assets/images/location_img2.png";
+  static const String locationImg3 = "assets/images/location_img3.png";
+  static const String locationImg4 = "assets/images/location_img4.png";
+  static const String locationImg5 = "assets/images/location_img5.png";
+  static const String locationImg6 = "assets/images/location_img6.png";
+
+  static const String ourLegacyImg = "assets/images/our_legacy_img.png";
+  static const String teamMemberImg1 = "assets/images/tm_img1.png";
+
+  static const String tmInstaImg = "assets/images/tm_inst_img.png";
+  static const String tmLinkedInImg = "assets/images/tm_lk_img.png";
+
   static const String testProfile = 'assets/images/test_profile.png';
 
   static const String rightArrow = "assets/images/right_arrow.png";
@@ -73,4 +86,6 @@ class AppAssets {
   static String phoneIcon = "assets/icons/phone_icon.png";
 
   static String companyEmailIcon = "assets/icons/company_mail_icon.png";
+
+  static String clientIcon = "assets/icons/big_client_size_icon.png";
 }

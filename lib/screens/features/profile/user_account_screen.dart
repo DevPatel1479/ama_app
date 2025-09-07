@@ -1,4 +1,4 @@
-import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -420,6 +420,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                         ],
                       ),
                     ),
+                    SizedBox(height: screenHeight * 0.02),
                   ],
                 ),
               ),

@@ -1,4 +1,4 @@
-import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -1,7 +1,7 @@
 // lib/custom_widgets/bottom_navigation.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
 class CustomBottomNav extends StatefulWidget {
   const CustomBottomNav({super.key});

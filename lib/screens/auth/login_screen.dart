@@ -1,7 +1,9 @@
 import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
-import 'package:ama_legal_solutions/config/assets_constants.dart';
+import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -100,6 +102,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Login Button
               _gradientLoginButton(fieldWidth, fieldHeight, () {}),
+              const SizedBox(height: 20),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontFamily: "Outfit",
+                    fontWeight: FontWeight.w300,
+                    fontSize: 16,
+                    color: Colors.white, // Default style for non-clickable text
+                  ),
+                  children: [
+                    const TextSpan(text: "Don't have an account? "),
+                    TextSpan(
+                      text: "Sign up",
+                      style: const TextStyle(
+                        color: Color(
+                          0xFFD29F2A,
+                        ), // Color for the clickable text
+                        fontWeight: FontWeight
+                            .w500, // Optional: make it slightly bolder
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          // Handle login tap here
+                          context.go('/signUp');
+                          // Example: Navigate to login screen
+                          // context.go('/login');
+                        },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
