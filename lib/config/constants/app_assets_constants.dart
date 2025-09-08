@@ -31,6 +31,21 @@ class AppAssets {
 
   static const String ourLegacyImg = "assets/images/our_legacy_img.png";
   static const String teamMemberImg1 = "assets/images/tm_img1.png";
+  static const String teamMemberImg2 = "assets/images/tm_img2.png";
+  static const String teamMemberImg3 = "assets/images/tm_img3.png";
+  static const String teamMemberImg4 = "assets/images/tm_img4.png";
+  static const String teamMemberImg5 = "assets/images/tm_img5.png";
+  static const String teamMemberImg6 = "assets/images/tm_img6.png";
+  static const String teamMemberImg7 = "assets/images/tm_img7.png";
+  static const String teamMemberImg8 = "assets/images/tm_img8.png";
+  static const String teamMemberImg9 = "assets/images/tm_img9.png";
+  static const String teamMemberImg10 = "assets/images/tm_img10.png";
+  static const String teamMemberImg11 = "assets/images/tm_img11.png";
+  static const String teamMemberImg12 = "assets/images/tm_img12.png";
+  static const String teamMemberImg13 = "assets/images/tm_img13.png";
+  static const String teamMemberImg14 = "assets/images/tm_img14.png";
+  static const String teamMemberImg15 = "assets/images/tm_img15.png";
+  static const String teamMemberImg16 = "assets/images/tm_img16.png";
 
   static const String tmInstaImg = "assets/images/tm_inst_img.png";
   static const String tmLinkedInImg = "assets/images/tm_lk_img.png";
