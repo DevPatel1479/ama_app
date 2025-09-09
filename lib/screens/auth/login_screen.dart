@@ -1,4 +1,5 @@
 import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -126,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
                           // Handle login tap here
-                          context.go('/signUp');
+                          context.go(AppPathsForScreen.signUpPath);
                           // Example: Navigate to login screen
                           // context.go('/login');
                         },

@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:ama_legal_solutions/api/api_service.dart';
+import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:flutter/material.dart';
 
 class SignupProvider extends ChangeNotifier {
@@ -16,6 +20,20 @@ class SignupProvider extends ChangeNotifier {
   String? phoneError;
   String? stateError;
   String? sourceError;
+
+  // Loading state
+  bool isLoading = false;
+
+  // API result message
+  String? resultMessage;
+
+  bool isError = false;
+
+  void setMessage(String message, bool error) {
+    resultMessage = message;
+    isError = error;
+    notifyListeners();
+  }
 
   // Setters
   void setFullName(String value) {
@@ -111,14 +129,40 @@ class SignupProvider extends ChangeNotifier {
   // Fetch all form values
   Map<String, String> getFormData() {
     return {
-      "fullName": fullName,
+      "name": fullName,
       "email": email,
-      "phoneNumber": phoneNumber,
+      "phone": phoneNumber,
       "state": selectedState,
-      "queries": queries,
-      "sourceReference": sourceReference == "Other"
-          ? otherSource
-          : sourceReference,
+      "query": queries,
+      "source": sourceReference == "Other" ? otherSource : sourceReference,
+      "role": "user",
     };
+  }
+
+  Future<void> submitSignup() async {
+    isLoading = true;
+    resultMessage = null;
+    notifyListeners();
+    print("calling signup ...");
+    try {
+      final response = await ApiService().post(
+        Endpoints.signup,
+        getFormData(), // ✅ Use this, since it's within the same class
+      );
+      print("Final API RESPONSE ===> ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        setMessage("Signup successful!", false);
+      } else {
+        // Show message from server response, like "User already exists"
+        final body = jsonDecode(response.body);
+        setMessage(body['message'] ?? "Unknown error", true);
+      }
+    } catch (e) {
+      setMessage("Signup failed: ${e.toString()}", true);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

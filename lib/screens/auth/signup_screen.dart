@@ -1,6 +1,8 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/config/constants/form_data.dart';
+import 'package:ama_legal_solutions/custom_messages_widgets/sign_up_message.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,7 @@ class _SignUpScreen extends State<SignUpScreen> {
   String? _selectedState;
   String? _selectedReference;
   String? _otherReference; // For "Other" input
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -166,7 +169,7 @@ class _SignUpScreen extends State<SignUpScreen> {
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
                               // Handle login tap here
-                              context.go("/logIn");
+                              context.go(AppPathsForScreen.logInPath);
                               // Example: Navigate to login screen
                               // context.go('/login');
                             },
@@ -361,6 +364,7 @@ class _SignUpScreen extends State<SignUpScreen> {
     double height,
     VoidCallback onPressed,
   ) {
+    final signupProvider = Provider.of<SignupProvider>(context, listen: false);
     return Center(
       child: GestureDetector(
         onTapDown: (_) {
@@ -368,20 +372,31 @@ class _SignUpScreen extends State<SignUpScreen> {
             _scale = 0.95; // Scale down on tap
           });
         },
-        onTapUp: (_) {
+        onTapUp: (_) async {
           setState(() {
             _scale = 1.0; // Return to normal
           });
-          final signupProvider = Provider.of<SignupProvider>(
-            context,
-            listen: false,
-          );
 
           bool isValid = signupProvider.validateForm();
 
           if (isValid) {
             // Form is valid, proceed with submission
             print("Form Data: ${signupProvider.getFormData()}");
+            await signupProvider.submitSignup();
+            print(signupProvider.isError);
+
+            if (signupProvider.resultMessage != null) {
+              await showSignupMessage(
+                context,
+                signupProvider.resultMessage!,
+                signupProvider.isError,
+              );
+              if (!signupProvider.isError) {
+                Future.delayed(const Duration(seconds: 1), () {
+                  context.go(AppPathsForScreen.logInPath);
+                });
+              }
+            }
           } else {
             print("has error...");
             // Form has errors, rebuild UI to show them
@@ -409,17 +424,26 @@ class _SignUpScreen extends State<SignUpScreen> {
               ),
             ),
             child: Center(
-              child: const Text(
-                "Sign Up",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.black,
-                  height: 1,
-                ),
-              ),
+              child: signupProvider.isLoading
+                  ? SizedBox(
+                      width: 24, // 30% of button width
+                      height: 24, // Keep it square
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2, // 3% of width
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                      ),
+                    )
+                  : const Text(
+                      "Sign Up",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: "Outfit",
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: Colors.black,
+                        height: 1,
+                      ),
+                    ),
             ),
           ),
         ),

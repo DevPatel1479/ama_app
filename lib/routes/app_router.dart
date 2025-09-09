@@ -10,32 +10,34 @@ import 'package:ama_legal_solutions/screens/features/services_screen.dart';
 import 'package:ama_legal_solutions/screens/onboarding/get_start_screen.dart';
 import 'package:ama_legal_solutions/screens/onboarding/splash_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/user_home_screen.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/userHome',
+  initialLocation: AppPathsForScreen.splashPath,
   routes: [
     GoRoute(
-      path: '/splash',
-      name: 'splash',
+      path: AppPathsForScreen.splashPath,
+      name: AppScreenNames.splash,
       builder: (context, state) => const SplashScreen(),
     ),
 
     GoRoute(
-      path: '/userHome',
-      name: 'user_home',
+      path: AppPathsForScreen.userHomePath,
+      name: AppScreenNames.userHome,
       builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
-      path: '/getStarted',
-      name: 'get_started',
+      path: AppPathsForScreen.getStartedPath,
+      name: AppScreenNames.getStarted,
       builder: (context, state) => const GetStartedScreen(),
     ),
 
     GoRoute(
-      path: '/signUp',
-      name: 'sign_up',
+      path: AppPathsForScreen.signUpPath,
+      name: AppScreenNames.signUp,
       builder: (context, state) {
         // Wrap the SignUpScreen with ChangeNotifierProvider
         return ChangeNotifierProvider(
@@ -45,38 +47,38 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/logIn',
-      name: 'log_in',
+      path: AppPathsForScreen.logInPath,
+      name: AppScreenNames.logIn,
       builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
-      path: '/userAccount',
-      name: 'user_account',
+      path: AppPathsForScreen.userAccountPath,
+      name: AppScreenNames.userAccount,
       builder: (context, state) => const UserAccountScreen(),
     ),
     GoRoute(
-      path: '/portfolio',
-      name: 'portfolio',
+      path: AppPathsForScreen.portfolioPath,
+      name: AppScreenNames.portfolio,
       builder: (context, state) => const PortfolioScreen(),
     ),
     GoRoute(
-      path: '/ama',
-      name: 'ama',
+      path: AppPathsForScreen.amaPath,
+      name: AppScreenNames.ama,
       builder: (context, state) => const AmaScreen(),
     ),
     GoRoute(
-      path: '/caseDesk',
-      name: 'case_Desk',
+      path: AppPathsForScreen.caseDeskPath,
+      name: AppScreenNames.caseDesk,
       builder: (context, state) => const MyCasedeskScreen(),
     ),
     GoRoute(
-      path: '/amaServices',
-      name: 'ama_services',
+      path: AppPathsForScreen.amaServicesPath,
+      name: AppScreenNames.amaServices,
       builder: (context, state) => const ServicesScreen(),
     ),
     GoRoute(
-      path: '/raiseQuery',
-      name: 'raise_query',
+      path: AppPathsForScreen.raiseQueryPath,
+      name: AppScreenNames.raiseQuery,
       builder: (context, state) => const RaiseQueryScreen(),
     ),
   ],

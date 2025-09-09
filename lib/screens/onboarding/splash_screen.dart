@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -70,9 +71,9 @@ class _SplashScreenState extends State<SplashScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (isLoggedIn != null && isLoggedIn == true) {
-        context.go('/home');
+        context.go(AppPathsForScreen.userHomePath);
       } else {
-        context.go('/getStarted');
+        context.go(AppPathsForScreen.getStartedPath);
       }
     });
   }
