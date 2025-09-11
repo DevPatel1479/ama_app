@@ -114,14 +114,14 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                     Row(
                       children: [
                         Image.asset(
-                          AppAssets.qrIcon,
+                          AppAssets.themeIcon,
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
-                          "Scan code",
+                          "Theme / Appearance",
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,

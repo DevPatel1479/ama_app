@@ -1,6 +1,7 @@
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/screens/auth/login_screen.dart';
 import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:ama_legal_solutions/screens/features/advocate_casedesk_screen.dart';
 import 'package:ama_legal_solutions/screens/features/ama_screen.dart';
 import 'package:ama_legal_solutions/screens/features/casedesk_screen.dart';
 import 'package:ama_legal_solutions/screens/features/profile/portfolio_screen.dart';
@@ -16,7 +17,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppPathsForScreen.splashPath,
+  initialLocation: AppPathsForScreen.amaPath,
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
@@ -70,6 +71,11 @@ final GoRouter appRouter = GoRouter(
       path: AppPathsForScreen.caseDeskPath,
       name: AppScreenNames.caseDesk,
       builder: (context, state) => const MyCasedeskScreen(),
+    ),
+    GoRoute(
+      path: AppPathsForScreen.advocateCaseDeskPath,
+      name: AppScreenNames.advocateCaseDesk,
+      builder: (context, state) => const AdvocateCasedeskScreen(),
     ),
     GoRoute(
       path: AppPathsForScreen.amaServicesPath,

@@ -1,13 +1,15 @@
 class AppScreenNames {
-  static String splash = "splash";
-  static String userHome = "user_home";
-  static String getStarted = "get_started";
-  static String signUp = "sign_up";
-  static String logIn = "log_in";
-  static String userAccount = "userAccount";
-  static String portfolio = "portfolio";
-  static String ama = "ama";
-  static String caseDesk = "case_desk";
-  static String amaServices = "ama_services";
-  static String raiseQuery = "raise_query";
+  static const String splash = "splash";
+  static const String userHome = "user_home";
+  static const String getStarted = "get_started";
+  static const String signUp = "sign_up";
+  static const String logIn = "log_in";
+  static const String userAccount = "userAccount";
+  static const String portfolio = "portfolio";
+  static const String ama = "ama";
+  static const String caseDesk = "case_desk";
+  static const String amaServices = "ama_services";
+  static const String raiseQuery = "raise_query";
+  static const String advocateCaseDesk = "advocate_case_desk";
+  
 }

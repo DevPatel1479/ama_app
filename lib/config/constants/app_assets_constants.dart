@@ -1,5 +1,3 @@
-/// lib/config/assets_constants.dart
-
 class AppAssets {
   // IMAGES
   static const String img1 = 'assets/images/img_1.png';
@@ -59,6 +57,8 @@ class AppAssets {
   static const String googleIcon = "assets/icons/google_icon.png";
   static const String appleIcon = "assets/icons/apple_icon.png";
 
+  static const String advocateIcon = "assets/icons/advocate_icon.png";
+
   static const String homeActive = "assets/icons/home_active.png";
   static const String homeInActive = "assets/icons/home_inactive.png";
 
@@ -95,12 +95,17 @@ class AppAssets {
   static const String notificationIcon = "assets/icons/notification_icon.png";
   static const String rateIcon = "assets/icons/rate_icon.png";
   static const String helpIcon = "assets/icons/help_icon.png";
+  static const String themeIcon = "assets/icons/theme_icon.png";
 
-  static String locationIcon = "assets/icons/location_icon.png";
+  static const String locationIcon = "assets/icons/location_icon.png";
 
-  static String phoneIcon = "assets/icons/phone_icon.png";
+  static const String phoneIcon = "assets/icons/phone_icon.png";
 
-  static String companyEmailIcon = "assets/icons/company_mail_icon.png";
+  static const String companyEmailIcon = "assets/icons/company_mail_icon.png";
 
-  static String clientIcon = "assets/icons/big_client_size_icon.png";
+  static const String clientIcon = "assets/icons/big_client_size_icon.png";
+  static const String remarksIcon = "assets/icons/remarks_icon.png";
+
+  static const String likeHeartIcon = "assets/icons/like_icon.png";
+  static const String answerIcon = "assets/icons/answer_icon.png";
 }
