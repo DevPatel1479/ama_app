@@ -1,6 +1,8 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/config/constants/form_data.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/sign_up_message.dart';
+import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart';
@@ -9,14 +11,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LightSignupScreen extends StatefulWidget {
+  const LightSignupScreen({super.key});
 
   @override
-  _SignUpScreen createState() => _SignUpScreen();
+  _LightSignupScreenState createState() => _LightSignupScreenState();
 }
 
-class _SignUpScreen extends State<SignUpScreen> {
+class _LightSignupScreenState extends State<LightSignupScreen> {
   double _scale = 1.0;
   String? _selectedState;
   String? _selectedReference;
@@ -26,9 +28,9 @@ class _SignUpScreen extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // transparent status bar
-        statusBarIconBrightness: Brightness.light, // white icons
-        statusBarBrightness: Brightness.dark, // iOS: white icons
+        statusBarColor: const Color(0xFFF8BD00), // transparent status bar
+        statusBarIconBrightness: Brightness.dark, // white icons
+        statusBarBrightness: Brightness.light, // iOS: white icons
       ),
     );
     final screenWidth = MediaQuery.of(context).size.width;
@@ -38,150 +40,154 @@ class _SignUpScreen extends State<SignUpScreen> {
     final signupProvider = context.watch<SignupProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF171717),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10), // Reduced top spacing
-              // App Logo
-              Image.asset(
-                "assets/icons/app_logo_with_text.png",
-                width: screenWidth * 0.4,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 5), // Small spacing before Welcome
-              // Welcome Section
-              const Text(
-                "Welcome",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w600,
-                  fontSize: 25,
-                  color: Colors.white,
-                ),
-              ),
-              const Text(
-                "To your 1:1 Legal Advisors",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w300,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Sign Up",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w500,
-                  fontSize: 25,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 24),
+        child: GradientTopLayout(
+          headerContent: Image.asset(
+            AppAssets.appLogoWithText,
+            width: screenWidth * 0.4,
+            fit: BoxFit.contain,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // const SizedBox(height: 10), // Reduced top spacing
+                // App Logo
 
-              // Input Fields
-              Column(
-                children: [
-                  _gradientBorderInput(
-                    "Full Name",
-                    fieldWidth,
-                    fieldHeight,
-                    onChanged: (value) => signupProvider.setFullName(value),
-                    errorText: signupProvider.fullNameError,
+                // const SizedBox(height: 5), // Small spacing before Welcome
+                // Welcome Section
+                const Text(
+                  "Welcome",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "Outfit",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 25,
+                    color: Color(0xFF000000),
                   ),
-                  const SizedBox(height: 16),
-                  _gradientBorderInput(
-                    "Email ID",
-                    fieldWidth,
-                    fieldHeight,
-                    onChanged: (value) => signupProvider.setEmail(value),
-                    errorText: signupProvider.emailError,
+                ),
+                const Text(
+                  "To your 1:1 Legal Advisors",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "Outfit",
+                    fontWeight: FontWeight.w300,
+                    fontSize: 18,
+                    color: Color(0xFF000000),
                   ),
-                  const SizedBox(height: 16),
-                  _gradientBorderInput(
-                    "Phone number",
-                    fieldWidth,
-                    fieldHeight,
-                    onChanged: (value) => signupProvider.setPhoneNumber(value),
-                    keyboardType: TextInputType.phone,
-                    errorText: signupProvider.phoneError,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Sign Up",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "Outfit",
+                    fontWeight: FontWeight.w500,
+                    fontSize: 25,
+                    color: Color(0xFF000000),
                   ),
-                  const SizedBox(height: 16),
-                  _gradientBorderDropdown(
-                    "Select your State",
-                    fieldWidth,
-                    fieldHeight,
-                    FormData.indianStates,
+                ),
+                const SizedBox(height: 24),
 
-                    true,
-                    errorText: signupProvider.stateError,
-                  ),
-                  const SizedBox(height: 16),
-                  _gradientBorderInput(
-                    "Queries",
-                    fieldWidth,
-                    fieldHeight,
-                    onChanged: (value) => signupProvider.setQueries(value),
-                  ),
-                  const SizedBox(height: 16),
-                  _gradientBorderDropdown(
-                    "How did you hear about this?",
-                    fieldWidth,
-                    fieldHeight,
-                    FormData.sourceReference,
-                    false,
-                    errorText: signupProvider.sourceError,
-                  ),
-                  const SizedBox(height: 16),
-                  _gradientSignUpButton(fieldWidth, fieldHeight - 5, () {
-                    print("callig this .. ");
-                    // Handle Sign Up button tap here
-                  }),
-                  const SizedBox(height: 10),
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontFamily: "Outfit",
-                        fontWeight: FontWeight.w300,
-                        fontSize: 16,
-                        color: Colors
-                            .white, // Default style for non-clickable text
-                      ),
-                      children: [
-                        const TextSpan(text: "Already have an account? "),
-                        TextSpan(
-                          text: "Login",
-                          style: const TextStyle(
-                            color: Color(
-                              0xFFD29F2A,
-                            ), // Color for the clickable text
-                            fontWeight: FontWeight
-                                .w500, // Optional: make it slightly bolder
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              // Handle login tap here
-                              context.go(AppPathsForScreen.logInPath);
-                              // Example: Navigate to login screen
-                              // context.go('/login');
-                            },
-                        ),
-                      ],
+                // Input Fields
+                Column(
+                  children: [
+                    _gradientBorderInput(
+                      "Full Name",
+                      fieldWidth,
+                      fieldHeight,
+                      onChanged: (value) => signupProvider.setFullName(value),
+                      errorText: signupProvider.fullNameError,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    _gradientBorderInput(
+                      "Email ID",
+                      fieldWidth,
+                      fieldHeight,
+                      onChanged: (value) => signupProvider.setEmail(value),
+                      errorText: signupProvider.emailError,
+                    ),
+                    const SizedBox(height: 16),
+                    _gradientBorderInput(
+                      "Phone number",
+                      fieldWidth,
+                      fieldHeight,
+                      onChanged: (value) =>
+                          signupProvider.setPhoneNumber(value),
+                      keyboardType: TextInputType.phone,
+                      errorText: signupProvider.phoneError,
+                    ),
+                    const SizedBox(height: 16),
+                    _gradientBorderDropdown(
+                      "Select your State",
+                      fieldWidth,
+                      fieldHeight,
+                      FormData.indianStates,
+                      true,
+                      errorText: signupProvider.stateError,
+                    ),
+                    const SizedBox(height: 16),
+                    _gradientBorderInput(
+                      "Queries",
+                      fieldWidth,
+                      fieldHeight,
+                      onChanged: (value) => signupProvider.setQueries(value),
+                    ),
+                    const SizedBox(height: 16),
+                    _gradientBorderDropdown(
+                      "How did you hear about this?",
+                      fieldWidth,
+                      fieldHeight,
+                      FormData.sourceReference,
+                      false,
+                      errorText: signupProvider.sourceError,
+                    ),
+                    const SizedBox(height: 16),
+                    _gradientSignUpButton(fieldWidth, fieldHeight - 5, () {
+                      print("callig this .. ");
+                      // Handle Sign Up button tap here
+                    }),
+                    const SizedBox(height: 10),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontFamily: "Outfit",
+                          fontWeight: FontWeight.w300,
+                          fontSize: 16,
+                          color: Color(
+                            0xFF2D2319,
+                          ), // Default style for non-clickable text
+                        ),
+                        children: [
+                          const TextSpan(text: "Already have an account? "),
+                          TextSpan(
+                            text: "Login",
+                            style: const TextStyle(
+                              color: Color(
+                                0xFFD29F2A,
+                              ), // Color for the clickable text
+                              fontWeight: FontWeight
+                                  .w500, // Optional: make it slightly bolder
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                // Handle login tap here
+                                context.go(AppPathsForScreen.logInPath);
+                                // Example: Navigate to login screen
+                                // context.go('/login');
+                              },
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -209,17 +215,15 @@ class _SignUpScreen extends State<SignUpScreen> {
               border: Border.all(width: 2, color: Colors.transparent),
             ),
             child: CustomPaint(
-              painter: GradientBorderPainter(
+              painter: SolidBorderPainter(
                 radius: 20,
                 width: 2,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFD29F2A), Colors.white],
-                ),
+                color: const Color(0xFF2D2319),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black),
                   keyboardType: keyboardType,
                   onChanged: onChanged,
                   inputFormatters: label.toLowerCase().contains("phone")
@@ -232,8 +236,9 @@ class _SignUpScreen extends State<SignUpScreen> {
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     border: InputBorder.none,
                     hintText: label,
+
                     hintStyle: const TextStyle(
-                      color: Color(0x59FFFFFF),
+                      color: const Color(0xFF2D2319),
                       fontFamily: "Outfit",
                     ),
                   ),
@@ -278,12 +283,10 @@ class _SignUpScreen extends State<SignUpScreen> {
             border: Border.all(width: 2, color: Colors.transparent),
           ),
           child: CustomPaint(
-            painter: GradientBorderPainter(
+            painter: SolidBorderPainter(
               radius: 20,
               width: 2,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD29F2A), Colors.white],
-              ),
+              color: const Color(0xFF2D2319),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -291,12 +294,12 @@ class _SignUpScreen extends State<SignUpScreen> {
                 child: DropdownButton<String>(
                   isExpanded: true,
                   value: isState ? _selectedState : _selectedReference,
-                  dropdownColor: const Color(0xFF171717),
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                  dropdownColor: Colors.white,
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
                   hint: Text(
                     label,
                     style: const TextStyle(
-                      color: Color(0x59FFFFFF),
+                      color: Color(0xFF2D2319),
                       fontFamily: "Outfit",
                     ),
                   ),
@@ -306,7 +309,9 @@ class _SignUpScreen extends State<SignUpScreen> {
                           value: value,
                           child: Text(
                             value,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(
+                              color: const Color(0xFF2D2319),
+                            ),
                           ),
                         ),
                       )
@@ -417,11 +422,7 @@ class _SignUpScreen extends State<SignUpScreen> {
             height: height,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD29F2A), Colors.white],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
+              color: const Color(0xFF2D2319),
             ),
             child: Center(
               child: signupProvider.isLoading
@@ -440,7 +441,7 @@ class _SignUpScreen extends State<SignUpScreen> {
                         fontFamily: "Outfit",
                         fontWeight: FontWeight.w600,
                         fontSize: 18,
-                        color: Colors.black,
+                        color: Colors.white,
                         height: 1,
                       ),
                     ),

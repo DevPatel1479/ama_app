@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       routerConfig: appRouter,
+      // routerDelegate: appRouter.routerDelegate,
     );
   }
 }

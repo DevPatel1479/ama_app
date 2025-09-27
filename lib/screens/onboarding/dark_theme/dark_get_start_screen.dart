@@ -5,14 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class GetStartedScreen extends StatefulWidget {
-  const GetStartedScreen({super.key});
+class DarkGetStartedScreen extends StatefulWidget {
+  const DarkGetStartedScreen({super.key});
 
   @override
-  _GetStartedScreen createState() => _GetStartedScreen();
+  _DarkGetStartedScreen createState() => _DarkGetStartedScreen();
 }
 
-class _GetStartedScreen extends State<GetStartedScreen> {
+class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
   double _scale = 1.0;
 
   @override

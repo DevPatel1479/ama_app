@@ -1,6 +1,10 @@
+import 'dart:ui' show Brightness;
+
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
-import 'package:ama_legal_solutions/screens/auth/login_screen.dart';
-import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_login_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/light_theme/light_login_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/light_theme/light_signup_screen.dart';
 import 'package:ama_legal_solutions/screens/features/advocate_casedesk_screen.dart';
 import 'package:ama_legal_solutions/screens/features/ama_screen.dart';
 import 'package:ama_legal_solutions/screens/features/casedesk_screen.dart';
@@ -8,16 +12,19 @@ import 'package:ama_legal_solutions/screens/features/profile/portfolio_screen.da
 import 'package:ama_legal_solutions/screens/features/profile/user_account_screen.dart';
 import 'package:ama_legal_solutions/screens/features/raise_query_screen.dart';
 import 'package:ama_legal_solutions/screens/features/services_screen.dart';
-import 'package:ama_legal_solutions/screens/onboarding/get_start_screen.dart';
+import 'package:ama_legal_solutions/screens/onboarding/dark_theme/dark_get_start_screen.dart';
+import 'package:ama_legal_solutions/screens/onboarding/light_theme/light_get_start_screen.dart';
 import 'package:ama_legal_solutions/screens/onboarding/splash_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/user_home_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:flutter/material.dart' show Theme;
+
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppPathsForScreen.amaPath,
+  initialLocation: AppPathsForScreen.signUpPath,
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
@@ -33,7 +40,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppPathsForScreen.getStartedPath,
       name: AppScreenNames.getStarted,
-      builder: (context, state) => const GetStartedScreen(),
+      builder: (context, state) {
+        final isLight = Theme.of(context).brightness == Brightness.light;
+
+        return true
+            ? const LightGetStartScreen()
+            : const DarkGetStartedScreen();
+      },
     ),
 
     GoRoute(
@@ -43,14 +56,18 @@ final GoRouter appRouter = GoRouter(
         // Wrap the SignUpScreen with ChangeNotifierProvider
         return ChangeNotifierProvider(
           create: (_) => SignupProvider(),
-          child: SignUpScreen(),
+          child: LightSignupScreen(),
         );
       },
     ),
     GoRoute(
       path: AppPathsForScreen.logInPath,
       name: AppScreenNames.logIn,
-      builder: (context, state) => const LoginScreen(),
+      builder: (context, state) {
+        final isLight = Theme.of(context).brightness == Brightness.light;
+        // return DarkLoginScreen();
+        return LightLoginScreen();
+      },
     ),
     GoRoute(
       path: AppPathsForScreen.userAccountPath,

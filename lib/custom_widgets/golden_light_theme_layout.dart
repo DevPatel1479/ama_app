@@ -1,0 +1,50 @@
+import 'package:flutter/material.dart';
+
+/// Top header layout with linear gradient background
+/// followed by scrollable child content.
+class GradientTopLayout extends StatelessWidget {
+  final Widget? headerContent;
+  final Widget child;
+
+  const GradientTopLayout({Key? key, this.headerContent, required this.child})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
+
+    return Stack(
+      children: [
+        // Fixed gradient background
+        Container(
+          height: sh,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF8BD00), Color(0xFFFFFFFF)],
+              stops: [0.0, 0.406],
+            ),
+          ),
+        ),
+
+        // Scrollable header + content
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header section
+              if (headerContent != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: SafeArea(child: Center(child: headerContent)),
+                ),
+
+              // Main content
+              child,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

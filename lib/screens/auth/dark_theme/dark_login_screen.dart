@@ -1,4 +1,4 @@
-import 'package:ama_legal_solutions/screens/auth/signup_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
@@ -6,14 +6,14 @@ import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class DarkLoginScreen extends StatefulWidget {
+  const DarkLoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<DarkLoginScreen> createState() => _DarkLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _DarkLoginScreenState extends State<DarkLoginScreen> {
   final int otpLength = 6;
   late List<TextEditingController> otpControllers;
   late List<FocusNode> otpFocusNodes;
