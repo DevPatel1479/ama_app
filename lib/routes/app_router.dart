@@ -1,22 +1,22 @@
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 
-import 'package:ama_legal_solutions/screens/screen_helpers/auth_helper/login_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/auth_helper/signup_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/ama_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/casedesk_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/home_screen_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/raise_query_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/services_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/onboarding_helper/get_started_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/auth_helper/login_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/auth_helper/signup_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ama_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/casedesk_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/home_screen_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/raise_query_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/services_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/get_started_helper.dart';
 
 import 'package:ama_legal_solutions/screens/onboarding/splash_screen.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 
-import 'package:ama_legal_solutions/screens/screen_helpers/portfolio_helper/portfolio_helper.dart';
-import 'package:ama_legal_solutions/screens/screen_helpers/profile_helper/profile_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/portfolio_helper/portfolio_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/profile_helper/profile_helper.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
