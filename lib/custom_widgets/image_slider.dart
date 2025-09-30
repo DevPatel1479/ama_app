@@ -93,13 +93,6 @@ class _AutoScrollSliderState extends State<AutoScrollSlider> {
             alignment: Alignment.centerLeft,
             child: Container(
               width: screenWidth * 0.25, // ← increased from 12% → 25%
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Color(0xFF171717), Colors.transparent],
-                ),
-              ),
             ),
           ),
 
@@ -108,13 +101,6 @@ class _AutoScrollSliderState extends State<AutoScrollSlider> {
             alignment: Alignment.centerRight,
             child: Container(
               width: screenWidth * 0.25, // ← increased from 12% → 25%
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerRight,
-                  end: Alignment.centerLeft,
-                  colors: [Color(0xFF171717), Colors.transparent],
-                ),
-              ),
             ),
           ),
         ],

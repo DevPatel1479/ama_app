@@ -47,7 +47,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFF2D2319).withOpacity(0.85),
+                // color: const Color(0xFF2D2319).withOpacity(0.85),
+                color: const Color(0xFF2D23195C).withOpacity(0.25),
                 borderRadius: BorderRadius.circular(navHeight * 0.45),
                 border: GradientBoxBorder(
                   gradient: const LinearGradient(

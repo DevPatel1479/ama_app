@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class MyCasedeskScreen extends StatefulWidget {
-  const MyCasedeskScreen({super.key});
+class DarkCasedeskScreen extends StatefulWidget {
+  const DarkCasedeskScreen({super.key});
 
   @override
-  State<MyCasedeskScreen> createState() => _MyCasedeskScreenState();
+  State<DarkCasedeskScreen> createState() => _DarkCasedeskScreenState();
 }
 
-class _MyCasedeskScreenState extends State<MyCasedeskScreen> {
+class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   bool isMyCaseActive = true;
   bool isPendingActive = true; // secondary toggle
 

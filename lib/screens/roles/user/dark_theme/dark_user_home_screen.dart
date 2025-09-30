@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class DarkHomeScreen extends StatelessWidget {
+  const DarkHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

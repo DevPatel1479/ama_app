@@ -108,4 +108,6 @@ class AppAssets {
 
   static const String likeHeartIcon = "assets/icons/like_icon.png";
   static const String answerIcon = "assets/icons/answer_icon.png";
+
+  static const String whiteUserIcon = "assets/icons/white_theme_user.png";
 }

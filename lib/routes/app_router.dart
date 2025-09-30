@@ -1,30 +1,28 @@
-import 'dart:ui' show Brightness;
-
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
-import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_login_screen.dart';
-import 'package:ama_legal_solutions/screens/auth/light_theme/light_login_screen.dart';
-import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
-import 'package:ama_legal_solutions/screens/auth/light_theme/light_signup_screen.dart';
-import 'package:ama_legal_solutions/screens/features/advocate_casedesk_screen.dart';
-import 'package:ama_legal_solutions/screens/features/ama_screen.dart';
-import 'package:ama_legal_solutions/screens/features/casedesk_screen.dart';
-import 'package:ama_legal_solutions/screens/features/profile/portfolio_screen.dart';
-import 'package:ama_legal_solutions/screens/features/profile/user_account_screen.dart';
-import 'package:ama_legal_solutions/screens/features/raise_query_screen.dart';
-import 'package:ama_legal_solutions/screens/features/services_screen.dart';
-import 'package:ama_legal_solutions/screens/onboarding/dark_theme/dark_get_start_screen.dart';
-import 'package:ama_legal_solutions/screens/onboarding/light_theme/light_get_start_screen.dart';
+
+import 'package:ama_legal_solutions/screens/screen_helpers/auth_helper/login_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/auth_helper/signup_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/ama_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/casedesk_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/home_screen_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/raise_query_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/main_content_helper/services_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/onboarding_helper/get_started_helper.dart';
+
 import 'package:ama_legal_solutions/screens/onboarding/splash_screen.dart';
-import 'package:ama_legal_solutions/screens/roles/user/user_home_screen.dart';
+
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
-import 'package:flutter/material.dart' show Theme;
+
+import 'package:ama_legal_solutions/screens/screen_helpers/portfolio_helper/portfolio_helper.dart';
+import 'package:ama_legal_solutions/screens/screen_helpers/profile_helper/profile_helper.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppPathsForScreen.signUpPath,
+  initialLocation: AppPathsForScreen.getStartedPath,
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
@@ -35,17 +33,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppPathsForScreen.userHomePath,
       name: AppScreenNames.userHome,
-      builder: (context, state) => const HomeScreen(),
+      builder: (context, state) => HomeScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.getStartedPath,
       name: AppScreenNames.getStarted,
       builder: (context, state) {
-        final isLight = Theme.of(context).brightness == Brightness.light;
-
-        return true
-            ? const LightGetStartScreen()
-            : const DarkGetStartedScreen();
+        return GetStartedScreenHelper.getScreen(context);
       },
     ),
 
@@ -56,7 +50,7 @@ final GoRouter appRouter = GoRouter(
         // Wrap the SignUpScreen with ChangeNotifierProvider
         return ChangeNotifierProvider(
           create: (_) => SignupProvider(),
-          child: LightSignupScreen(),
+          child: SignupScreenHelper.getScreen(context),
         );
       },
     ),
@@ -64,45 +58,45 @@ final GoRouter appRouter = GoRouter(
       path: AppPathsForScreen.logInPath,
       name: AppScreenNames.logIn,
       builder: (context, state) {
-        final isLight = Theme.of(context).brightness == Brightness.light;
         // return DarkLoginScreen();
-        return LightLoginScreen();
+        return LoginScreenHelper.getScreen(context);
       },
     ),
     GoRoute(
       path: AppPathsForScreen.userAccountPath,
       name: AppScreenNames.userAccount,
-      builder: (context, state) => const UserAccountScreen(),
+      builder: (context, state) => ProfileScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.portfolioPath,
       name: AppScreenNames.portfolio,
-      builder: (context, state) => const PortfolioScreen(),
+      builder: (context, state) => PortfolioSreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.amaPath,
       name: AppScreenNames.ama,
-      builder: (context, state) => const AmaScreen(),
+      builder: (context, state) => AmaScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.caseDeskPath,
       name: AppScreenNames.caseDesk,
-      builder: (context, state) => const MyCasedeskScreen(),
+      builder: (context, state) => CaseDeskScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.advocateCaseDeskPath,
       name: AppScreenNames.advocateCaseDesk,
-      builder: (context, state) => const AdvocateCasedeskScreen(),
+      builder: (context, state) =>
+          AdvocateCasedeskScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.amaServicesPath,
       name: AppScreenNames.amaServices,
-      builder: (context, state) => const ServicesScreen(),
+      builder: (context, state) => ServicesScreenHelper.getScreen(context),
     ),
     GoRoute(
       path: AppPathsForScreen.raiseQueryPath,
       name: AppScreenNames.raiseQuery,
-      builder: (context, state) => const RaiseQueryScreen(),
+      builder: (context, state) => RaiseQueryScreenHelper.getScreen(context),
     ),
   ],
 );

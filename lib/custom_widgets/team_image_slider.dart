@@ -269,7 +269,7 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: Colors.black26,
+                                        color: Colors.white,
                                         blurRadius: 12,
                                         offset: const Offset(0, 6),
                                       ),

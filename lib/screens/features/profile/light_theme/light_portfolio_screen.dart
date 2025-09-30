@@ -1,17 +1,18 @@
 import 'dart:ui';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
+import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class PortfolioScreen extends StatefulWidget {
-  const PortfolioScreen({super.key});
+class LightPortfolioScreen extends StatefulWidget {
+  const LightPortfolioScreen({super.key});
   @override
-  _PortfolioScreenState createState() => _PortfolioScreenState();
+  _LightPortfolioScreenState createState() => _LightPortfolioScreenState();
 }
 
-class _PortfolioScreenState extends State<PortfolioScreen> {
+class _LightPortfolioScreenState extends State<LightPortfolioScreen> {
   final List<Map<String, String>> fields = [
     {"label": "Name", "value": "Dp"},
     {"label": "Phone", "value": "+91 8776655464"},
@@ -76,14 +77,19 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           if (showEdit)
             Row(
               children: [
-                Image.asset(AppAssets.editIcon, width: 18, height: 18),
+                Image.asset(
+                  AppAssets.editIcon,
+                  width: 18,
+                  height: 18,
+                  color: const Color.fromARGB(225, 255, 255, 255),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   "Edit",
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xB2FFFFFF),
+                    color: const Color.fromARGB(225, 255, 255, 255),
                   ),
                 ),
               ],
@@ -112,7 +118,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w400,
-              color: Colors.white,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 6),
@@ -120,7 +126,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(240, 57, 60, 32),
+              // color: const Color.fromARGB(240, 57, 60, 32),
+              color: const Color(0x33D29F2A).withOpacity(0.3),
               borderRadius: BorderRadius.circular(15),
             ),
             child: Text(
@@ -128,7 +135,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: isFinancial ? const Color(0xFF008C38) : Colors.white,
+                color: isFinancial ? const Color(0xFF008C38) : Colors.black,
               ),
             ),
           ),
@@ -140,86 +147,106 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+      SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFD29F2A),
+        statusBarIconBrightness: Brightness.dark, // white icons
+        statusBarBrightness: Brightness.light, // iOS: white icons
       ),
     );
-
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
-      body: Stack(
-        children: [
-          // Scrollable content behind AppBar
-          SingleChildScrollView(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: List.generate(fields.length, (index) {
-                List<Widget> widgets = [];
+      body: GradientTopLayout(
+        screenName: "home",
+        headerContent: Container(
+          width: double.infinity,
 
-                if (index == 0) {
-                  widgets.add(
-                    buildSectionHeader("Personal Information", showEdit: true),
-                  );
-                }
-
-                if (fields[index]["label"] == "Monthly Income") {
-                  widgets.add(buildSectionHeader("Financial Information"));
-                }
-
-                widgets.add(
-                  buildField(fields[index]["label"]!, fields[index]["value"]!),
-                );
-
-                return Column(children: widgets);
-              }),
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04,
+            vertical: screenHeight * 0.015,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD29F2A),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
+              bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
             ),
           ),
-
-          // Modern transparent + blur AppBar with proper top padding
-          ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                padding: EdgeInsets.only(
-                  top:
-                      MediaQuery.of(context).padding.top +
-                      12, // Add status bar height + some spacing
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                ),
-                color: Colors.black.withOpacity(_appBarOpacity * 0.3 + 0.05),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Image.asset(
-                        AppAssets.backArrowIcon,
-                        width:
-                            MediaQuery.of(context).size.width *
-                            0.05, // responsive icon size
-                        height: MediaQuery.of(context).size.width * 0.05,
-                      ),
+          child: ClipRRect(
+            child: Container(
+              padding: EdgeInsets.only(
+                top:
+                    MediaQuery.of(context).padding.top -
+                    10, // Add status bar height + some spacing
+                left: 16,
+                right: 16,
+                bottom: 14,
+              ),
+              // color: Colors.black.withOpacity(_appBarOpacity * 0.3 + 0.05),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Image.asset(
+                      AppAssets.backArrowIcon,
+                      width:
+                          MediaQuery.of(context).size.width *
+                          0.05, // responsive icon size
+                      height: MediaQuery.of(context).size.width * 0.05,
                     ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.12),
-                    Text(
-                      "Portfolio",
-                      style: GoogleFonts.outfit(
-                        fontSize: MediaQuery.of(context).size.width * 0.065,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                  ),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.12),
+                  Text(
+                    "Portfolio",
+                    style: GoogleFonts.outfit(
+                      fontSize: MediaQuery.of(context).size.width * 0.065,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
+
+        child: Column(
+          children: [
+            // Modern transparent + blur AppBar with proper top padding
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(fields.length, (index) {
+                  List<Widget> widgets = [];
+
+                  if (index == 0) {
+                    widgets.add(
+                      buildSectionHeader(
+                        "Personal Information",
+                        showEdit: true,
+                      ),
+                    );
+                  }
+
+                  if (fields[index]["label"] == "Monthly Income") {
+                    widgets.add(buildSectionHeader("Financial Information"));
+                  }
+
+                  widgets.add(
+                    buildField(
+                      fields[index]["label"]!,
+                      fields[index]["value"]!,
+                    ),
+                  );
+
+                  return Column(children: widgets);
+                }),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

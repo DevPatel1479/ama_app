@@ -5,9 +5,16 @@ import 'package:flutter/material.dart';
 class GradientTopLayout extends StatelessWidget {
   final Widget? headerContent;
   final Widget child;
+  final String? screenName;
+  final Widget? fixedPositionWidget;
 
-  const GradientTopLayout({Key? key, this.headerContent, required this.child})
-    : super(key: key);
+  const GradientTopLayout({
+    Key? key,
+    this.headerContent,
+    required this.child,
+    this.screenName,
+    this.fixedPositionWidget,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,23 +34,34 @@ class GradientTopLayout extends StatelessWidget {
             ),
           ),
         ),
-
-        // Scrollable header + content
-        SingleChildScrollView(
-          child: Column(
+        if (screenName == "home")
+          Column(
             children: [
-              // Header section
               if (headerContent != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: SafeArea(child: Center(child: headerContent)),
-                ),
+                SafeArea(child: Center(child: headerContent)),
 
-              // Main content
-              child,
+              if (fixedPositionWidget != null) fixedPositionWidget!,
+
+              Expanded(child: SingleChildScrollView(child: child)),
             ],
+          )
+        else
+          // Scrollable header + content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header section
+                if (headerContent != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24.0),
+                    child: SafeArea(child: Center(child: headerContent)),
+                  ),
+
+                // Main content
+                child,
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

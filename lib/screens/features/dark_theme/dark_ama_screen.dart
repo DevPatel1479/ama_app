@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AmaScreen extends StatefulWidget {
-  const AmaScreen({super.key});
+class DarkAmaScreen extends StatefulWidget {
+  const DarkAmaScreen({super.key});
   @override
-  _AmaScreenState createState() => _AmaScreenState();
+  _DarkAmaScreenState createState() => _DarkAmaScreenState();
 }
 
-class _AmaScreenState extends State<AmaScreen>
+class _DarkAmaScreenState extends State<DarkAmaScreen>
     with SingleTickerProviderStateMixin {
   bool _expanded = false; // for view more/less toggle
   late AnimationController _animationController;

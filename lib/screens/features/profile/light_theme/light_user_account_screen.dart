@@ -1,23 +1,24 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class UserAccountScreen extends StatefulWidget {
-  const UserAccountScreen({super.key});
+class LightUserAccountScreen extends StatefulWidget {
+  const LightUserAccountScreen({super.key});
 
   @override
-  State<UserAccountScreen> createState() => _UserAccountScreenState();
+  State<LightUserAccountScreen> createState() => _LightUserAccountScreenState();
 }
 
-class _UserAccountScreenState extends State<UserAccountScreen> {
+class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarColor: Color(0xFFD29F2A),
+        statusBarIconBrightness: Brightness.dark, // white icons
+        statusBarBrightness: Brightness.light, // iOS: white icons
       ),
     );
 
@@ -27,85 +28,104 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 Top Bar
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.015,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.05,
-                      height: screenWidth * 0.05,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.12),
-                  Text(
-                    "Account",
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.065,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+        child: GradientTopLayout(
+          screenName: "home",
+          headerContent: Container(
+            width: double.infinity,
+
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.015,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD29F2A),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
+                bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
               ),
             ),
-
-            SizedBox(height: screenHeight * 0.03),
-
-            // 🔹 Centered User Info Section
-            Center(
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: handle camera tap
-                    },
-                    child: Image.asset(
-                      AppAssets.userCameraIcon,
-                      width: screenWidth * 0.22,
-                      height: screenWidth * 0.22,
-                      fit: BoxFit.contain,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🔹 Top Bar
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.04,
+                    vertical: screenHeight * 0.015,
                   ),
-                  SizedBox(height: screenHeight * 0.015),
-                  Text(
-                    "Username",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Image.asset(
+                          AppAssets.backArrowIcon,
+                          width: screenWidth * 0.05,
+                          height: screenWidth * 0.05,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      SizedBox(width: screenWidth * 0.12),
+                      Text(
+                        "Account",
+                        style: GoogleFonts.outfit(
+                          fontSize: screenWidth * 0.065,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: screenHeight * 0.005),
-                  Text(
-                    "Xyz@gmail.com",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.04,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+          // SizedBox(height: screenHeight * 0.03),
+          fixedPositionWidget:
+              // 🔹 Centered User Info Section
+              Center(
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.015),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: handle camera tap
+                      },
+                      child: Image.asset(
+                        AppAssets.userCameraIcon,
+                        width: screenWidth * 0.22,
+                        height: screenWidth * 0.22,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.015),
+                    Text(
+                      "Username",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.005),
+                    Text(
+                      "Xyz@gmail.com",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.04,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withOpacity(1),
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                  ],
+                ),
+              ),
 
-            SizedBox(height: screenHeight * 0.03),
-
-            // 🔹 Scrollable Options List (Left aligned)
-            Expanded(
-              child: SingleChildScrollView(
+          // SizedBox(height: screenHeight * 0.03),
+          child:
+              // 🔹 Scrollable Options List (Left aligned)
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,6 +138,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
@@ -125,7 +146,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -141,6 +162,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
@@ -148,7 +170,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -162,7 +184,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.05,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -176,6 +198,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
@@ -183,7 +206,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -199,6 +222,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Expanded(
@@ -207,7 +231,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -222,7 +246,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.05,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -237,6 +261,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         RichText(
@@ -244,7 +269,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                             children: [
                               const TextSpan(text: "Rate "),
@@ -272,6 +297,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
@@ -279,7 +305,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -293,7 +319,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.05,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -308,6 +334,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Expanded(
@@ -317,7 +344,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w500,
                               height: 1.3, // line height
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -334,6 +361,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
@@ -341,7 +369,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -357,6 +385,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                           width: screenWidth * 0.04,
                           height: screenWidth * 0.04,
                           fit: BoxFit.contain,
+                          color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Expanded(
@@ -365,7 +394,7 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -424,8 +453,6 @@ class _UserAccountScreenState extends State<UserAccountScreen> {
                   ],
                 ),
               ),
-            ),
-          ],
         ),
       ),
     );

@@ -1,17 +1,18 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
+import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ServicesScreen extends StatefulWidget {
-  const ServicesScreen({super.key});
+class LightServicesScreen extends StatefulWidget {
+  const LightServicesScreen({super.key});
 
   @override
-  State<ServicesScreen> createState() => _ServicesScreenState();
+  State<LightServicesScreen> createState() => _LightServicesScreenState();
 }
 
-class _ServicesScreenState extends State<ServicesScreen>
+class _LightServicesScreenState extends State<LightServicesScreen>
     with TickerProviderStateMixin {
   // Services list drives how many cards we render.
   final List<String> services = [
@@ -258,9 +259,9 @@ class _ServicesScreenState extends State<ServicesScreen>
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // transparent status bar
-        statusBarIconBrightness: Brightness.light, // white icons
-        statusBarBrightness: Brightness.dark, // iOS: white icons
+        statusBarColor: Color(0xFFD29F2A),
+        statusBarIconBrightness: Brightness.dark, // white icons
+        statusBarBrightness: Brightness.light, // iOS: white icons
       ),
     );
     final screenWidth = MediaQuery.of(context).size.width;
@@ -268,160 +269,182 @@ class _ServicesScreenState extends State<ServicesScreen>
 
     // Keep search bar + button fixed at the top; cards scroll below.
     return Scaffold(
-      backgroundColor: const Color(0xFF171717),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // fixed header + search area
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.015,
+        child: GradientTopLayout(
+          screenName: "home",
+          headerContent: Container(
+            width: double.infinity,
+
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.015,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD29F2A),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
+                bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
               ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Image.asset(
-                          AppAssets.backArrowIcon,
-                          width: screenWidth * 0.05,
-                          height: screenWidth * 0.05,
-                          fit: BoxFit.contain,
-                        ),
+            ),
+
+            // fixed header + search area
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Image.asset(
+                        AppAssets.backArrowIcon,
+                        width: screenWidth * 0.05,
+                        height: screenWidth * 0.05,
+                        fit: BoxFit.contain,
+                        color: Colors.black,
                       ),
-                      SizedBox(width: screenWidth * 0.12),
-                      Text(
-                        "Services",
-                        style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.065,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: screenHeight * 0.03),
-                  // Search bar stays fixed
-                  Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: const Color(0xCCFFFFFF),
-                        width: 2,
-                      ),
-                      color: Colors.transparent,
                     ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 16),
-                        const Icon(
-                          Icons.search,
-                          color: Colors.white70,
-                          size: 18,
+                    SizedBox(width: screenWidth * 0.12),
+                    Text(
+                      "Services",
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.065,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Search bar stays fixed
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.015,
+            ),
+            child:
+                // scrollable list below the fixed search: cards live here
+                ListView(
+                  shrinkWrap: true, // important
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: const Color(0xFF2D2319),
+                          width: 2,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            style: GoogleFonts.outfit(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w300,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Search any Service...",
-                              hintStyle: GoogleFonts.outfit(
-                                color: Colors.white70,
+                        color: Colors.transparent,
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 16),
+                          const Icon(
+                            Icons.search,
+                            color: Colors.black,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              style: GoogleFonts.outfit(
+                                color: Colors.black,
                                 fontWeight: FontWeight.w300,
                               ),
-                              border: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {},
-                          child: Container(
-                            height: 50,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(25),
-                                bottomRight: Radius.circular(25),
-                              ),
-                              gradient: const LinearGradient(
-                                begin: Alignment(-1.0, -0.0),
-                                end: Alignment(1.0, 0.0),
-                                colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              "Search",
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
+                              decoration: InputDecoration(
+                                hintText: "Search any Service...",
+                                hintStyle: GoogleFonts.outfit(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                                border: InputBorder.none,
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onTap: () {},
+                            child: Container(
+                              height: 50,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(25),
+                                  bottomRight: Radius.circular(25),
+                                ),
+                                gradient: const LinearGradient(
+                                  begin: Alignment
+                                      .topCenter, // <- start from top-left
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF2D2319),
+                                    Color.fromARGB(255, 116, 116, 116),
+                                  ],
+                                  stops: [0.2, 1.0],
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                "Search",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 16),
+                    // Past Viewed header + first two cards
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(
+                        "Past Viewed",
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (services.length > 0) buildServiceCard(0),
+                    if (services.length > 1) buildServiceCard(1),
 
-            // scrollable list below the fixed search: cards live here
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.04,
-                  vertical: screenHeight * 0.015,
+                    // Our Services header
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(
+                        "Our Services",
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Remaining cards (from index 2 onward)
+                    for (int i = 2; i < services.length; i++)
+                      buildServiceCard(i),
+
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                children: [
-                  // Past Viewed header + first two cards
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      "Past Viewed",
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (services.length > 0) buildServiceCard(0),
-                  if (services.length > 1) buildServiceCard(1),
-
-                  // Our Services header
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      "Our Services",
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Remaining cards (from index 2 onward)
-                  for (int i = 2; i < services.length; i++) buildServiceCard(i),
-
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
+      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }
