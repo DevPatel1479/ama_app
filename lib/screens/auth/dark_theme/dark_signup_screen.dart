@@ -1,6 +1,6 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/config/constants/form_data.dart';
-import 'package:ama_legal_solutions/custom_messages_widgets/sign_up_message.dart';
+import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart';
@@ -377,6 +377,8 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
             _scale = 1.0; // Return to normal
           });
 
+          if (signupProvider.isLoading) return;
+
           bool isValid = signupProvider.validateForm();
 
           if (isValid) {
@@ -386,7 +388,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
             print(signupProvider.isError);
 
             if (signupProvider.resultMessage != null) {
-              await showSignupMessage(
+              await showCustomMessage(
                 context,
                 signupProvider.resultMessage!,
                 signupProvider.isError,

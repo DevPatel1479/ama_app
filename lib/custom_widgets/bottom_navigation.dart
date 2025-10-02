@@ -1,7 +1,9 @@
 // lib/custom_widgets/bottom_navigation.dart
 import 'dart:ui';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomBottomNav extends StatefulWidget {
   const CustomBottomNav({super.key});
@@ -31,8 +33,20 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     // compute nav height relative to screen size but clamp reasonably
-    final navHeight = (screenWidth * 0.16).clamp(56.0, 84.0);
-
+    final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
+    final location = GoRouterState.of(context).uri.toString();
+    int _selectedIndex;
+    if (location.startsWith(AppPathsForScreen.userHomePath)) {
+      _selectedIndex = 0;
+    } else if (location.startsWith(AppPathsForScreen.amaServicesPath)) {
+      _selectedIndex = 1;
+    } else if (location.startsWith(AppPathsForScreen.amaPath)) {
+      _selectedIndex = 2;
+    } else if (location.startsWith(AppPathsForScreen.caseDeskPath)) {
+      _selectedIndex = 3;
+    } else {
+      _selectedIndex = 0;
+    }
     return SizedBox(
       height: navHeight,
       child: Padding(
@@ -69,6 +83,21 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                   return GestureDetector(
                     onTap: () {
                       setState(() => _selectedIndex = index);
+                      print(_selectedIndex);
+                      switch (_selectedIndex) {
+                        case 0:
+                          context.go(AppPathsForScreen.userHomePath);
+                          break;
+                        case 1:
+                          context.go(AppPathsForScreen.amaServicesPath);
+                          break;
+                        case 2:
+                          context.go(AppPathsForScreen.amaPath);
+                          break;
+                        case 3:
+                          context.go(AppPathsForScreen.caseDeskPath);
+                          break;
+                      }
                       // If you want to navigate, send an event/callback here.
                     },
                     child: Column(

@@ -1,3 +1,4 @@
+import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_router.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,13 @@ import 'package:provider/provider.dart';
 void main() {
   // runApp(const MyApp());
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ProfileProvider(),
+        ), // added profile provider
+      ],
       child: const MyApp(),
     ),
   );

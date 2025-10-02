@@ -68,12 +68,12 @@ class ApiService {
     }
   }
 
-  // Optional: if you want, handle error based on caller logic instead of throwing here
-  void _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-    // If you want, log or record the issue but don't throw
-    print("HTTP error ${response.statusCode}: ${response.reasonPhrase}");
-  }
+  // // Optional: if you want, handle error based on caller logic instead of throwing here
+  // void _handleResponse(http.Response response) {
+  //   if (response.statusCode >= 200 && response.statusCode < 300) {
+  //     return;
+  //   }
+  //   // If you want, log or record the issue but don't throw
+  //   print("HTTP error ${response.statusCode}: ${response.reasonPhrase}");
+  // }
 }

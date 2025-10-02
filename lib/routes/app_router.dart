@@ -1,3 +1,4 @@
+import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 
 import 'package:ama_legal_solutions/screen_helpers/auth_helper/login_helper.dart';
@@ -17,86 +18,235 @@ import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 
 import 'package:ama_legal_solutions/screen_helpers/portfolio_helper/portfolio_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/profile_helper/profile_helper.dart';
+import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppPathsForScreen.getStartedPath,
+  initialLocation: AppPathsForScreen.userHomePath,
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
       name: AppScreenNames.splash,
-      builder: (context, state) => const SplashScreen(),
-    ),
-
-    GoRoute(
-      path: AppPathsForScreen.userHomePath,
-      name: AppScreenNames.userHome,
-      builder: (context, state) => HomeScreenHelper.getScreen(context),
-    ),
-    GoRoute(
-      path: AppPathsForScreen.getStartedPath,
-      name: AppScreenNames.getStarted,
-      builder: (context, state) {
-        return GetStartedScreenHelper.getScreen(context);
-      },
-    ),
-
-    GoRoute(
-      path: AppPathsForScreen.signUpPath,
-      name: AppScreenNames.signUp,
-      builder: (context, state) {
-        // Wrap the SignUpScreen with ChangeNotifierProvider
-        return ChangeNotifierProvider(
-          create: (_) => SignupProvider(),
-          child: SignupScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: const SplashScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
         );
       },
     ),
+
+    // Home
+    GoRoute(
+      path: AppPathsForScreen.userHomePath,
+      name: AppScreenNames.userHome,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: HomeScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+
+    // Get Started
+    GoRoute(
+      path: AppPathsForScreen.getStartedPath,
+      name: AppScreenNames.getStarted,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: GetStartedScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+
+    // SignUp
+    GoRoute(
+      path: AppPathsForScreen.signUpPath,
+      name: AppScreenNames.signUp,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: ChangeNotifierProvider(
+            create: (_) => SignupProvider(),
+            child: SignupScreenHelper.getScreen(context),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+
+    // LogIn
     GoRoute(
       path: AppPathsForScreen.logInPath,
       name: AppScreenNames.logIn,
-      builder: (context, state) {
-        // return DarkLoginScreen();
-        return LoginScreenHelper.getScreen(context);
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: ChangeNotifierProvider(
+            create: (_) => LoginProvider(),
+            child: LoginScreenHelper.getScreen(context),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
       },
     ),
+
+    // User Account → slide-from-left
     GoRoute(
       path: AppPathsForScreen.userAccountPath,
       name: AppScreenNames.userAccount,
-      builder: (context, state) => ProfileScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        String? name = state.uri.queryParameters["name"] ?? "";
+        String? email = state.uri.queryParameters["email"] ?? "";
+        String? profile_photo =
+            state.uri.queryParameters["profile_photo"] ?? "";
+        String? role = state.uri.queryParameters["role"] ?? "";
+        String? phone = state.uri.queryParameters["phone"] ?? "";
+
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: ProfileScreenHelper.getScreen(
+            context,
+            name,
+            email,
+            profile_photo,
+            phone,
+            role,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(-1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+        );
+      },
     ),
+
+    // Portfolio
     GoRoute(
       path: AppPathsForScreen.portfolioPath,
       name: AppScreenNames.portfolio,
-      builder: (context, state) => PortfolioSreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: PortfolioSreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
+
+    // AMA
     GoRoute(
       path: AppPathsForScreen.amaPath,
       name: AppScreenNames.ama,
-      builder: (context, state) => AmaScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: AmaScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
+
+    // CaseDesk
     GoRoute(
       path: AppPathsForScreen.caseDeskPath,
       name: AppScreenNames.caseDesk,
-      builder: (context, state) => CaseDeskScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: CaseDeskScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
+
+    // Advocate CaseDesk
     GoRoute(
       path: AppPathsForScreen.advocateCaseDeskPath,
       name: AppScreenNames.advocateCaseDesk,
-      builder: (context, state) =>
-          AdvocateCasedeskScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: AdvocateCasedeskScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
+
+    // AMA Services
     GoRoute(
       path: AppPathsForScreen.amaServicesPath,
       name: AppScreenNames.amaServices,
-      builder: (context, state) => ServicesScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: ServicesScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
+
+    // Raise Query
     GoRoute(
       path: AppPathsForScreen.raiseQueryPath,
       name: AppScreenNames.raiseQuery,
-      builder: (context, state) => RaiseQueryScreenHelper.getScreen(context),
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          child: RaiseQueryScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
     ),
   ],
 );

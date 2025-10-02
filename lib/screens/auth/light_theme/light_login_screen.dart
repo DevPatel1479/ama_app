@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
+import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class LightLoginScreen extends StatefulWidget {
   const LightLoginScreen({super.key});
@@ -49,6 +51,8 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final fieldWidth = screenWidth * 0.9;
     final fieldHeight = 50.0;
+
+    final loginProvider = context.watch<LoginProvider>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -98,16 +102,43 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                 const SizedBox(height: 24),
 
                 // Phone Number Input
-                _gradientBorderInput("Phone Number", fieldWidth, fieldHeight),
+                _gradientBorderInput(
+                  "Phone Number",
+                  fieldWidth,
+                  fieldHeight,
+                  loginProvider,
+                ),
                 const SizedBox(height: 16),
 
                 // OTP Input Boxes
-                _otpInputBoxes(screenWidth),
+                if (loginProvider.otpSent)
+                  _otpInputBoxes(screenWidth, loginProvider),
 
                 const SizedBox(height: 35),
 
                 // Login Button
-                _gradientLoginButton(fieldWidth, fieldHeight, () {}),
+                loginProvider.otpSent
+                    ? _gradientLoginButton(
+                        fieldWidth,
+                        fieldHeight,
+                        () {
+                          if (loginProvider.isLoading) return;
+                          loginProvider.verifyOtp(context);
+                        },
+                        "Verify OTP",
+                        loginProvider,
+                      )
+                    : _gradientLoginButton(
+                        fieldWidth,
+                        fieldHeight,
+                        () {
+                          print("calling login side");
+                          if (loginProvider.isLoading) return;
+                          loginProvider.login(context);
+                        },
+                        "Login",
+                        loginProvider,
+                      ),
                 const SizedBox(height: 20),
                 RichText(
                   textAlign: TextAlign.center,
@@ -152,7 +183,12 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     );
   }
 
-  Widget _gradientBorderInput(String label, double width, double height) {
+  Widget _gradientBorderInput(
+    String label,
+    double width,
+    double height,
+    LoginProvider provider,
+  ) {
     return Center(
       child: Container(
         width: width,
@@ -170,15 +206,19 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
-              style: const TextStyle(color: Colors.white),
+              maxLength: 10,
+              controller: provider.phoneController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly, // allow only digits
+              ],
+              style: const TextStyle(color: Colors.black),
               decoration: InputDecoration(
+                counterText: "",
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 border: InputBorder.none,
                 hintText: label,
-                hintStyle: const TextStyle(
-                  color: Color(0x59FFFFFF),
-                  fontFamily: "Outfit",
-                ),
+                hintStyle: TextStyle(color: Colors.black, fontFamily: "Outfit"),
               ),
             ),
           ),
@@ -187,7 +227,8 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     );
   }
 
-  Widget _otpInputBoxes(double screenWidth) {
+  Widget _otpInputBoxes(double screenWidth, LoginProvider provider) {
+    final otpLength = provider.otpControllers.length;
     final boxWidth = (screenWidth - 80) / otpLength;
 
     return Row(
@@ -206,10 +247,10 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
             ),
             child: Center(
               child: TextField(
-                controller: otpControllers[index],
+                controller: provider.otpControllers[index],
                 focusNode: otpFocusNodes[index],
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 20),
+                style: const TextStyle(color: Colors.black, fontSize: 20),
                 keyboardType: TextInputType.number,
                 maxLength: 1,
                 decoration: const InputDecoration(
@@ -217,10 +258,19 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                   border: InputBorder.none,
                 ),
                 onChanged: (value) {
+                  // if (value.isNotEmpty && index < otpLength - 1) {
+                  //   otpFocusNodes[index + 1].requestFocus();
+                  // } else if (value.isEmpty && index > 0) {
+                  //   otpFocusNodes[index - 1].requestFocus();
+                  // }
                   if (value.isNotEmpty && index < otpLength - 1) {
-                    otpFocusNodes[index + 1].requestFocus();
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(otpFocusNodes[index + 1]);
                   } else if (value.isEmpty && index > 0) {
-                    otpFocusNodes[index - 1].requestFocus();
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(otpFocusNodes[index - 1]);
                   }
                 },
               ),
@@ -235,6 +285,8 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     double width,
     double height,
     VoidCallback onPressed,
+    String text,
+    LoginProvider provider,
   ) {
     return Center(
       child: Container(
@@ -249,17 +301,26 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: onPressed,
-            child: const Center(
-              child: Text(
-                "Login",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                  color: Colors.white,
-                ),
-              ),
+            child: Center(
+              child: provider.isLoading
+                  ? SizedBox(
+                      width: 24, // 30% of button width
+                      height: 24, // Keep it square
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2, // 3% of width
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      text,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: "Outfit",
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ),

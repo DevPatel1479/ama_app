@@ -1,3 +1,4 @@
+import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class DarkLoginScreen extends StatefulWidget {
   const DarkLoginScreen({super.key});
@@ -44,7 +46,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final fieldWidth = screenWidth * 0.9;
     final fieldHeight = 50.0;
-
+    final loginProvider = context.watch<LoginProvider>();
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
       body: SafeArea(
@@ -93,16 +95,42 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
               const SizedBox(height: 24),
 
               // Phone Number Input
-              _gradientBorderInput("Phone Number", fieldWidth, fieldHeight),
+              _gradientBorderInput(
+                "Phone Number",
+                fieldWidth,
+                fieldHeight,
+                loginProvider,
+              ),
               const SizedBox(height: 16),
 
               // OTP Input Boxes
-              _otpInputBoxes(screenWidth),
+              if (loginProvider.otpSent)
+                _otpInputBoxes(screenWidth, loginProvider),
 
               const SizedBox(height: 35),
 
               // Login Button
-              _gradientLoginButton(fieldWidth, fieldHeight, () {}),
+              // _gradientLoginButton(fieldWidth, fieldHeight, () {}),
+              loginProvider.otpSent
+                  ? _gradientLoginButton(
+                      fieldWidth,
+                      fieldHeight,
+                      () {
+                        loginProvider.verifyOtp(context);
+                      },
+                      "Verify OTP",
+                      loginProvider,
+                    )
+                  : _gradientLoginButton(
+                      fieldWidth,
+                      fieldHeight,
+                      () {
+                        print("calling login side");
+                        loginProvider.login(context);
+                      },
+                      "Login",
+                      loginProvider,
+                    ),
               const SizedBox(height: 20),
               RichText(
                 textAlign: TextAlign.center,
@@ -142,7 +170,12 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
     );
   }
 
-  Widget _gradientBorderInput(String label, double width, double height) {
+  Widget _gradientBorderInput(
+    String label,
+    double width,
+    double height,
+    LoginProvider provider,
+  ) {
     return Center(
       child: Container(
         width: width,
@@ -162,9 +195,18 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
+              maxLength: 10,
+              controller: provider.phoneController,
               style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly, // allow only digits
+              ],
+
               decoration: InputDecoration(
+                counterText: "",
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
+
                 border: InputBorder.none,
                 hintText: label,
                 hintStyle: const TextStyle(
@@ -179,7 +221,8 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
     );
   }
 
-  Widget _otpInputBoxes(double screenWidth) {
+  Widget _otpInputBoxes(double screenWidth, LoginProvider provider) {
+    final otpLength = provider.otpControllers.length;
     final boxWidth = (screenWidth - 80) / otpLength;
 
     return Row(
@@ -200,7 +243,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
             ),
             child: Center(
               child: TextField(
-                controller: otpControllers[index],
+                controller: provider.otpControllers[index],
                 focusNode: otpFocusNodes[index],
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
@@ -211,10 +254,19 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                   border: InputBorder.none,
                 ),
                 onChanged: (value) {
+                  // if (value.isNotEmpty && index < otpLength - 1) {
+                  //   otpFocusNodes[index + 1].requestFocus();
+                  // } else if (value.isEmpty && index > 0) {
+                  //   otpFocusNodes[index - 1].requestFocus();
+                  // }
                   if (value.isNotEmpty && index < otpLength - 1) {
-                    otpFocusNodes[index + 1].requestFocus();
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(otpFocusNodes[index + 1]);
                   } else if (value.isEmpty && index > 0) {
-                    otpFocusNodes[index - 1].requestFocus();
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(otpFocusNodes[index - 1]);
                   }
                 },
               ),
@@ -229,6 +281,8 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
     double width,
     double height,
     VoidCallback onPressed,
+    String text,
+    LoginProvider provider,
   ) {
     return Center(
       child: Container(
@@ -247,17 +301,26 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: onPressed,
-            child: const Center(
-              child: Text(
-                "Login",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                  color: Colors.black,
-                ),
-              ),
+            child: Center(
+              child: provider.isLoading
+                  ? SizedBox(
+                      width: 24, // 30% of button width
+                      height: 24, // Keep it square
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2, // 3% of width
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                      ),
+                    )
+                  : Text(
+                      text,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: "Outfit",
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ),
         ),

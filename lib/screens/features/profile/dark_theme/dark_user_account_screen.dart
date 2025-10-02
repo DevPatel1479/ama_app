@@ -1,10 +1,27 @@
+import 'dart:io';
+
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class DarkUserAccountScreen extends StatefulWidget {
-  const DarkUserAccountScreen({super.key});
+  final String name;
+  final String email;
+  final String profile_photo;
+  final String phone;
+  final String role;
+  const DarkUserAccountScreen({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.profile_photo,
+    required this.phone,
+    required this.role,
+  });
   @override
   State<DarkUserAccountScreen> createState() => _DarkUserAccountScreenState();
 }
@@ -66,19 +83,85 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
               child: Column(
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      // TODO: handle camera tap
+                    onTap: () async {
+                      final provider = Provider.of<ProfileProvider>(
+                        context,
+                        listen: false,
+                      );
+
+                      if (provider.isUpdating) return; // prevent multiple taps
+
+                      final picker = ImagePicker();
+                      final pickedFile = await picker.pickImage(
+                        source: ImageSource.gallery,
+                      );
+
+                      if (pickedFile != null) {
+                        File imageFile = File(pickedFile.path);
+
+                        // Await provider update to ensure UI reflects new image
+                        await provider.updateProfilePhoto(
+                          context,
+                          phone: widget.phone,
+                          role: widget.role,
+                          newPhoto: imageFile,
+                        );
+                      }
                     },
-                    child: Image.asset(
-                      AppAssets.userCameraIcon,
-                      width: screenWidth * 0.22,
-                      height: screenWidth * 0.22,
-                      fit: BoxFit.contain,
+                    child: Consumer<ProfileProvider>(
+                      builder: (context, provider, _) {
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 55, // adjust radius
+                              backgroundColor: Colors.grey[800],
+                              backgroundImage: provider.hasProfilePhoto
+                                  ? NetworkImage(
+                                      "${provider.profilePhotoUrl}?t=${DateTime.now().millisecondsSinceEpoch}",
+                                    )
+                                  : null,
+                              child: !provider.hasProfilePhoto
+                                  ? Icon(
+                                      Icons.person,
+                                      size: 55,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                            if (provider.isUpdating)
+                              SizedBox(
+                                width: 55,
+                                height: 55,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            if (!provider.isUpdating)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: EdgeInsets.all(6),
+                                  child: Icon(
+                                    Icons.camera_alt,
+                                    size: 24,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.015),
                   Text(
-                    "Username",
+                    "${widget.name}",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: screenWidth * 0.045,
@@ -88,7 +171,7 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.005),
                   Text(
-                    "Xyz@gmail.com",
+                    "${widget.email}",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: screenWidth * 0.04,

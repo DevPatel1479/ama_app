@@ -213,7 +213,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
         ),
       ),
 
-      bottomNavigationBar: const CustomBottomNav(),
+      // bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }

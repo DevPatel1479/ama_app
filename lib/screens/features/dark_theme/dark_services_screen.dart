@@ -1,7 +1,9 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DarkServicesScreen extends StatefulWidget {
@@ -283,7 +285,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => context.go(AppPathsForScreen.userHomePath),
                         child: Image.asset(
                           AppAssets.backArrowIcon,
                           width: screenWidth * 0.05,
@@ -422,6 +424,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
           ],
         ),
       ),
+      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }

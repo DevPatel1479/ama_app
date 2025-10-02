@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -41,10 +43,13 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final horizontalPadding = screenWidth * 0.04; // ~16px on 400 width screen
-    final imageWidth =
-        (screenWidth - horizontalPadding * 2 - 12 * 3) / 4; // 4 images + gaps
-    final imageHeight = imageWidth * 1.25; // maintain aspect ratio
+    final imageWidth = ((screenWidth - horizontalPadding * 2 - 12 * 3) / 4)
+        .clamp(0, double.infinity)
+        .toDouble();
 
+    final imageHeight = (imageWidth * 1.25)
+        .clamp(0, double.infinity)
+        .toDouble();
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
       body: SafeArea(

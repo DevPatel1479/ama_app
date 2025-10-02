@@ -7,14 +7,27 @@ import 'package:provider/provider.dart';
 
 class ProfileScreenHelper {
   /// Returns the appropriate Get Started screen based on theme
-  static Widget getScreen(BuildContext context) {
+  static Widget getScreen(
+    BuildContext context,
+    String name,
+    String email,
+    String profile_photo,
+    String phone,
+    String role,
+  ) {
     final isDarkMode = Provider.of<ThemeProvider>(
       context,
       listen: false,
     ).isDarkMode;
 
     if (isDarkMode) {
-      return const DarkUserAccountScreen();
+      return DarkUserAccountScreen(
+        name: name,
+        email: email,
+        profile_photo: profile_photo,
+        phone: phone,
+        role: role,
+      );
     } else {
       return const LightUserAccountScreen();
     }

@@ -1,6 +1,6 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/config/constants/form_data.dart';
-import 'package:ama_legal_solutions/custom_messages_widgets/sign_up_message.dart';
+import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
@@ -381,6 +381,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
           setState(() {
             _scale = 1.0; // Return to normal
           });
+          if (signupProvider.isLoading) return;
 
           bool isValid = signupProvider.validateForm();
 
@@ -391,7 +392,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
             print(signupProvider.isError);
 
             if (signupProvider.resultMessage != null) {
-              await showSignupMessage(
+              await showCustomMessage(
                 context,
                 signupProvider.resultMessage!,
                 signupProvider.isError,
@@ -431,7 +432,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
                       height: 24, // Keep it square
                       child: CircularProgressIndicator(
                         strokeWidth: 2, // 3% of width
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Text(

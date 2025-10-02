@@ -4,13 +4,38 @@ import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dar
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
 import 'package:ama_legal_solutions/custom_widgets/team_image_slider.dart';
+import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
-class LightHomeScreen extends StatelessWidget {
+class LightHomeScreen extends StatefulWidget {
   const LightHomeScreen({super.key});
+  _LightHomeScreen createState() => _LightHomeScreen();
+}
+
+class _LightHomeScreen extends State<LightHomeScreen> {
+  String? userName;
+  String? userRole;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserNameAndRole();
+  }
+
+  Future<void> fetchUserNameAndRole() async {
+    final fetchedName = await getUserName();
+    final fetchedRole = await getUserRole();
+
+    if (!mounted) return; // only return if widget is disposed
+
+    setState(() {
+      userName = fetchedName;
+      userRole = fetchedRole;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,9 +191,17 @@ class LightHomeScreen extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    CircleAvatar(
-                      radius: avatarDiameter / 2,
-                      backgroundImage: AssetImage(AppAssets.testProfile),
+                    InkWell(
+                      onTap: () {
+                        print("Avatar tapped!");
+                      },
+                      borderRadius: BorderRadius.circular(avatarDiameter / 2),
+                      child: CircleAvatar(
+                        radius: avatarDiameter / 2,
+                        backgroundImage: const AssetImage(
+                          "assets/images/test_profile.png",
+                        ),
+                      ),
                     ),
                     SizedBox(width: screenWidth * 0.03),
                     Row(
@@ -185,7 +218,7 @@ class LightHomeScreen extends StatelessWidget {
                         Transform.translate(
                           offset: const Offset(0, 3),
                           child: Text(
-                            "Zaib",
+                            "$userName",
                             style: GoogleFonts.satisfy(
                               fontSize: fontSize,
                               fontWeight: FontWeight.w400,

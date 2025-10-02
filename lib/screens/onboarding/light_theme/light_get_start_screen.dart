@@ -41,9 +41,13 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final horizontalPadding = screenWidth * 0.04; // ~16px on 400 width screen
-    final imageWidth =
-        (screenWidth - horizontalPadding * 2 - 12 * 3) / 4; // 4 images + gaps
-    final imageHeight = imageWidth * 1.25; // maintain aspect ratio
+    final imageWidth = ((screenWidth - horizontalPadding * 2 - 12 * 3) / 4)
+        .clamp(0, double.infinity)
+        .toDouble();
+
+    final imageHeight = (imageWidth * 1.25)
+        .clamp(0, double.infinity)
+        .toDouble();
 
     return Scaffold(
       backgroundColor: Colors.white,

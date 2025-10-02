@@ -3,13 +3,60 @@ import 'package:ama_legal_solutions/custom_widgets/client_testimonial_widget.dar
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
 import 'package:ama_legal_solutions/custom_widgets/team_image_slider.dart';
+import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:provider/provider.dart';
 
-class DarkHomeScreen extends StatelessWidget {
+class DarkHomeScreen extends StatefulWidget {
   const DarkHomeScreen({super.key});
+
+  _DarkHomeScreenState createState() => _DarkHomeScreenState();
+}
+
+class _DarkHomeScreenState extends State<DarkHomeScreen> {
+  String? userName;
+  String? userRole;
+  String? userEmail;
+  String? userPhone;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserNameAndRole();
+  }
+
+  Future<void> fetchUserNameAndRole() async {
+    final fetchedName = await getUserName();
+    final fetchedRole = await getUserRole();
+    final fetchedEmail = await getUserEmail();
+    final fetchedPhone = await getUserPhone();
+
+    print(fetchedRole);
+    if (!mounted) return; // only return if widget is disposed
+
+    setState(() {
+      userName = fetchedName;
+      userRole = fetchedRole;
+      userEmail = fetchedEmail;
+      userPhone = fetchedPhone;
+    });
+    final provider = Provider.of<ProfileProvider>(context, listen: false);
+    if (userRole != null && userEmail != null) {
+      // replace with correct identifiers
+      provider.fetchProfilePhoto(
+        context,
+        phone: fetchedPhone!, // or actual phone if available
+        role: userRole!,
+      );
+      print(provider.profilePhotoUrl);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,9 +207,37 @@ class DarkHomeScreen extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      CircleAvatar(
-                        radius: avatarDiameter / 2,
-                        backgroundImage: AssetImage(AppAssets.testProfile),
+                      Consumer<ProfileProvider>(
+                        builder: (context, provider, child) {
+                          return InkWell(
+                            onTap: () {
+                              context.pushNamed(
+                                AppScreenNames.userAccount,
+                                queryParameters: {
+                                  "name": userName,
+                                  "email": userEmail,
+                                  "profile_photo": provider.hasProfilePhoto
+                                      ? provider.profilePhotoUrl!
+                                      : AppAssets.userIcon,
+                                  "phone": userPhone!,
+                                  "role": userRole!,
+                                },
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(
+                              avatarDiameter / 2,
+                            ),
+                            child: CircleAvatar(
+                              radius: avatarDiameter / 2,
+                              backgroundImage: provider.hasProfilePhoto
+                                  ? NetworkImage(
+                                      "${provider.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                    )
+                                  : const AssetImage(AppAssets.userIcon)
+                                        as ImageProvider,
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(width: screenWidth * 0.03),
                       Row(
@@ -179,7 +254,7 @@ class DarkHomeScreen extends StatelessWidget {
                           Transform.translate(
                             offset: const Offset(0, 3),
                             child: Text(
-                              "Zaib",
+                              "${userName}",
                               style: GoogleFonts.satisfy(
                                 fontSize: fontSize,
                                 fontWeight: FontWeight.w400,
@@ -642,7 +717,7 @@ class DarkHomeScreen extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar: CustomBottomNav(),
+      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }

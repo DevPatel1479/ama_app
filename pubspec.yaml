@@ -39,6 +39,7 @@ dependencies:
   go_router: ^16.2.1
   provider: ^6.1.5+1
   another_flushbar: ^1.12.32
+  image_picker: ^1.2.0
 
 dev_dependencies:
   flutter_test:
