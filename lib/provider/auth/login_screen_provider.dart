@@ -13,6 +13,11 @@ class LoginProvider extends ChangeNotifier {
   String? role;
   String? name;
   String? email;
+  String? weekTopic;
+  bool weekTopicEnabled = false;
+
+  bool _loginSuccess = false;
+  bool get loginSuccess => _loginSuccess;
 
   // Controllers
   final TextEditingController phoneController = TextEditingController();
@@ -42,11 +47,14 @@ class LoginProvider extends ChangeNotifier {
         name = data["name"];
         role = data["role"];
         email = data["email"];
+        weekTopic = data["week_topic"];
+        weekTopicEnabled = true;
 
         // Save name and role in local storage
         await LocalStorageHelper.saveString("userName", name!);
         await LocalStorageHelper.saveString("userRole", role!);
         await LocalStorageHelper.saveString("userEmail", email!);
+        await LocalStorageHelper.saveString("userWeekTopic", weekTopic!);
 
         // _showFlushbar(context, "Login successful", Colors.green);
         // showCustomMessage(context, "Login successful", true);
@@ -110,6 +118,7 @@ class LoginProvider extends ChangeNotifier {
     }
 
     _setLoading(true);
+    bool success = false;
     try {
       final response = await _apiService.post(Endpoints.verifyOtp, {
         "phone": phone,
@@ -126,6 +135,8 @@ class LoginProvider extends ChangeNotifier {
           data["message"] ?? "OTP verified successfully",
           false,
         );
+        success = true;
+        // _setLoading(false, successLogin: true);
       } else {
         showCustomMessage(
           context,
@@ -136,11 +147,12 @@ class LoginProvider extends ChangeNotifier {
     } catch (e) {
       showCustomMessage(context, e.toString(), true);
     }
-    _setLoading(false);
+    _setLoading(false, successLogin: success);
   }
 
-  void _setLoading(bool value) {
+  void _setLoading(bool value, {bool successLogin = false}) {
     isLoading = value;
+    _loginSuccess = successLogin;
     notifyListeners();
   }
 

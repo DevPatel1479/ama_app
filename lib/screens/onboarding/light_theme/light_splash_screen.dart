@@ -6,14 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class LightSplashScreen extends StatefulWidget {
+  const LightSplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<LightSplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends State<LightSplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> rotationAnimation;
@@ -65,7 +65,8 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void checkAuth() async {
-    bool? isLoggedIn = await LocalStorageHelper.getBool("isLoggedIn");
+    bool? isLoggedIn = await LocalStorageHelper.getBool("isUserLoggedIn");
+    print(isLoggedIn);
     if (!mounted) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -83,14 +84,14 @@ class _SplashScreenState extends State<SplashScreen>
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
     );
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF171717),
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -99,6 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
               AppAssets.appLogoWithText,
               width: size.width * 0.6,
               fit: BoxFit.contain,
+              color: Colors.black,
             ),
             const SizedBox(height: 30),
             SizedBox(

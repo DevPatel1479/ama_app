@@ -30,4 +30,9 @@ class LocalStorageHelper {
     final prefs = await _instance;
     await prefs.remove(key);
   }
+
+  static Future<void> clearAll() async {
+    final prefs = await _instance;
+    await prefs.clear();
+  }
 }

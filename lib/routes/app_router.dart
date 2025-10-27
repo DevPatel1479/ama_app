@@ -10,8 +10,10 @@ import 'package:ama_legal_solutions/screen_helpers/main_content_helper/home_scre
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/raise_query_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/services_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/get_started_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/splash_screen_helper.dart';
+import 'package:ama_legal_solutions/screens/notifications/dark_notification_screen.dart';
 
-import 'package:ama_legal_solutions/screens/onboarding/splash_screen.dart';
+import 'package:ama_legal_solutions/screens/onboarding/dark_theme/dark_splash_screen.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
@@ -24,7 +26,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppPathsForScreen.userHomePath,
+  initialLocation: AppPathsForScreen.splashPath,
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
@@ -33,7 +35,7 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
-          child: const SplashScreen(),
+          child: SplashScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -238,10 +240,28 @@ final GoRouter appRouter = GoRouter(
       path: AppPathsForScreen.raiseQueryPath,
       name: AppScreenNames.raiseQuery,
       pageBuilder: (context, state) {
+        final String isQuestionPosting =
+            state.uri.queryParameters["isQuestionPosting"] ?? "";
+        bool questionPosting = isQuestionPosting == "true" ? true : false;
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
-          child: RaiseQueryScreenHelper.getScreen(context),
+          child: RaiseQueryScreenHelper.getScreen(context, questionPosting),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.notificationPath,
+      name: AppScreenNames.notificationScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: const NotificationScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

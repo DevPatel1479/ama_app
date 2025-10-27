@@ -11,4 +11,5 @@ class AppPathsForScreen {
   static const String amaServicesPath = '/amaServices';
   static const String raiseQueryPath = '/raiseQuery';
   static const String advocateCaseDeskPath = "/advocateCaseDesk";
+  static const String notificationPath = "/notification";
 }

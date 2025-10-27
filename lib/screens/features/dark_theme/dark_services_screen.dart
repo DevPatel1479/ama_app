@@ -91,8 +91,8 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
       animation: anim,
       builder: (context, child) {
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(2),
+          margin: EdgeInsets.symmetric(vertical: 8 * 0.85),
+          padding: const EdgeInsets.all(2 * 0.85),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(expanded ? 35 : 20),
             gradient: const LinearGradient(
@@ -105,7 +105,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
             ),
           ),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16 * 0.85),
             decoration: BoxDecoration(
               color: const Color(0xFF2D2319),
               borderRadius: BorderRadius.circular(expanded ? 35 : 20),
@@ -116,13 +116,13 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                 Text(
                   title,
                   style: GoogleFonts.outfit(
-                    fontSize: 25,
+                    fontSize: 25 * 0.85,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 8 * 0.85),
 
                 // SizeTransition driven by the per-card animation (anim)
                 // expanded child remains present while reversing because we
@@ -132,9 +132,9 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                   axisAlignment: 1,
                   child: expanded
                       ? Padding(
-                          padding: const EdgeInsets.only(top: 16),
+                          padding: const EdgeInsets.only(top: 16 * 0.85),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(16 * 0.85),
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(150, 102, 72, 5),
                               borderRadius: BorderRadius.circular(20),
@@ -145,30 +145,30 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                                 Text(
                                   "About the Service",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 20,
+                                    fontSize: 20 * 0.85,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 8 * 0.85),
                                 Text(
                                   "Expert guidance on loans, investments, \ncompliance, and disputes with banks or \nfinancial institutions.",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 16,
+                                    fontSize: 16 * 0.85,
                                     fontWeight: FontWeight.w300,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 12 * 0.85),
                                 Text(
                                   "Who Needs It?",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 20,
+                                    fontSize: 20 * 0.85,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 8 * 0.85),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: const [
@@ -190,11 +190,11 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 16 * 0.85),
                                 Center(
                                   child: Container(
-                                    width: 228,
-                                    height: 38,
+                                    width: 228 * 0.85,
+                                    height: 38 * 0.85,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(29),
                                       gradient: const LinearGradient(
@@ -210,7 +210,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                                     child: Text(
                                       "Get Started",
                                       style: GoogleFonts.outfit(
-                                        fontSize: 20,
+                                        fontSize: 20 * 0.85,
                                         fontWeight: FontWeight.w500,
                                         color: Colors.black,
                                       ),
@@ -224,7 +224,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                       : const SizedBox.shrink(),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 8 * 0.85),
                 GestureDetector(
                   onTap: () => toggleExpand(index),
                   child: Row(
@@ -234,16 +234,16 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                       Text(
                         expanded ? "View Less" : "View More",
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 16 * 0.85,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xBFFFFFFF),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 8 * 0.85),
                       Icon(
                         expanded ? Icons.expand_less : Icons.expand_more,
                         color: const Color(0xBFFFFFFF),
-                        size: 18,
+                        size: 18 * 0.85,
                       ),
                     ],
                   ),
@@ -267,6 +267,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
     );
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final scaleFactor = 0.75;
 
     // Keep search bar + button fixed at the top; cards scroll below.
     return Scaffold(
@@ -277,8 +278,8 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
             // fixed header + search area
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.015,
+                horizontal: screenWidth * 0.04 * scaleFactor,
+                vertical: screenHeight * 0.015 * scaleFactor,
               ),
               child: Column(
                 children: [
@@ -288,26 +289,27 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                         onTap: () => context.go(AppPathsForScreen.userHomePath),
                         child: Image.asset(
                           AppAssets.backArrowIcon,
-                          width: screenWidth * 0.05,
-                          height: screenWidth * 0.05,
+                          width: screenWidth * 0.05 * scaleFactor,
+                          height: screenWidth * 0.05 * scaleFactor,
                           fit: BoxFit.contain,
                         ),
                       ),
-                      SizedBox(width: screenWidth * 0.12),
+                      SizedBox(width: screenWidth * 0.12 * scaleFactor),
                       Text(
                         "Services",
                         style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.065,
+                          fontSize: screenWidth * 0.065 * scaleFactor,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.03),
+                  SizedBox(height: screenHeight * 0.03 * scaleFactor),
                   // Search bar stays fixed
                   Container(
-                    height: 50,
+                    height:
+                        MediaQuery.of(context).size.height * 0.08 * scaleFactor,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
                       border: Border.all(
@@ -318,13 +320,13 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                     ),
                     child: Row(
                       children: [
-                        const SizedBox(width: 16),
-                        const Icon(
+                        SizedBox(width: 18 * scaleFactor, height: 10),
+                        Icon(
                           Icons.search,
                           color: Colors.white70,
-                          size: 18,
+                          size: 20 * scaleFactor,
                         ),
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10 * scaleFactor),
                         Expanded(
                           child: TextField(
                             style: GoogleFonts.outfit(
@@ -344,8 +346,13 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                         GestureDetector(
                           onTap: () {},
                           child: Container(
-                            height: 50,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            height:
+                                MediaQuery.of(context).size.height *
+                                0.08 *
+                                scaleFactor,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20 * scaleFactor,
+                            ),
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.only(
                                 topRight: Radius.circular(25),
@@ -361,7 +368,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                             child: Text(
                               "Search",
                               style: GoogleFonts.outfit(
-                                fontSize: 14,
+                                fontSize: 14 * scaleFactor,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black,
                               ),
@@ -379,45 +386,29 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
             Expanded(
               child: ListView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.04,
-                  vertical: screenHeight * 0.015,
+                  horizontal: screenWidth * 0.04 * scaleFactor,
+                  vertical: screenHeight * 0.015 * scaleFactor,
                 ),
                 children: [
-                  // Past Viewed header + first two cards
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      "Past Viewed",
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (services.length > 0) buildServiceCard(0),
-                  if (services.length > 1) buildServiceCard(1),
-
                   // Our Services header
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16 * scaleFactor),
                   Padding(
-                    padding: const EdgeInsets.only(left: 4),
+                    padding: EdgeInsets.only(left: 4 * scaleFactor),
                     child: Text(
                       "Our Services",
                       style: GoogleFonts.outfit(
-                        fontSize: 16,
+                        fontSize: 16 * scaleFactor,
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12 * scaleFactor),
 
                   // Remaining cards (from index 2 onward)
                   for (int i = 2; i < services.length; i++) buildServiceCard(i),
 
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40 * scaleFactor),
                 ],
               ),
             ),

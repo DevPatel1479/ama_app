@@ -1,4 +1,6 @@
+import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
@@ -115,8 +117,25 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                   ? _gradientLoginButton(
                       fieldWidth,
                       fieldHeight,
-                      () {
-                        loginProvider.verifyOtp(context);
+                      () async {
+                        await loginProvider.verifyOtp(context);
+
+                        print(loginProvider.loginSuccess);
+                        if (loginProvider.loginSuccess) {
+                          if (loginProvider.weekTopicEnabled) {
+                            await FirebaseMessagingService.instance
+                                .subscribeToTopicFor(
+                                  weekEnabled: loginProvider.weekTopicEnabled,
+                                  weekEnabledValue:
+                                      loginProvider.weekTopic ?? "",
+                                );
+                          } else {
+                            await FirebaseMessagingService.instance
+                                .subscribeToTopicFor();
+                          }
+
+                          context.go(AppPathsForScreen.userHomePath);
+                        }
                       },
                       "Verify OTP",
                       loginProvider,

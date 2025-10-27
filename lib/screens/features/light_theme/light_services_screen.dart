@@ -1,8 +1,10 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LightServicesScreen extends StatefulWidget {
@@ -90,8 +92,8 @@ class _LightServicesScreenState extends State<LightServicesScreen>
       animation: anim,
       builder: (context, child) {
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(2),
+          margin: EdgeInsets.symmetric(vertical: 8 * 0.85),
+          padding: const EdgeInsets.all(2 * 0.85),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(expanded ? 35 : 20),
             gradient: const LinearGradient(
@@ -104,7 +106,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
             ),
           ),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16 * 0.85),
             decoration: BoxDecoration(
               color: const Color(0xFF2D2319),
               borderRadius: BorderRadius.circular(expanded ? 35 : 20),
@@ -115,13 +117,13 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                 Text(
                   title,
                   style: GoogleFonts.outfit(
-                    fontSize: 25,
+                    fontSize: 25 * 0.85,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 8 * 0.85),
 
                 // SizeTransition driven by the per-card animation (anim)
                 // expanded child remains present while reversing because we
@@ -131,9 +133,9 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                   axisAlignment: 1,
                   child: expanded
                       ? Padding(
-                          padding: const EdgeInsets.only(top: 16),
+                          padding: const EdgeInsets.only(top: 16 * 0.85),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(16 * 0.85),
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(150, 102, 72, 5),
                               borderRadius: BorderRadius.circular(20),
@@ -144,30 +146,30 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                                 Text(
                                   "About the Service",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 20,
+                                    fontSize: 20 * 0.85,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 8 * 0.85),
                                 Text(
                                   "Expert guidance on loans, investments, \ncompliance, and disputes with banks or \nfinancial institutions.",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 16,
+                                    fontSize: 16 * 0.85,
                                     fontWeight: FontWeight.w300,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 12 * 0.85),
                                 Text(
                                   "Who Needs It?",
                                   style: GoogleFonts.outfit(
-                                    fontSize: 20,
+                                    fontSize: 20 * 0.85,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 8 * 0.85),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: const [
@@ -189,11 +191,11 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 16 * 0.85),
                                 Center(
                                   child: Container(
-                                    width: 228,
-                                    height: 38,
+                                    width: 228 * 0.85,
+                                    height: 38 * 0.85,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(29),
                                       gradient: const LinearGradient(
@@ -209,7 +211,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                                     child: Text(
                                       "Get Started",
                                       style: GoogleFonts.outfit(
-                                        fontSize: 20,
+                                        fontSize: 20 * 0.85,
                                         fontWeight: FontWeight.w500,
                                         color: Colors.black,
                                       ),
@@ -223,7 +225,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                       : const SizedBox.shrink(),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 8 * 0.85),
                 GestureDetector(
                   onTap: () => toggleExpand(index),
                   child: Row(
@@ -233,16 +235,16 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                       Text(
                         expanded ? "View Less" : "View More",
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 16 * 0.85,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xBFFFFFFF),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 8 * 0.85),
                       Icon(
                         expanded ? Icons.expand_less : Icons.expand_more,
                         color: const Color(0xBFFFFFFF),
-                        size: 18,
+                        size: 18 * 0.85,
                       ),
                     ],
                   ),
@@ -266,7 +268,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
     );
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final scaleFactor = 0.75;
     // Keep search bar + button fixed at the top; cards scroll below.
     return Scaffold(
       backgroundColor: Colors.white,
@@ -277,8 +279,8 @@ class _LightServicesScreenState extends State<LightServicesScreen>
             width: double.infinity,
 
             padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04,
-              vertical: screenHeight * 0.015,
+              horizontal: screenWidth * 0.04 * scaleFactor,
+              vertical: screenHeight * 0.015 * scaleFactor,
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFD29F2A),
@@ -294,20 +296,20 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => context.go(AppPathsForScreen.userHomePath),
                       child: Image.asset(
                         AppAssets.backArrowIcon,
-                        width: screenWidth * 0.05,
-                        height: screenWidth * 0.05,
+                        width: screenWidth * 0.05 * scaleFactor,
+                        height: screenWidth * 0.05 * scaleFactor,
                         fit: BoxFit.contain,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(width: screenWidth * 0.12),
+                    SizedBox(width: screenWidth * 0.12 * scaleFactor),
                     Text(
                       "Services",
                       style: GoogleFonts.outfit(
-                        fontSize: screenWidth * 0.065,
+                        fontSize: screenWidth * 0.065 * scaleFactor,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -321,8 +323,8 @@ class _LightServicesScreenState extends State<LightServicesScreen>
           ),
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04,
-              vertical: screenHeight * 0.015,
+              horizontal: screenWidth * 0.04 * scaleFactor,
+              vertical: screenHeight * 0.015 * scaleFactor,
             ),
             child:
                 // scrollable list below the fixed search: cards live here
@@ -331,7 +333,10 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
                     Container(
-                      height: 50,
+                      height:
+                          MediaQuery.of(context).size.height *
+                          0.08 *
+                          scaleFactor,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
@@ -342,13 +347,13 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                       ),
                       child: Row(
                         children: [
-                          const SizedBox(width: 16),
-                          const Icon(
+                          SizedBox(width: 18 * scaleFactor, height: 10),
+                          Icon(
                             Icons.search,
                             color: Colors.black,
-                            size: 18,
+                            size: 20 * scaleFactor,
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10 * scaleFactor),
                           Expanded(
                             child: TextField(
                               style: GoogleFonts.outfit(
@@ -368,9 +373,12 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                           GestureDetector(
                             onTap: () {},
                             child: Container(
-                              height: 50,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
+                              height:
+                                  MediaQuery.of(context).size.height *
+                                  0.08 *
+                                  scaleFactor,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20 * scaleFactor,
                               ),
                               decoration: BoxDecoration(
                                 borderRadius: const BorderRadius.only(
@@ -392,7 +400,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                               child: Text(
                                 "Search",
                                 style: GoogleFonts.outfit(
-                                  fontSize: 14,
+                                  fontSize: 14 * scaleFactor,
                                   fontWeight: FontWeight.w400,
                                   color: Colors.white,
                                 ),
@@ -402,43 +410,43 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Past Viewed header + first two cards
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: Text(
-                        "Past Viewed",
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (services.length > 0) buildServiceCard(0),
-                    if (services.length > 1) buildServiceCard(1),
+                    SizedBox(height: 16 * scaleFactor),
+                    // // Past Viewed header + first two cards
+                    // Padding(
+                    //   padding: EdgeInsets.only(left: 4 * scaleFactor),
+                    //   child: Text(
+                    //     "Past Viewed",
+                    //     style: GoogleFonts.outfit(
+                    //       fontSize: 16,
+                    //       fontWeight: FontWeight.w500,
+                    //       color: Colors.black,
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 16),
+                    // if (services.length > 0) buildServiceCard(0),
+                    // if (services.length > 1) buildServiceCard(1),
 
                     // Our Services header
-                    const SizedBox(height: 16),
+                    // const SizedBox(height: 16),
                     Padding(
-                      padding: const EdgeInsets.only(left: 4),
+                      padding: EdgeInsets.only(left: 4 * scaleFactor),
                       child: Text(
                         "Our Services",
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 16 * scaleFactor,
                           fontWeight: FontWeight.w500,
                           color: Colors.black,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12 * scaleFactor),
 
                     // Remaining cards (from index 2 onward)
                     for (int i = 2; i < services.length; i++)
                       buildServiceCard(i),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: 40 * scaleFactor),
                   ],
                 ),
           ),

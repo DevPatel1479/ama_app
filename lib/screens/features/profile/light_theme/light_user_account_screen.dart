@@ -1,11 +1,34 @@
+import 'dart:io';
+
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class LightUserAccountScreen extends StatefulWidget {
-  const LightUserAccountScreen({super.key});
+  final String name;
+  final String email;
+  final String profile_photo;
+  final String phone;
+  final String role;
+  const LightUserAccountScreen({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.profile_photo,
+    required this.phone,
+    required this.role,
+  });
 
   @override
   State<LightUserAccountScreen> createState() => _LightUserAccountScreenState();
@@ -48,33 +71,27 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 🔹 Top Bar
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.04,
-                    vertical: screenHeight * 0.015,
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Image.asset(
-                          AppAssets.backArrowIcon,
-                          width: screenWidth * 0.05,
-                          height: screenWidth * 0.05,
-                          fit: BoxFit.contain,
-                        ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Image.asset(
+                        AppAssets.backArrowIcon,
+                        width: screenWidth * 0.05,
+                        height: screenWidth * 0.05,
+                        fit: BoxFit.contain,
                       ),
-                      SizedBox(width: screenWidth * 0.12),
-                      Text(
-                        "Account",
-                        style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.065,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                    ),
+                    SizedBox(width: screenWidth * 0.12),
+                    Text(
+                      "Account",
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.065,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -85,21 +102,88 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
               Center(
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.015),
+                    SizedBox(height: screenHeight * 0.03),
                     GestureDetector(
-                      onTap: () {
-                        // TODO: handle camera tap
+                      onTap: () async {
+                        final provider = Provider.of<ProfileProvider>(
+                          context,
+                          listen: false,
+                        );
+
+                        if (provider.isUpdating)
+                          return; // prevent multiple taps
+
+                        final picker = ImagePicker();
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
+
+                        if (pickedFile != null) {
+                          File imageFile = File(pickedFile.path);
+
+                          // Await provider update to ensure UI reflects new image
+                          await provider.updateProfilePhoto(
+                            context,
+                            phone: widget.phone,
+                            role: widget.role,
+                            newPhoto: imageFile,
+                          );
+                        }
                       },
-                      child: Image.asset(
-                        AppAssets.userCameraIcon,
-                        width: screenWidth * 0.22,
-                        height: screenWidth * 0.22,
-                        fit: BoxFit.contain,
+                      child: Consumer<ProfileProvider>(
+                        builder: (context, provider, _) {
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 55, // adjust radius
+                                backgroundColor: Colors.grey[800],
+                                backgroundImage: provider.hasProfilePhoto
+                                    ? NetworkImage(
+                                        "${provider.profilePhotoUrl}?t=${DateTime.now().millisecondsSinceEpoch}",
+                                      )
+                                    : null,
+                                child: !provider.hasProfilePhoto
+                                    ? Icon(
+                                        Icons.person,
+                                        size: 55,
+                                        color: Colors.white,
+                                      )
+                                    : null,
+                              ),
+                              if (provider.isUpdating)
+                                SizedBox(
+                                  width: 55,
+                                  height: 55,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              if (!provider.isUpdating)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      size: 24,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     SizedBox(height: screenHeight * 0.015),
                     Text(
-                      "Username",
+                      "${widget.name}",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.045,
@@ -109,7 +193,7 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     ),
                     SizedBox(height: screenHeight * 0.005),
                     Text(
-                      "Xyz@gmail.com",
+                      "${widget.email}",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.04,
@@ -131,6 +215,7 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Row: QR + Text
+                    SizedBox(height: screenHeight * 0.01),
                     Row(
                       children: [
                         Image.asset(
@@ -141,12 +226,37 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                           color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Theme / Appearance",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
+                        GestureDetector(
+                          onTap: () {
+                            final isDark = Provider.of<ThemeProvider>(
+                              context,
+                              listen: false,
+                            ).isDarkMode;
+                            if (isDark) {
+                              context.go(
+                                AppPathsForScreen.userHomePath,
+                              ); // go to light home
+                              Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).setTheme(false);
+                            } else {
+                              context.go(
+                                AppPathsForScreen.userHomePath,
+                              ); // go to dark home
+                              Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).setTheme(true);
+                            }
+                          },
+                          child: Text(
+                            "Theme / Appearance",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ],
@@ -165,12 +275,17 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                           color: Colors.black,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Portfolio",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
+                        GestureDetector(
+                          onTap: () {
+                            context.pushNamed(AppScreenNames.portfolio);
+                          },
+                          child: Text(
+                            "Portfolio",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ],
@@ -427,8 +542,22 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     SizedBox(height: screenHeight * 0.02),
 
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         // TODO: handle log out action
+                        print("tapped on logout .. ");
+                        final weekTopic = await LocalStorageHelper.getString(
+                          "userWeekTopic",
+                        );
+
+                        await FirebaseMessagingService.instance
+                            .unsubscribeFromTopicFor(weekTopicValue: weekTopic);
+                        await LocalStorageHelper.clearAll();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Logged out successfull ")),
+                        );
+
+                        await Future.delayed(Duration(milliseconds: 300));
+                        context.go(AppPathsForScreen.logInPath);
                       },
                       child: Row(
                         children: [

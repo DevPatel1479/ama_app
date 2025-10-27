@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
+import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
@@ -121,9 +122,18 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                     ? _gradientLoginButton(
                         fieldWidth,
                         fieldHeight,
-                        () {
-                          if (loginProvider.isLoading) return;
-                          loginProvider.verifyOtp(context);
+                        () async {
+                          // if (loginProvider.isLoading) return;
+                          // loginProvider.verifyOtp(context);
+                          await loginProvider.verifyOtp(context);
+
+                          print(loginProvider.loginSuccess);
+                          if (loginProvider.loginSuccess) {
+                            await FirebaseMessagingService.instance
+                                .subscribeToTopicFor();
+
+                            context.go(AppPathsForScreen.userHomePath);
+                          }
                         },
                         "Verify OTP",
                         loginProvider,

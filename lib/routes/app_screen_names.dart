@@ -11,5 +11,5 @@ class AppScreenNames {
   static const String amaServices = "ama_services";
   static const String raiseQuery = "raise_query";
   static const String advocateCaseDesk = "advocate_case_desk";
-  
+  static const String notificationScreen = "notification";
 }

@@ -13,6 +13,8 @@ class CustomBottomNav extends StatefulWidget {
 }
 
 class _CustomBottomNavState extends State<CustomBottomNav> {
+  // keep a field if you need local tracking or animations; here we mostly
+  // derive active tab from router, so this field is optional.
   int _selectedIndex = 0;
 
   final List<String> _labels = ["Home", "Services", "AMA", "Casedesk"];
@@ -29,24 +31,40 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
     AppAssets.caseDeskInActive,
   ];
 
+  int _indexFromLocation(String location) {
+    if (location.startsWith(AppPathsForScreen.userHomePath)) return 0;
+    if (location.startsWith(AppPathsForScreen.amaServicesPath)) return 1;
+    if (location.startsWith(AppPathsForScreen.amaPath)) return 2;
+    if (location.startsWith(AppPathsForScreen.caseDeskPath)) return 3;
+    return 0;
+  }
+
+  void _navigateToIndex(int index) {
+    switch (index) {
+      case 0:
+        context.go(AppPathsForScreen.userHomePath);
+        break;
+      case 1:
+        context.go(AppPathsForScreen.amaServicesPath);
+        break;
+      case 2:
+        context.go(AppPathsForScreen.amaPath);
+        break;
+      case 3:
+        context.go(AppPathsForScreen.caseDeskPath);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // compute nav height relative to screen size but clamp reasonably
     final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
     final location = GoRouterState.of(context).uri.toString();
-    int _selectedIndex;
-    if (location.startsWith(AppPathsForScreen.userHomePath)) {
-      _selectedIndex = 0;
-    } else if (location.startsWith(AppPathsForScreen.amaServicesPath)) {
-      _selectedIndex = 1;
-    } else if (location.startsWith(AppPathsForScreen.amaPath)) {
-      _selectedIndex = 2;
-    } else if (location.startsWith(AppPathsForScreen.caseDeskPath)) {
-      _selectedIndex = 3;
-    } else {
-      _selectedIndex = 0;
-    }
+
+    // derive active index from current route (keeps UI in sync with navigation)
+    final activeIndex = _indexFromLocation(location);
+
     return SizedBox(
       height: navHeight,
       child: Padding(
@@ -61,7 +79,6 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                // color: const Color(0xFF2D2319).withOpacity(0.85),
                 color: const Color(0xFF2D23195C).withOpacity(0.25),
                 borderRadius: BorderRadius.circular(navHeight * 0.45),
                 border: GradientBoxBorder(
@@ -75,55 +92,55 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(_labels.length, (index) {
-                  final isActive = _selectedIndex == index;
+                  final isActive = activeIndex == index;
                   final iconSize = (navHeight * 0.35).clamp(16.0, 28.0);
                   final labelSize = (navHeight * 0.18).clamp(10.0, 13.0);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedIndex = index);
-                      print(_selectedIndex);
-                      switch (_selectedIndex) {
-                        case 0:
-                          context.go(AppPathsForScreen.userHomePath);
-                          break;
-                        case 1:
-                          context.go(AppPathsForScreen.amaServicesPath);
-                          break;
-                        case 2:
-                          context.go(AppPathsForScreen.amaPath);
-                          break;
-                        case 3:
-                          context.go(AppPathsForScreen.caseDeskPath);
-                          break;
-                      }
-                      // If you want to navigate, send an event/callback here.
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          isActive
-                              ? _activeIcons[index]
-                              : _inactiveIcons[index],
-                          width: iconSize,
-                          height: iconSize,
-                        ),
-                        SizedBox(height: navHeight * 0.06),
-                        Text(
-                          _labels[index],
-                          style: TextStyle(
-                            fontFamily: "Outfit",
-                            fontWeight: FontWeight.w300,
-                            fontSize: labelSize,
-                            height: 1,
-                            color: isActive
-                                ? const Color(0xFFD29F2A)
-                                : Colors.white,
+
+                  // Make each tab expand equally so touch area is large and even.
+                  return Expanded(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        // makes whole area tappable and shows ripple
+                        onTap: () {
+                          if (isActive) return; // already on this tab
+                          // If you want a tiny instant feedback in UI you can setState
+                          // but it's not required; routing will update the active index.
+                          setState(() => _selectedIndex = index);
+                          _navigateToIndex(index);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: navHeight * 0.08,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                isActive
+                                    ? _activeIcons[index]
+                                    : _inactiveIcons[index],
+                                width: iconSize,
+                                height: iconSize,
+                              ),
+                              SizedBox(height: navHeight * 0.06),
+                              Text(
+                                _labels[index],
+                                style: TextStyle(
+                                  fontFamily: "Outfit",
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: labelSize,
+                                  height: 1,
+                                  color: isActive
+                                      ? const Color(0xFFD29F2A)
+                                      : Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }),

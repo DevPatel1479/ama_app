@@ -1,9 +1,15 @@
 import 'dart:io';
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -202,12 +208,37 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Theme / Appearance",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                        GestureDetector(
+                          onTap: () {
+                            final isDark = Provider.of<ThemeProvider>(
+                              context,
+                              listen: false,
+                            ).isDarkMode;
+                            if (isDark) {
+                              context.go(
+                                AppPathsForScreen.userHomePath,
+                              ); // go to light home
+                              Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).setTheme(false);
+                            } else {
+                              context.go(
+                                AppPathsForScreen.userHomePath,
+                              ); // go to dark home
+                              Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).setTheme(true);
+                            }
+                          },
+                          child: Text(
+                            "Theme / Appearance",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -225,12 +256,17 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Portfolio",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                        GestureDetector(
+                          onTap: () {
+                            context.pushNamed(AppScreenNames.portfolio);
+                          },
+                          child: Text(
+                            "Portfolio",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -480,8 +516,22 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     SizedBox(height: screenHeight * 0.02),
 
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         // TODO: handle log out action
+                        print("tapped on logout .. ");
+                        final weekTopic = await LocalStorageHelper.getString(
+                          "userWeekTopic",
+                        );
+
+                        await FirebaseMessagingService.instance
+                            .unsubscribeFromTopicFor(weekTopicValue: weekTopic);
+                        await LocalStorageHelper.clearAll();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Logged out successfull ")),
+                        );
+
+                        await Future.delayed(Duration(milliseconds: 300));
+                        context.go(AppPathsForScreen.logInPath);
                       },
                       child: Row(
                         children: [

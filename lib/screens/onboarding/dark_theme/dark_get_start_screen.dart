@@ -39,9 +39,10 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
       AppAssets.img10,
       AppAssets.img11,
     ];
+    const scaleFactor = 0.95;
+    final screenWidth = MediaQuery.of(context).size.width * scaleFactor;
+    final screenHeight = MediaQuery.of(context).size.height * scaleFactor;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final horizontalPadding = screenWidth * 0.04; // ~16px on 400 width screen
     final imageWidth = ((screenWidth - horizontalPadding * 2 - 12 * 3) / 4)
         .clamp(0, double.infinity)

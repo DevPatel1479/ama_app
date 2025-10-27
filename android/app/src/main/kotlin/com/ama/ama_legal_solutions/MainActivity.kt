@@ -1,4 +1,4 @@
-package com.example.ama_legal_solutions
+package com.ama.ama_legal_solutions
 
 import io.flutter.embedding.android.FlutterActivity
 

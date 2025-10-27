@@ -49,11 +49,14 @@ class _TestimonialCardState extends State<TestimonialCard> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    const scaleFactor = 0.85;
 
     // Responsive sizes / fallbacks
-    final double iconWidth = screenWidth * 0.20; // typical icon width
-    final double iconMinHeight = iconWidth; // keep icon square at minimum
-    final double horizontalPadding = screenWidth * 0.04;
+    final double iconWidth =
+        screenWidth * 0.20 * scaleFactor; // typical icon width
+    final double iconMinHeight =
+        iconWidth * scaleFactor; // keep icon square at minimum
+    final double horizontalPadding = screenWidth * 0.04 * scaleFactor;
 
     // Use measured text height if available, otherwise fallback to min size
     final double targetIconHeight = (_measuredTextHeight > 0)
@@ -74,8 +77,8 @@ class _TestimonialCardState extends State<TestimonialCard> {
 
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.01,
-        vertical: 10,
+        horizontal: screenWidth * 0.01 * scaleFactor,
+        vertical: 10 * scaleFactor,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -129,7 +132,7 @@ class _TestimonialCardState extends State<TestimonialCard> {
                     ),
                   ),
 
-                  SizedBox(width: screenWidth * 0.03),
+                  SizedBox(width: screenWidth * 0.03 * scaleFactor),
 
                   // Text column that we measure using _textKey
                   Expanded(
@@ -143,19 +146,19 @@ class _TestimonialCardState extends State<TestimonialCard> {
                             "Pratichi Pradhan",
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w500,
-                              fontSize: screenWidth * 0.05,
+                              fontSize: screenWidth * 0.05 * scaleFactor,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 6),
+                          SizedBox(height: 6 * scaleFactor),
                           Text(
                             // your testimonial text (wraps to multiple lines as needed)
                             "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price,",
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w400,
-                              fontSize: screenWidth * 0.035,
+                              fontSize: screenWidth * 0.035 * scaleFactor,
                               color: Colors.white,
-                              height: 1.4,
+                              height: 1.4 * scaleFactor,
                             ),
                           ),
                         ],

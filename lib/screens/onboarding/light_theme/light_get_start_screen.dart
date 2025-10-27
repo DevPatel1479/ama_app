@@ -37,9 +37,9 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
       AppAssets.img10,
       AppAssets.img11,
     ];
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    const scaleFactor = 0.95;
+    final screenWidth = MediaQuery.of(context).size.width * scaleFactor;
+    final screenHeight = MediaQuery.of(context).size.height * scaleFactor;
     final horizontalPadding = screenWidth * 0.04; // ~16px on 400 width screen
     final imageWidth = ((screenWidth - horizontalPadding * 2 - 12 * 3) / 4)
         .clamp(0, double.infinity)
