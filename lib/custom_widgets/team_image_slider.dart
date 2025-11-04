@@ -356,57 +356,57 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
 
                                           // tappable social icons (small spacing)
                                           const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  onTap: () {
-                                                    // TODO: open Instagram
-                                                  },
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                          6.0,
-                                                        ),
-                                                    child: Image.asset(
-                                                      AppAssets.tmInstaImg,
-                                                      width: 28,
-                                                      height: 28,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  onTap: () {
-                                                    // TODO: open LinkedIn
-                                                  },
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                          6.0,
-                                                        ),
-                                                    child: Image.asset(
-                                                      AppAssets.tmLinkedInImg,
-                                                      width: 28,
-                                                      height: 28,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                          // Row(
+                                          //   mainAxisAlignment:
+                                          //       MainAxisAlignment.center,
+                                          //   children: [
+                                          //     Material(
+                                          //       color: Colors.transparent,
+                                          //       child: InkWell(
+                                          //         borderRadius:
+                                          //             BorderRadius.circular(8),
+                                          //         onTap: () {
+                                          //           // TODO: open Instagram
+                                          //         },
+                                          //         child: Padding(
+                                          //           padding:
+                                          //               const EdgeInsets.all(
+                                          //                 6.0,
+                                          //               ),
+                                          //           child: Image.asset(
+                                          //             AppAssets.tmInstaImg,
+                                          //             width: 28,
+                                          //             height: 28,
+                                          //             fit: BoxFit.contain,
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     ),
+                                          //     const SizedBox(width: 12),
+                                          //     Material(
+                                          //       color: Colors.transparent,
+                                          //       child: InkWell(
+                                          //         borderRadius:
+                                          //             BorderRadius.circular(8),
+                                          //         onTap: () {
+                                          //           // TODO: open LinkedIn
+                                          //         },
+                                          //         child: Padding(
+                                          //           padding:
+                                          //               const EdgeInsets.all(
+                                          //                 6.0,
+                                          //               ),
+                                          //           child: Image.asset(
+                                          //             AppAssets.tmLinkedInImg,
+                                          //             width: 28,
+                                          //             height: 28,
+                                          //             fit: BoxFit.contain,
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     ),
+                                          //   ],
+                                          // ),
                                         ],
                                       ),
                                     ),

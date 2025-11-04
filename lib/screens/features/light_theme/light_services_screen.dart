@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
@@ -15,241 +17,186 @@ class LightServicesScreen extends StatefulWidget {
 }
 
 class _LightServicesScreenState extends State<LightServicesScreen>
-    with TickerProviderStateMixin {
-  // Services list drives how many cards we render.
+    with SingleTickerProviderStateMixin {
   final List<String> services = [
     "Banking & Finance",
-    "Legal & Compliance",
-    "Banking & Finance",
-    "Legal & Compliance",
-    "Banking & Finance",
-    "Legal & Compliance",
+    "Loan Settlement",
+    "Intellectual Property Rights",
+    "Entertainment Law",
+    "Real Estate",
+    "Criminal Law",
+    "Corporate Law",
+    "Arbitration Law",
+    "IT & Cyber Law",
+    "Civil Law",
+    "Drafting",
+    "Litigation",
   ];
 
-  // Each card gets its own state and controller/animation.
-  late final List<bool> _isExpanded;
-  late final List<AnimationController> _controllers;
-  late final List<Animation<double>> _animations;
+  // Simple descriptions used for the small preview in the grid cards.
+  // Replace the old _preview with this full map
+  final Map<String, String> _preview = {
+    "Banking & Finance":
+        "Expert legal solutions for financial disputes, fraud cases, and banking compliance matters. We handle issues related to frozen accounts, regulatory actions, and financial litigation.",
+    "Loan Settlement":
+        "Get professional help to settle your loans legally — whether it’s a credit card, personal, business, or vehicle loan. We follow RBI guidelines to negotiate and resolve defaults with banks and NBFCs.",
+    "Intellectual Property Rights":
+        "Protect your ideas and brand legally. Our team handles trademark, copyright, and patent filings, IP infringement cases, and brand protection for startups and businesses.",
+    "Entertainment Law":
+        "Comprehensive legal support for film, music, and media professionals. We advise on contracts, licensing, and rights management for OTT and digital platforms.",
+    "Real Estate":
+        "End-to-end legal assistance for property disputes, RERA compliance, registration, land verification, and real estate fraud. Safeguard your property investments with expert due diligence.",
+    "Criminal Law":
+        "From FIR to trial, we provide full legal representation in criminal cases, including cybercrime, financial fraud, money laundering, and police investigations.",
+    "Corporate Law":
+        "Simplify your business’s legal journey. We assist with company incorporation, startup compliance, MSME registration, contracts, and partnership agreements.",
+    "Arbitration Law":
+        "Resolve disputes efficiently through arbitration. We draft agreements, handle arbitral awards, and represent clients in financial and commercial arbitration cases.",
+    "IT & Cyber Law":
+        "Protect your digital presence. We handle cyber fraud complaints, online defamation, social media harassment, and other IT-related legal matters.",
+    "Civil Law":
+        "Expert help for property, contract, and landlord-tenant disputes. Our team ensures fair resolutions in civil matters through strong legal representation.",
+    "Drafting":
+        "Professionally drafted legal documents including contracts, agreements, NDAs, deeds, and notices — customized for India and the UK.",
+    "Litigation":
+        "Comprehensive litigation support across civil, criminal, corporate, real estate, and financial disputes — representing clients in all major courts and tribunals.",
+  };
+
+  int? _focusedIndex;
+  late final AnimationController _overlayController;
+  late final Animation<double> _overlayOpacity;
+  late final Animation<double> _cardScale;
 
   @override
   void initState() {
     super.initState();
-
-    final int cardCount = services.length;
-
-    // initialize expanded flags for every card
-    _isExpanded = List<bool>.filled(cardCount, false);
-
-    // create a controller + animation per card
-    _controllers = List.generate(
-      cardCount,
-      (_) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 600),
-      ),
+    _overlayController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
     );
-
-    _animations = _controllers
-        .map((c) => CurvedAnimation(parent: c, curve: Curves.easeInOut))
-        .toList();
-  }
-
-  // Toggle expand for a card at [index].
-  // Opening: set flag true then forward the controller.
-  // Closing: reverse the controller and only set flag false after reverse completes,
-  // so the SizeTransition animates both ways with the same timing.
-  void toggleExpand(int index) {
-    if (!_isExpanded[index]) {
-      setState(() {
-        _isExpanded[index] = true;
-      });
-      _controllers[index].forward(from: 0);
-    } else {
-      _controllers[index].reverse().then((_) {
-        if (!mounted) return;
-        setState(() {
-          _isExpanded[index] = false;
-        });
-      });
-    }
+    _overlayOpacity = CurvedAnimation(
+      parent: _overlayController,
+      curve: Curves.easeOut,
+    );
+    _cardScale = Tween<double>(begin: 0.96, end: 1.0).animate(
+      CurvedAnimation(parent: _overlayController, curve: Curves.easeOutBack),
+    );
   }
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
+    _overlayController.dispose();
     super.dispose();
   }
 
-  Widget buildServiceCard(int index) {
-    // Use per-card animation here
-    final anim = _animations[index];
-    final bool expanded = _isExpanded[index];
+  Future<void> _openCard(int index) async {
+    setState(() => _focusedIndex = index);
+    await _overlayController.forward(from: 0.0);
+  }
+
+  Future<void> _closeCard() async {
+    await _overlayController.reverse();
+    if (!mounted) return;
+    setState(() => _focusedIndex = null);
+  }
+
+  Widget _buildGridCard(BuildContext context, int index) {
     final title = services[index];
+    final preview = _preview[title] ?? "Quick summary about this service.";
 
-    return AnimatedBuilder(
-      animation: anim,
-      builder: (context, child) {
-        return Container(
-          margin: EdgeInsets.symmetric(vertical: 8 * 0.85),
-          padding: const EdgeInsets.all(2 * 0.85),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(expanded ? 35 : 20),
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromRGBO(210, 159, 42, 0.65),
-                Color.fromRGBO(255, 255, 255, 0.65),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(16 * 0.85),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 200;
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _openCard(index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              color: const Color(0xFF2D2319),
-              borderRadius: BorderRadius.circular(expanded ? 35 : 20),
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFD29F2A), Color(0xFF3A2B1F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 25 * 0.85,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+            padding: const EdgeInsets.all(1.2),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D2319),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+
+              // <-- IMPORTANT: allow this Column to use the available tile height
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title (fixed height by maxLines)
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: isWide ? 17 : 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8 * 0.85),
 
-                // SizeTransition driven by the per-card animation (anim)
-                // expanded child remains present while reversing because we
-                // only flip the expanded flag after reverse completes.
-                SizeTransition(
-                  sizeFactor: anim,
-                  axisAlignment: 1,
-                  child: expanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 16 * 0.85),
-                          child: Container(
-                            padding: const EdgeInsets.all(16 * 0.85),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(150, 102, 72, 5),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "About the Service",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 20 * 0.85,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 8 * 0.85),
-                                Text(
-                                  "Expert guidance on loans, investments, \ncompliance, and disputes with banks or \nfinancial institutions.",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16 * 0.85,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 12 * 0.85),
-                                Text(
-                                  "Who Needs It?",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 20 * 0.85,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 8 * 0.85),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      "• Businesses managing finance or credit",
-                                      style: TextStyle(color: Colors.white70),
-                                    ),
-                                    Text(
-                                      "• Individuals in bank-related disputes",
-                                      style: TextStyle(color: Colors.white70),
-                                    ),
-                                    Text(
-                                      "• Startups & companies needing compliance",
-                                      style: TextStyle(color: Colors.white70),
-                                    ),
-                                    Text(
-                                      "• Investors securing safe agreements",
-                                      style: TextStyle(color: Colors.white70),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16 * 0.85),
-                                Center(
-                                  child: Container(
-                                    width: 228 * 0.85,
-                                    height: 38 * 0.85,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(29),
-                                      gradient: const LinearGradient(
-                                        begin: Alignment(-1.0, -0.0),
-                                        end: Alignment(1.0, 0.0),
-                                        colors: [
-                                          Color(0xFFD29F2A),
-                                          Color(0xFFFFFFFF),
-                                        ],
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Get Started",
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 20 * 0.85,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
+                  const SizedBox(height: 6),
 
-                const SizedBox(height: 8 * 0.85),
-                GestureDetector(
-                  onTap: () => toggleExpand(index),
-                  child: Row(
+                  // Give the preview the remaining tile space so it can ellipsize safely
+                  Expanded(
+                    child: Text(
+                      preview,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        height: 1.25,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // View more aligned to bottom-right
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        expanded ? "View Less" : "View More",
+                        "View More",
                         style: GoogleFonts.outfit(
-                          fontSize: 16 * 0.85,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xBFFFFFFF),
+                          color: const Color(0xFFD29F2A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 8 * 0.85),
-                      Icon(
-                        expanded ? Icons.expand_less : Icons.expand_more,
-                        color: const Color(0xBFFFFFFF),
-                        size: 18 * 0.85,
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 13,
+                        color: Color(0xFFD29F2A),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -257,202 +204,254 @@ class _LightServicesScreenState extends State<LightServicesScreen>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFD29F2A),
-        statusBarIconBrightness: Brightness.dark, // white icons
-        statusBarBrightness: Brightness.light, // iOS: white icons
-      ),
-    );
+  Widget _buildFocusedCard(BuildContext context, int index) {
+    final title = services[index];
+    final description = _preview[title] ?? "Description not available.";
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final scaleFactor = 0.75;
-    // Keep search bar + button fixed at the top; cards scroll below.
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: GradientTopLayout(
-          screenName: "home",
-          headerContent: Container(
-            width: double.infinity,
+    final topPadding = MediaQuery.of(context).padding.top;
 
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04 * scaleFactor,
-              vertical: screenHeight * 0.015 * scaleFactor,
+    return Center(
+      child: ScaleTransition(
+        scale: _cardScale,
+        child: FadeTransition(
+          opacity: _overlayOpacity,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: min(screenWidth * 0.95, 760),
+              maxHeight: min(screenHeight * 0.85 - topPadding, 820),
             ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD29F2A),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
-                bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+                padding: const EdgeInsets.all(1.4),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D2319),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Only your provided description — no filler text
+                        Text(
+                          description,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white70,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-
-            // fixed header + search area
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.go(AppPathsForScreen.userHomePath),
-                      child: Image.asset(
-                        AppAssets.backArrowIcon,
-                        width: screenWidth * 0.05 * scaleFactor,
-                        height: screenWidth * 0.05 * scaleFactor,
-                        fit: BoxFit.contain,
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(width: screenWidth * 0.12 * scaleFactor),
-                    Text(
-                      "Services",
-                      style: GoogleFonts.outfit(
-                        fontSize: screenWidth * 0.065 * scaleFactor,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Search bar stays fixed
-              ],
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04 * scaleFactor,
-              vertical: screenHeight * 0.015 * scaleFactor,
-            ),
-            child:
-                // scrollable list below the fixed search: cards live here
-                ListView(
-                  shrinkWrap: true, // important
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    Container(
-                      height:
-                          MediaQuery.of(context).size.height *
-                          0.08 *
-                          scaleFactor,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: const Color(0xFF2D2319),
-                          width: 2,
-                        ),
-                        color: Colors.transparent,
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(width: 18 * scaleFactor, height: 10),
-                          Icon(
-                            Icons.search,
-                            color: Colors.black,
-                            size: 20 * scaleFactor,
-                          ),
-                          SizedBox(width: 10 * scaleFactor),
-                          Expanded(
-                            child: TextField(
-                              style: GoogleFonts.outfit(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w300,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Search any Service...",
-                                hintStyle: GoogleFonts.outfit(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {},
-                            child: Container(
-                              height:
-                                  MediaQuery.of(context).size.height *
-                                  0.08 *
-                                  scaleFactor,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20 * scaleFactor,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(25),
-                                  bottomRight: Radius.circular(25),
-                                ),
-                                gradient: const LinearGradient(
-                                  begin: Alignment
-                                      .topCenter, // <- start from top-left
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF2D2319),
-                                    Color.fromARGB(255, 116, 116, 116),
-                                  ],
-                                  stops: [0.2, 1.0],
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                "Search",
-                                style: GoogleFonts.outfit(
-                                  fontSize: 14 * scaleFactor,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16 * scaleFactor),
-                    // // Past Viewed header + first two cards
-                    // Padding(
-                    //   padding: EdgeInsets.only(left: 4 * scaleFactor),
-                    //   child: Text(
-                    //     "Past Viewed",
-                    //     style: GoogleFonts.outfit(
-                    //       fontSize: 16,
-                    //       fontWeight: FontWeight.w500,
-                    //       color: Colors.black,
-                    //     ),
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 16),
-                    // if (services.length > 0) buildServiceCard(0),
-                    // if (services.length > 1) buildServiceCard(1),
-
-                    // Our Services header
-                    // const SizedBox(height: 16),
-                    Padding(
-                      padding: EdgeInsets.only(left: 4 * scaleFactor),
-                      child: Text(
-                        "Our Services",
-                        style: GoogleFonts.outfit(
-                          fontSize: 16 * scaleFactor,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12 * scaleFactor),
-
-                    // Remaining cards (from index 2 onward)
-                    for (int i = 2; i < services.length; i++)
-                      buildServiceCard(i),
-
-                    SizedBox(height: 40 * scaleFactor),
-                  ],
-                ),
           ),
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // status bar (golden header)
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFD29F2A),
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+    const scaleFactor = 0.85;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final crossTopPadding = MediaQuery.of(context).padding.top + 12;
+    final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final contentBottomPadding =
+        navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            // IMPORTANT: pass keepExpanded: false so GradientTopLayout uses Expanded(child: child)
+            GradientTopLayout(
+              screenName: "home",
+              keepExpanded: false,
+              headerContent: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.04 * scaleFactor,
+                  vertical: screenHeight * 0.015 * scaleFactor,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD29F2A),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(screenWidth * 0.07),
+                    bottomRight: Radius.circular(screenWidth * 0.07),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () =>
+                              context.go(AppPathsForScreen.userHomePath),
+                          child: Image.asset(
+                            AppAssets.backArrowIcon,
+                            width: screenWidth * 0.05 * scaleFactor,
+                            height: screenWidth * 0.05 * scaleFactor,
+                            fit: BoxFit.contain,
+                            color: Colors.black,
+                          ),
+                        ),
+                        SizedBox(width: screenWidth * 0.12 * scaleFactor),
+                        Text(
+                          'Services',
+                          style: GoogleFonts.outfit(
+                            color: Colors.black,
+                            fontSize: screenWidth * 0.065 * scaleFactor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // child supplies its own bounded area (GradientTopLayout will provide Expanded)
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8,
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Our Services',
+                          style: GoogleFonts.outfit(
+                            color: Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          int crossAxisCount = 2;
+                          final w = constraints.maxWidth;
+                          if (w > 1000)
+                            crossAxisCount = 4;
+                          else if (w > 700)
+                            crossAxisCount = 3;
+
+                          double childAspectRatio =
+                              (constraints.maxWidth / crossAxisCount) / 170;
+                          final safeAspect = childAspectRatio.clamp(0.9, 1.8);
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: GridView.builder(
+                              padding: EdgeInsets.symmetric().copyWith(
+                                // ensure the scrollable content has extra bottom padding equal
+                                // to the visible nav footprint so last items can scroll above it
+                                bottom: contentBottomPadding,
+                              ),
+                              physics: _focusedIndex == null
+                                  ? const BouncingScrollPhysics()
+                                  : const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: safeAspect,
+                                  ),
+                              itemCount: services.length,
+                              itemBuilder: _buildGridCard,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // overlay when focused
+            if (_focusedIndex != null) ...[
+              FadeTransition(
+                opacity: _overlayOpacity,
+                child: GestureDetector(
+                  onTap: _closeCard,
+                  child: Container(color: Colors.black.withOpacity(0.6)),
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: false,
+                  child: _buildFocusedCard(context, _focusedIndex!),
+                ),
+              ),
+              Positioned(
+                top: crossTopPadding,
+                right: 18,
+                child: SafeArea(
+                  child: IconButton(
+                    onPressed: _closeCard,
+                    icon: const CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Color(0xFF3A2B1F),
+                      child: Icon(Icons.close, color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: const CustomBottomNav(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

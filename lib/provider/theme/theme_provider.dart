@@ -29,6 +29,7 @@ class ThemeProvider extends ChangeNotifier {
 
   /// ✅ Explicitly set theme (dark/light)
   Future<void> setTheme(bool isDark) async {
+    // print("Setting theme to is_dark: $isDark");
     if (_isDarkMode != isDark) {
       _isDarkMode = isDark;
       final prefs = await SharedPreferences.getInstance();

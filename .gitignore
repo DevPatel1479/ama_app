@@ -48,3 +48,7 @@ app.*.map.json
 
 
 .env
+
+
+android/app/ama-release-key.jks
+android/key.properties

@@ -12,4 +12,10 @@ class AppScreenNames {
   static const String raiseQuery = "raise_query";
   static const String advocateCaseDesk = "advocate_case_desk";
   static const String notificationScreen = "notification";
+  static const String policyScreen = "policy_screen";
+  static const String termsAndConditionsScreen = "terms_and_conditions";
+  static const String deleteAccountScreen = "delete_account_screen";
+  static const String acceptPolicyScreen = "accept_policy_screen";
+  static const String deleteAccountRequestScreen =
+      "delete_account_request_screen";
 }

@@ -1,10 +1,8 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
-import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
-import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
+
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
@@ -49,7 +47,7 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
       ),
     );
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    // final screenHeight = MediaQuery.of(context).size.height;
     final fieldWidth = screenWidth * 0.9;
     final fieldHeight = 50.0;
 
@@ -127,10 +125,10 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                           // loginProvider.verifyOtp(context);
                           await loginProvider.verifyOtp(context);
 
-                          print(loginProvider.loginSuccess);
+                          // print(loginProvider.loginSuccess);
                           if (loginProvider.loginSuccess) {
-                            await FirebaseMessagingService.instance
-                                .subscribeToTopicFor();
+                            // await FirebaseMessagingService.instance
+                            //     .subscribeToTopicFor();
 
                             context.go(AppPathsForScreen.userHomePath);
                           }
@@ -142,7 +140,7 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                         fieldWidth,
                         fieldHeight,
                         () {
-                          print("calling login side");
+                          // print("calling login side");
                           if (loginProvider.isLoading) return;
                           loginProvider.login(context);
                         },

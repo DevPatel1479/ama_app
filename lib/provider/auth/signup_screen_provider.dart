@@ -143,13 +143,13 @@ class SignupProvider extends ChangeNotifier {
     isLoading = true;
     resultMessage = null;
     notifyListeners();
-    print("calling signup ...");
+    // print("calling signup ...");
     try {
       final response = await ApiService().post(
         Endpoints.signup,
         getFormData(), // ✅ Use this, since it's within the same class
       );
-      print("Final API RESPONSE ===> ${response.body}");
+      // print("Final API RESPONSE ===> ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         setMessage("Signup successful!", false);

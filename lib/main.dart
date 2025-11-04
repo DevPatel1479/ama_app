@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/firebase/firebase_options.dart';
@@ -20,14 +22,19 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  if (Platform.isIOS) {
+    debugPrint("iOS: Audio mix policy handled automatically by video_player.");
+  }
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await FirebaseMessagingService.instance.initialize();
-    print("Firebase connected successfully !!");
+    // print("Firebase connected successfully !!");
   } catch (e) {
-    print("Error connecting firebase $e");
+    // print("Error connecting firebase $e");
   }
   final themeProvider = await ThemeProvider.create();
   // runApp(const MyApp());
@@ -53,13 +60,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AnswerProvider()),
         ChangeNotifierProvider(create: (_) => WeeklyClientCountProvider()),
       ],
-      child: const MyApp(),
+      child: const AmaLegalSolutionsApp(),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AmaLegalSolutionsApp extends StatelessWidget {
+  const AmaLegalSolutionsApp({super.key});
 
   // This widget is the root of your application.
   @override

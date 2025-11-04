@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:ama_legal_solutions/custom_widgets/feedback_bottom_sheet.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
@@ -8,6 +9,7 @@ import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -292,10 +294,9 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     ),
 
                     SizedBox(height: screenHeight * 0.05),
-
-                    // 🔹 Preference Header
+                    // 🔹 App Policies Header
                     Text(
-                      "Preference",
+                      "App Policies",
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.05,
                         fontWeight: FontWeight.w500,
@@ -305,44 +306,108 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
 
                     SizedBox(height: screenHeight * 0.025),
 
-                    // Row: Email Settings
+                    // Row: Privacy Policy
                     Row(
                       children: [
-                        Image.asset(
-                          AppAssets.emailIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                          color: Colors.black,
+                        Icon(
+                          Icons.privacy_tip_outlined,
+                          color: const Color(0xFFD29F2A),
+                          size: screenWidth * 0.05,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Email Settings",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
+                        GestureDetector(
+                          onTap: () {
+                            context.pushReplacement(
+                              AppPathsForScreen.policyScreenPath,
+                            );
+                          },
+                          child: Text(
+                            "Privacy Policy",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ],
                     ),
 
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.02),
 
-                    // Row: Notification Settings
+                    // Row: Terms & Conditions
                     Row(
                       children: [
-                        Image.asset(
-                          AppAssets.notificationIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                          color: Colors.black,
+                        Icon(
+                          Icons.article_outlined,
+                          color: const Color(0xFFD29F2A),
+                          size: screenWidth * 0.05,
                         ),
                         SizedBox(width: screenWidth * 0.04),
-                        Expanded(
+                        GestureDetector(
+                          onTap: () {
+                            context.pushReplacement(
+                              AppPathsForScreen.termsAndConditionsPath,
+                            );
+                          },
                           child: Text(
-                            "Device and push notification settings",
+                            "Terms and Conditions",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+
+                    // 🔴 Delete Account Policy
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.delete_forever_outlined,
+                          color: const Color(0xFFD29F2A),
+                          size: screenWidth * 0.05,
+                        ),
+                        SizedBox(width: screenWidth * 0.04),
+                        GestureDetector(
+                          onTap: () {
+                            context.pushReplacement(
+                              AppPathsForScreen.deleteAccountPath,
+                            );
+                          },
+                          child: Text(
+                            "Delete Account Policy",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.040,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+
+                    // Row: Delete Account Request
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.request_page_outlined,
+                          color: const Color(0xFFD29F2A),
+                          size: screenWidth * 0.05,
+                        ),
+                        SizedBox(width: screenWidth * 0.04),
+                        GestureDetector(
+                          onTap: () {
+                            context.pushReplacement(
+                              AppPathsForScreen.deleteAccountRequestPath,
+                            );
+                          },
+                          child: Text(
+                            "Delete Account Request",
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
@@ -354,7 +419,6 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     ),
 
                     SizedBox(height: screenHeight * 0.05),
-
                     // 🔹 Feedback Header
                     Text(
                       "Feedback",
@@ -366,67 +430,53 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     ),
 
                     SizedBox(height: screenHeight * 0.025),
-
-                    // Row: Rate AMA Legal Solutions
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          AppAssets.rateIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                          color: Colors.black,
-                        ),
-                        SizedBox(width: screenWidth * 0.04),
-                        RichText(
-                          text: TextSpan(
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.040,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
+                    GestureDetector(
+                      onTap: () async {
+                        final phone = await getUserPhone();
+                        final role = await getUserRole();
+                        final userId = "${role}_$phone";
+                        showFeedbackBottomSheet(context, userId);
+                      },
+                      child:
+                          // Row: Rate AMA Legal Solutions
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const TextSpan(text: "Rate "),
-                              TextSpan(
-                                text: "AMA Legal Solutions",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.043,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFFD29F2A), // gold color
+                              Image.asset(
+                                AppAssets.rateIcon,
+                                width: screenWidth * 0.04,
+                                height: screenWidth * 0.04,
+                                fit: BoxFit.contain,
+                                color: Colors.black,
+                              ),
+                              SizedBox(width: screenWidth * 0.04),
+                              RichText(
+                                text: TextSpan(
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.040,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: "Rate "),
+                                    TextSpan(
+                                      text: "AMA Legal Solutions",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: screenWidth * 0.043,
+                                        fontWeight: FontWeight.w400,
+                                        color: const Color(
+                                          0xFFD29F2A,
+                                        ), // gold color
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
                     ),
 
                     SizedBox(height: screenHeight * 0.03),
-
-                    // Row: Contact Support
-                    Row(
-                      children: [
-                        Image.asset(
-                          AppAssets.helpIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                          color: Colors.black,
-                        ),
-                        SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "Contact support",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: screenHeight * 0.05),
 
                     // 🔹 Contact Us Header
                     Text(
@@ -543,21 +593,188 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
 
                     GestureDetector(
                       onTap: () async {
-                        // TODO: handle log out action
-                        print("tapped on logout .. ");
-                        final weekTopic = await LocalStorageHelper.getString(
-                          "userWeekTopic",
+                        // print("Tapped on logout ..");
+
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final screenHeight = MediaQuery.of(context).size.height;
+                        final themeProvider = Provider.of<ThemeProvider>(
+                          context,
+                          listen: false,
+                        );
+                        final isDark = themeProvider.isDarkMode;
+
+                        // 🟢 Confirmation dialog
+                        final shouldLogout = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              backgroundColor: isDark
+                                  ? const Color(0xFF1E1E1E)
+                                  : Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              title: Text(
+                                "Confirm Logout",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: screenWidth * 0.05,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              content: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.01,
+                                  horizontal: screenWidth * 0.02,
+                                ),
+                                child: Text(
+                                  "Are you sure you want to log out?",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: screenWidth * 0.04,
+                                    color: isDark
+                                        ? Colors.grey[300]
+                                        : Colors.grey[800],
+                                  ),
+                                ),
+                              ),
+                              actionsAlignment: MainAxisAlignment.spaceEvenly,
+                              actions: [
+                                // ❌ Cancel Button
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[700],
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      fontSize: screenWidth * 0.04,
+                                    ),
+                                  ),
+                                ),
+                                // ✅ Logout Button
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFD29F2A),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: screenWidth * 0.05,
+                                      vertical: screenHeight * 0.012,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: Text(
+                                    "Logout",
+                                    style: TextStyle(
+                                      fontSize: screenWidth * 0.04,
+                                      color: isDark
+                                          ? Colors.black
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         );
 
-                        await FirebaseMessagingService.instance
-                            .unsubscribeFromTopicFor(weekTopicValue: weekTopic);
-                        await LocalStorageHelper.clearAll();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Logged out successfull ")),
-                        );
+                        // ✅ If user confirmed logout
+                        if (shouldLogout == true) {
+                          // Show loader dialog while logout is processing
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false, // Prevent closing
+                            builder: (context) {
+                              return Dialog(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: screenHeight * 0.04,
+                                    horizontal: screenWidth * 0.08,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        color: const Color(0xFFD29F2A),
+                                      ),
+                                      SizedBox(height: screenHeight * 0.02),
+                                      Text(
+                                        "Logging out...\nPlease wait",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: screenWidth * 0.045,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
 
-                        await Future.delayed(Duration(milliseconds: 300));
-                        context.go(AppPathsForScreen.logInPath);
+                          try {
+                            // Preserve the theme before clearing all storage
+                            final wasDark = themeProvider.isDarkMode;
+                            final weekTopic =
+                                await LocalStorageHelper.getString(
+                                  "userWeekTopic",
+                                );
+
+                            await FirebaseMessagingService.instance
+                                .unsubscribeFromTopicFor(
+                                  weekTopicValue: weekTopic,
+                                );
+
+                            await LocalStorageHelper.clearAll();
+
+                            await themeProvider.setTheme(wasDark);
+                            await LocalStorageHelper.saveBool(
+                              "isAcceptedPolicy",
+                              true,
+                            );
+                            await Future.delayed(
+                              const Duration(milliseconds: 800),
+                            );
+
+                            Navigator.of(context).pop(); // Close loader
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Logged out successfully"),
+                              ),
+                            );
+
+                            await Future.delayed(
+                              const Duration(milliseconds: 300),
+                            );
+                            context.go(AppPathsForScreen.logInPath);
+                          } catch (e) {
+                            Navigator.of(
+                              context,
+                            ).pop(); // Close loader on error
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Logout failed: $e")),
+                            );
+                          }
+                        }
                       },
                       child: Row(
                         children: [

@@ -61,21 +61,21 @@ class _DarkPortfolioScreenState extends State<DarkPortfolioScreen> {
                   : const Color(0xFF008C38),
             ),
           ),
-          if (showEdit)
-            Row(
-              children: [
-                Image.asset(AppAssets.editIcon, width: 18, height: 18),
-                const SizedBox(width: 8),
-                Text(
-                  "Edit",
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xB2FFFFFF),
-                  ),
-                ),
-              ],
-            ),
+          // if (showEdit)
+          //   Row(
+          //     children: [
+          //       Image.asset(AppAssets.editIcon, width: 18, height: 18),
+          //       const SizedBox(width: 8),
+          //       Text(
+          //         "Edit",
+          //         style: GoogleFonts.outfit(
+          //           fontSize: 16,
+          //           fontWeight: FontWeight.w500,
+          //           color: const Color(0xB2FFFFFF),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
         ],
       ),
     );

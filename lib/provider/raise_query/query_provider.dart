@@ -122,14 +122,15 @@ class QueryProvider with ChangeNotifier {
 
     try {
       String url = "";
-      if (role == "admin") {
+      if (role == "admin" || role == "advocate") {
         url = "${Endpoints.getUserQuery}?limit=$limit";
       } else {
-        url = "${Endpoints.getUserQuery}?role=${role}&limit=$limit";
+        url = "${Endpoints.getUserQuery}?role=$role&phone=$phone&limit=$limit";
       }
-      print("url $url");
-      if (lastDocId != null && lastDocId.isNotEmpty)
+      // print("url $url");
+      if (lastDocId != null && lastDocId.isNotEmpty) {
         url += "&lastDocId=$lastDocId";
+      }
 
       final response = await _apiService.get(url);
       final data = jsonDecode(response.body);
@@ -193,9 +194,9 @@ class QueryProvider with ChangeNotifier {
             fetchedQueries.add(model);
           } catch (e, st) {
             // log and skip bad item (prevents whole fetch from failing)
-            print("Failed to parse one query item: $e");
-            print("RAW ITEM: $item");
-            print(st);
+            // print("Failed to parse one query item: $e");
+            // print("RAW ITEM: $item");
+            // print(st);
           }
         }
 

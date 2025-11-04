@@ -33,6 +33,10 @@ class LocalStorageHelper {
 
   static Future<void> clearAll() async {
     final prefs = await _instance;
+    final isDark = prefs.getBool('isDarkMode'); // Save theme value
     await prefs.clear();
+    if (isDark != null) {
+      await prefs.setBool('isDarkMode', isDark); // Restore theme
+    }
   }
 }

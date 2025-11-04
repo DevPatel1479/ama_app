@@ -12,7 +12,7 @@ class ApiService {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print("API RESPONSE FROM ${url} ===> ${response.body}");
+      // print("API RESPONSE FROM ${url} ===> ${response.body}");
 
       // Optional: You can handle or log response codes but not throw here
       //_handleResponse(response);
@@ -35,7 +35,7 @@ class ApiService {
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
       );
-      print("API RESPONSE FROM ${url} ===> ${response.body}");
+      // print("API RESPONSE FROM ${url} ===> ${response.body}");
       //_handleResponse(response);
       return response;
     } on SocketException {
@@ -56,7 +56,7 @@ class ApiService {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print("API RESPONSE FROM ${url} ===> ${response.body}");
+      // print("API RESPONSE FROM ${url} ===> ${response.body}");
       //_handleResponse(response);
       return response;
     } on SocketException {

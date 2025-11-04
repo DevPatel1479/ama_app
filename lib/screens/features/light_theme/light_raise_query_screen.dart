@@ -1,6 +1,6 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
-import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
+
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
@@ -300,7 +300,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                                           "profile_photo_url",
                                         );
                                     final userId = "${role}_${phone}";
-                                    print("profile img url $profilePhotoUrl");
+                                    // print("profile img url $profilePhotoUrl");
                                     await provider.createQuestion(
                                       context,
                                       userId: userId,

@@ -22,7 +22,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
   double _scale = 1.0;
   String? _selectedState;
   String? _selectedReference;
-  String? _otherReference; // For "Other" input
+  // String? _otherReference; // For "Other" input
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +145,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
                     ),
                     const SizedBox(height: 16),
                     _gradientSignUpButton(fieldWidth, fieldHeight - 5, () {
-                      print("callig this .. ");
+                      // print("callig this .. ");
                       // Handle Sign Up button tap here
                     }),
                     const SizedBox(height: 10),
@@ -387,9 +387,9 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
 
           if (isValid) {
             // Form is valid, proceed with submission
-            print("Form Data: ${signupProvider.getFormData()}");
+            // print("Form Data: ${signupProvider.getFormData()}");
             await signupProvider.submitSignup();
-            print(signupProvider.isError);
+            // print(signupProvider.isError);
 
             if (signupProvider.resultMessage != null) {
               await showCustomMessage(

@@ -1,4 +1,3 @@
-import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/config/constants/form_data.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
@@ -20,7 +19,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
   double _scale = 1.0;
   String? _selectedState;
   String? _selectedReference;
-  String? _otherReference; // For "Other" input
+  // String? _otherReference; // For "Other" input
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +140,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
                   ),
                   const SizedBox(height: 16),
                   _gradientSignUpButton(fieldWidth, fieldHeight - 5, () {
-                    print("callig this .. ");
+                    // print("callig this .. ");
                     // Handle Sign Up button tap here
                   }),
                   const SizedBox(height: 10),
@@ -383,9 +382,9 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
 
           if (isValid) {
             // Form is valid, proceed with submission
-            print("Form Data: ${signupProvider.getFormData()}");
+            // print("Form Data: ${signupProvider.getFormData()}");
             await signupProvider.submitSignup();
-            print(signupProvider.isError);
+            // print(signupProvider.isError);
 
             if (signupProvider.resultMessage != null) {
               await showCustomMessage(

@@ -1,8 +1,13 @@
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
+import 'package:ama_legal_solutions/screen_helpers/accept_policy/accept_policy_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/app_complaint/delete_account_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/app_complaint/privacy_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/app_complaint/terms_and_conditions_helper.dart';
 
 import 'package:ama_legal_solutions/screen_helpers/auth_helper/login_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/auth_helper/signup_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/delete_account/delete_account_request_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ama_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/casedesk_helper.dart';
@@ -11,9 +16,8 @@ import 'package:ama_legal_solutions/screen_helpers/main_content_helper/raise_que
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/services_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/get_started_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/splash_screen_helper.dart';
-import 'package:ama_legal_solutions/screens/notifications/dark_notification_screen.dart';
 
-import 'package:ama_legal_solutions/screens/onboarding/dark_theme/dark_splash_screen.dart';
+import 'package:ama_legal_solutions/screens/notifications/dark_notification_screen.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
@@ -262,6 +266,82 @@ final GoRouter appRouter = GoRouter(
           opaque: true,
           // child: ServicesScreenHelper.getScreen(context),
           child: const NotificationScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.policyScreenPath,
+      name: AppScreenNames.policyScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: PrivacyScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.termsAndConditionsPath,
+      name: AppScreenNames.termsAndConditionsScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: TermsAndConditionsScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.deleteAccountPath,
+      name: AppScreenNames.deleteAccountScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: DeleteAccountScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+
+    GoRoute(
+      path: AppPathsForScreen.acceptPolicyPath,
+      name: AppScreenNames.acceptPolicyScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: AcceptPolicyScreenHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.deleteAccountRequestPath,
+      name: AppScreenNames.deleteAccountRequestScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: DeleteAccountRequestScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

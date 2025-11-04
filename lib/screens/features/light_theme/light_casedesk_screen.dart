@@ -99,7 +99,7 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
 
     _queriesSubscription = subcollectionRef.snapshots().listen(
       (querySnap) async {
-        print("Firestore userQueries changes detected...");
+        // print("Firestore userQueries changes detected...");
         if (!mounted || !isMyCaseActive) return;
 
         // final queryProvider = Provider.of<QueryProvider>(
@@ -201,423 +201,558 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
     const scaleFactor = 0.81;
     final screenWidth = MediaQuery.of(context).size.width * scaleFactor;
     final screenHeight = MediaQuery.of(context).size.height * scaleFactor;
+    final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    // amount of extra space to reserve at bottom so the last item is fully visible
+    final contentBottomPadding =
+        navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Consumer<UserInfoProvider>(
         builder: (context, provider, _) {
-          return SafeArea(
-            child: GradientTopLayout(
-              keepExpanded: false,
-              screenName: "home",
-              headerContent: Container(
-                width: double.infinity,
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: SafeArea(
+                  child: GradientTopLayout(
+                    keepExpanded: false,
+                    screenName: "home",
+                    headerContent: Container(
+                      width: double.infinity,
 
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD29F2A),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(
-                      screenWidth * 0.07,
-                    ), // ~responsive
-                    bottomRight: Radius.circular(
-                      screenWidth * 0.07,
-                    ), // ~responsive
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Bar
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.04 * scaleFactor,
-                        vertical: screenHeight * 0.025 * scaleFactor,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD29F2A),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(
+                            screenWidth * 0.07,
+                          ), // ~responsive
+                          bottomRight: Radius.circular(
+                            screenWidth * 0.07,
+                          ), // ~responsive
+                        ),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: () =>
-                                context.go(AppPathsForScreen.userHomePath),
-                            child: Image.asset(
-                              AppAssets.backArrowIcon,
-                              width: screenWidth * 0.05,
-                              height: screenWidth * 0.05,
-                              fit: BoxFit.contain,
-                              color: Colors.black,
+                          // Top Bar
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04 * scaleFactor,
+                              vertical: screenHeight * 0.025 * scaleFactor,
                             ),
-                          ),
-                          SizedBox(width: screenWidth * 0.12),
-                          Text(
-                            "My Casedesk",
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.065,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => context.go(
+                                    AppPathsForScreen.userHomePath,
+                                  ),
+                                  child: Image.asset(
+                                    AppAssets.backArrowIcon,
+                                    width: screenWidth * 0.05,
+                                    height: screenWidth * 0.05,
+                                    fit: BoxFit.contain,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.12),
+                                Text(
+                                  "My Casedesk",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.065,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
 
-              fixedPositionWidget:
-                  // SizedBox(height: screenHeight * 0.03),
-                  Column(
-                    children: [
-                      // Primary Toggle bar (My Case / Bank Details)
-                      SizedBox(height: screenHeight * 0.05),
-                      Center(
-                        child: Container(
-                          width: screenWidth * 0.8,
-                          height: screenHeight * 0.06,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.white,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => _onToggleMyCase(true),
-                                  child: Container(
-                                    margin: EdgeInsets.all(screenWidth * 0.01),
-                                    decoration: BoxDecoration(
-                                      color: isMyCaseActive
-                                          ? const Color(0xFFD29F2A)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "My Case",
-                                      style: GoogleFonts.outfit(
-                                        fontSize: screenWidth * 0.04,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
+                    fixedPositionWidget:
+                        // SizedBox(height: screenHeight * 0.03),
+                        Column(
+                          children: [
+                            // Primary Toggle bar (My Case / Bank Details)
+                            SizedBox(height: screenHeight * 0.05),
+                            Center(
+                              child: Container(
+                                width: screenWidth * 0.8,
+                                height: screenHeight * 0.06,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  color: Colors.white,
                                 ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    _onToggleMyCase(false);
-                                    if (provider.userInfo != null) return;
-                                    provider.fetchUserInfo(context, true);
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.all(screenWidth * 0.01),
-                                    decoration: BoxDecoration(
-                                      color: !isMyCaseActive
-                                          ? const Color(0xFFD29F2A)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Bank Details",
-                                      style: GoogleFonts.outfit(
-                                        fontSize: screenWidth * 0.04,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: screenHeight * 0.025),
-
-                      // Secondary toggle row (Pending / Resolved) only for My Case
-                      if (isMyCaseActive)
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.15,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Pending
-                              GestureDetector(
-                                onTap: () =>
-                                    setState(() => isPendingActive = true),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
                                   children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        left: screenWidth * 0.02,
-                                      ),
-                                      child: Text(
-                                        "Pending",
-                                        style: GoogleFonts.outfit(
-                                          fontSize: screenWidth * 0.04,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        left: screenWidth * 0.03,
-                                      ), // adjust as needed
-                                      child: Container(
-                                        width: screenWidth * 0.15,
-                                        height: 2,
-                                        color: isPendingActive
-                                            ? Colors.black
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Resolved
-                              GestureDetector(
-                                onTap: () =>
-                                    setState(() => isPendingActive = false),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        right: screenWidth * 0.02,
-                                      ),
-                                      child: Text(
-                                        "Resolved",
-                                        style: GoogleFonts.outfit(
-                                          fontSize: screenWidth * 0.04,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        right: screenWidth * 0.01,
-                                      ),
-                                      child: Container(
-                                        width: screenWidth * 0.15,
-                                        height: 2,
-                                        color: !isPendingActive
-                                            ? Colors.black
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      SizedBox(height: screenHeight * 0.03),
-                    ],
-                  ),
-
-              child:
-                  // Content Section - scrollable
-                  isMyCaseActive
-                  ? Consumer<QueryProvider>(
-                      builder: (context, provider, _) {
-                        if (provider.isLoading && provider.queries.isEmpty) {
-                          // Initial loading
-                          return ListView.builder(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.05 * scaleFactor,
-                            ),
-                            itemCount: 3,
-                            itemBuilder: (context, index) => Padding(
-                              padding: EdgeInsets.only(
-                                bottom: screenHeight * 0.02 * scaleFactor,
-                              ),
-                              child: const ShimmerBankCard(),
-                            ),
-                          );
-                        }
-
-                        // Filter by Pending / Resolved
-                        final filteredQueries = provider.queries
-                            .where(
-                              (q) => isPendingActive
-                                  ? q.status == 'pending'
-                                  : q.status == 'resolved',
-                            )
-                            .toList();
-
-                        // Sort by submitted_at descending
-                        filteredQueries.sort(
-                          (a, b) => b.submittedAt.compareTo(a.submittedAt),
-                        );
-
-                        if (filteredQueries.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No queries found",
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.045 * scaleFactor,
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        }
-
-                        return RefreshIndicator(
-                          onRefresh: () async {
-                            final role = await LocalStorageHelper.getString(
-                              "userRole",
-                            );
-                            final phone = await LocalStorageHelper.getString(
-                              "userPhone",
-                            );
-                            await provider.fetchQueries(
-                              context: context,
-                              role: role!,
-                              phone: phone!,
-                              reset: true,
-                            );
-                          },
-                          child: ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            controller: _scrollController,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.05 * scaleFactor,
-                            ),
-                            itemCount:
-                                filteredQueries.length +
-                                1, // +1 for loader placeholder
-                            itemBuilder: (context, index) {
-                              if (index < filteredQueries.length) {
-                                final query = filteredQueries[index];
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: screenHeight * 0.02 * scaleFactor,
-                                  ),
-                                  child: QueryCard(
-                                    query: query,
-                                    userRole: userRole,
-                                  ),
-                                );
-                              } else {
-                                // Show bottom loader ONLY while fetching more
-                                return provider.isFetchingMore
-                                    ? Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical:
-                                              screenHeight * 0.02 * scaleFactor,
-                                        ),
-                                        child: Center(
-                                          child: CircularProgressIndicator(
-                                            color: Colors.orange,
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => _onToggleMyCase(true),
+                                        child: Container(
+                                          margin: EdgeInsets.all(
+                                            screenWidth * 0.01,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isMyCaseActive
+                                                ? const Color(0xFFD29F2A)
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            "My Case",
+                                            style: GoogleFonts.outfit(
+                                              fontSize: screenWidth * 0.04,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
                                           ),
                                         ),
-                                      )
-                                    : const SizedBox.shrink();
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        await provider.fetchUserInfo(context, true);
-                      },
-                      child: provider.isLoading
-                          ? ListView.builder(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.05 * scaleFactor,
-                              ),
-                              itemCount:
-                                  3, // show 3 shimmer cards while loading
-                              itemBuilder: (context, index) => Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: screenHeight * 0.02 * scaleFactor,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          _onToggleMyCase(false);
+                                          if (provider.userInfo != null) return;
+                                          provider.fetchUserInfo(context, true);
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.all(
+                                            screenWidth * 0.01,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: !isMyCaseActive
+                                                ? const Color(0xFFD29F2A)
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            "Bank Details",
+                                            style: GoogleFonts.outfit(
+                                              fontSize: screenWidth * 0.04,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                child: const ShimmerBankCard(),
                               ),
-                            )
-                          : ListView.builder(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.05 * scaleFactor,
+                            ),
+
+                            SizedBox(height: screenHeight * 0.025),
+
+                            // Secondary toggle row (Pending / Resolved) only for My Case
+                            if (isMyCaseActive)
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.15,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Pending
+                                    GestureDetector(
+                                      onTap: () => setState(
+                                        () => isPendingActive = true,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              left: screenWidth * 0.02,
+                                            ),
+                                            child: Text(
+                                              "Pending",
+                                              style: GoogleFonts.outfit(
+                                                fontSize: screenWidth * 0.04,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 6),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              left: screenWidth * 0.03,
+                                            ), // adjust as needed
+                                            child: Container(
+                                              width: screenWidth * 0.15,
+                                              height: 2,
+                                              color: isPendingActive
+                                                  ? Colors.black
+                                                  : Colors.transparent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Resolved
+                                    GestureDetector(
+                                      onTap: () => setState(
+                                        () => isPendingActive = false,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              right: screenWidth * 0.02,
+                                            ),
+                                            child: Text(
+                                              "Resolved",
+                                              style: GoogleFonts.outfit(
+                                                fontSize: screenWidth * 0.04,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 6),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              right: screenWidth * 0.01,
+                                            ),
+                                            child: Container(
+                                              width: screenWidth * 0.15,
+                                              height: 2,
+                                              color: !isPendingActive
+                                                  ? Colors.black
+                                                  : Colors.transparent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              itemCount: provider.userInfo?.banks.length,
-                              itemBuilder: (context, index) {
-                                final bank = provider.userInfo?.banks[index];
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: screenHeight * 0.02 * scaleFactor,
-                                  ),
-                                  child: BankCard(
-                                    bankName: bank!.bankName,
-                                    accountNumber: bank!.accountNumber,
-                                    type: bank!.loanType,
-                                    typeColor: bank!.loanType == "Credit Card"
-                                        ? Color(0xFF337EFF)
-                                        : Color(0xFF008C38),
-                                    amount: bank!.loanAmount,
-                                    amountColor: Color(0xFFFF5858),
+                            SizedBox(height: screenHeight * 0.03),
+                          ],
+                        ),
+
+                    child:
+                        // Content Section - scrollable
+                        isMyCaseActive
+                        ? Consumer<QueryProvider>(
+                            builder: (context, provider, _) {
+                              if (provider.isLoading &&
+                                  provider.queries.isEmpty) {
+                                // Initial loading
+                                return ListView.builder(
+                                  padding:
+                                      EdgeInsets.symmetric(
+                                        horizontal:
+                                            screenWidth * 0.04 * scaleFactor,
+                                        vertical:
+                                            screenHeight * 0.015 * scaleFactor,
+                                      ).copyWith(
+                                        // ensure the scrollable content has extra bottom padding equal
+                                        // to the visible nav footprint so last items can scroll above it
+                                        bottom: contentBottomPadding,
+                                      ),
+                                  itemCount: 3,
+                                  itemBuilder: (context, index) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: screenHeight * 0.02 * scaleFactor,
+                                    ),
+                                    child: const ShimmerBankCard(),
                                   ),
                                 );
-                              },
-                            ),
-                    ),
+                              }
 
-              // Column(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     crossAxisAlignment: CrossAxisAlignment.center,
-              //     children: [
-              //       SizedBox(height: screenHeight * 0.03),
-              //       Center(
-              //         child: Text(
-              //           isPendingActive
-              //               ? "Pending Content"
-              //               : "Resolved Content",
-              //           style: GoogleFonts.outfit(
-              //             fontSize: screenWidth * 0.05,
-              //             color: Colors.black,
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   )
-              // : ListView.builder(
-              //     shrinkWrap: true,
-              //     physics:
-              //         const NeverScrollableScrollPhysics(), // let parent scroll
-              //     padding: EdgeInsets.symmetric(
-              //       horizontal: screenWidth * 0.05,
-              //     ),
-              //     itemCount: bankDetails.length,
-              //     itemBuilder: (context, index) {
-              //       final bank = bankDetails[index];
-              //       return Padding(
-              //         padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-              //         child: BankCard(
-              //           bankName: bank["bankName"],
-              //           accountNumber: bank["accountNumber"],
-              //           type: bank["type"],
-              //           typeColor: bank["typeColor"],
-              //           amount: bank["amount"],
-              //           amountColor: bank["amountColor"],
-              //         ),
-              //       );
-              //     },
-              //   ),
-            ),
+                              // Filter by Pending / Resolved
+                              final filteredQueries = provider.queries
+                                  .where(
+                                    (q) => isPendingActive
+                                        ? q.status == 'pending'
+                                        : q.status == 'resolved',
+                                  )
+                                  .toList();
+
+                              // Sort by submitted_at descending
+                              filteredQueries.sort(
+                                (a, b) =>
+                                    b.submittedAt.compareTo(a.submittedAt),
+                              );
+
+                              if (filteredQueries.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    "No queries found",
+                                    style: GoogleFonts.outfit(
+                                      fontSize:
+                                          screenWidth * 0.045 * scaleFactor,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              return RefreshIndicator(
+                                onRefresh: () async {
+                                  final role =
+                                      await LocalStorageHelper.getString(
+                                        "userRole",
+                                      );
+                                  final phone =
+                                      await LocalStorageHelper.getString(
+                                        "userPhone",
+                                      );
+                                  await provider.fetchQueries(
+                                    context: context,
+                                    role: role!,
+                                    phone: phone!,
+                                    reset: true,
+                                  );
+                                },
+                                child: ListView.builder(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  controller: _scrollController,
+                                  padding:
+                                      EdgeInsets.symmetric(
+                                        horizontal:
+                                            screenWidth * 0.04 * scaleFactor,
+                                        vertical:
+                                            screenHeight * 0.015 * scaleFactor,
+                                      ).copyWith(
+                                        // ensure the scrollable content has extra bottom padding equal
+                                        // to the visible nav footprint so last items can scroll above it
+                                        bottom: contentBottomPadding,
+                                      ),
+                                  itemCount:
+                                      filteredQueries.length +
+                                      1, // +1 for loader placeholder
+                                  itemBuilder: (context, index) {
+                                    if (index < filteredQueries.length) {
+                                      final query = filteredQueries[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom:
+                                              screenHeight * 0.02 * scaleFactor,
+                                        ),
+                                        child: QueryCard(
+                                          query: query,
+                                          userRole: userRole,
+                                        ),
+                                      );
+                                    } else {
+                                      // Show bottom loader ONLY while fetching more
+                                      return provider.isFetchingMore
+                                          ? Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                vertical:
+                                                    screenHeight *
+                                                    0.02 *
+                                                    scaleFactor,
+                                              ),
+                                              child: Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.orange,
+                                                    ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          )
+                        : RefreshIndicator(
+                            onRefresh: () async {
+                              await provider.fetchUserInfo(context, true);
+                            },
+                            child: provider.isLoading
+                                ? ListView.builder(
+                                    padding:
+                                        EdgeInsets.symmetric(
+                                          horizontal:
+                                              screenWidth * 0.04 * scaleFactor,
+                                          vertical:
+                                              screenHeight *
+                                              0.015 *
+                                              scaleFactor,
+                                        ).copyWith(
+                                          // ensure the scrollable content has extra bottom padding equal
+                                          // to the visible nav footprint so last items can scroll above it
+                                          bottom: contentBottomPadding,
+                                        ),
+                                    itemCount:
+                                        3, // show 3 shimmer cards while loading
+                                    itemBuilder: (context, index) => Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom:
+                                            screenHeight * 0.02 * scaleFactor,
+                                      ),
+                                      child: const ShimmerBankCard(),
+                                    ),
+                                  )
+                                : (provider.userInfo == null ||
+                                      provider.userInfo!.banks.isEmpty)
+                                ? ListView(
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(
+                                              horizontal:
+                                                  screenWidth *
+                                                  0.04 *
+                                                  scaleFactor,
+                                              vertical:
+                                                  screenHeight *
+                                                  0.015 *
+                                                  scaleFactor,
+                                            ).copyWith(
+                                              // ensure the scrollable content has extra bottom padding equal
+                                              // to the visible nav footprint so last items can scroll above it
+                                              bottom: contentBottomPadding,
+                                            ),
+                                      ),
+                                      Center(
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.wifi_off,
+                                              color: Colors.grey,
+                                              size: 60,
+                                            ),
+                                            SizedBox(height: 10),
+                                            Text(
+                                              "${provider.error ?? "No bank details found."}",
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            SizedBox(height: 8),
+                                            ElevatedButton.icon(
+                                              onPressed: () async {
+                                                await provider.fetchUserInfo(
+                                                  context,
+                                                  true,
+                                                );
+                                              },
+                                              icon: Icon(Icons.refresh),
+                                              label: Text("Retry"),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : ListView.builder(
+                                    padding:
+                                        EdgeInsets.symmetric(
+                                          horizontal:
+                                              screenWidth * 0.04 * scaleFactor,
+                                          vertical:
+                                              screenHeight *
+                                              0.015 *
+                                              scaleFactor,
+                                        ).copyWith(
+                                          // ensure the scrollable content has extra bottom padding equal
+                                          // to the visible nav footprint so last items can scroll above it
+                                          bottom: contentBottomPadding,
+                                        ),
+                                    itemCount: provider.userInfo?.banks.length,
+                                    itemBuilder: (context, index) {
+                                      final bank =
+                                          provider.userInfo?.banks[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom:
+                                              screenHeight * 0.02 * scaleFactor,
+                                        ),
+                                        child: BankCard(
+                                          bankName: bank!.bankName,
+                                          accountNumber: bank.accountNumber,
+                                          type: bank.loanType,
+                                          typeColor:
+                                              bank.loanType == "Credit Card"
+                                              ? Color(0xFF337EFF)
+                                              : Color(0xFF008C38),
+                                          amount: bank.loanAmount,
+                                          amountColor: Color(0xFFFF5858),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+
+                    // Column(
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     crossAxisAlignment: CrossAxisAlignment.center,
+                    //     children: [
+                    //       SizedBox(height: screenHeight * 0.03),
+                    //       Center(
+                    //         child: Text(
+                    //           isPendingActive
+                    //               ? "Pending Content"
+                    //               : "Resolved Content",
+                    //           style: GoogleFonts.outfit(
+                    //             fontSize: screenWidth * 0.05,
+                    //             color: Colors.black,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   )
+                    // : ListView.builder(
+                    //     shrinkWrap: true,
+                    //     physics:
+                    //         const NeverScrollableScrollPhysics(), // let parent scroll
+                    //     padding: EdgeInsets.symmetric(
+                    //       horizontal: screenWidth * 0.05,
+                    //     ),
+                    //     itemCount: bankDetails.length,
+                    //     itemBuilder: (context, index) {
+                    //       final bank = bankDetails[index];
+                    //       return Padding(
+                    //         padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                    //         child: BankCard(
+                    //           bankName: bank["bankName"],
+                    //           accountNumber: bank["accountNumber"],
+                    //           type: bank["type"],
+                    //           typeColor: bank["typeColor"],
+                    //           amount: bank["amount"],
+                    //           amountColor: bank["amountColor"],
+                    //         ),
+                    //       );
+                    //     },
+                    //   ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: const CustomBottomNav(),
+                ),
+              ),
+            ],
           );
         },
       ),
-
-      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }

@@ -170,7 +170,7 @@ class ProfileProvider with ChangeNotifier {
       if (data['success'] == true && data['profile_img'] != null) {
         _profilePhotoUrl = data['profile_img'];
         _hasProfilePhoto = true;
-        print("updated profile photo url $_profilePhotoUrl");
+        // print("updated profile photo url $_profilePhotoUrl");
         await LocalStorageHelper.saveString(
           'profile_photo_url',
           _profilePhotoUrl!,

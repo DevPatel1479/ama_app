@@ -12,4 +12,9 @@ class AppPathsForScreen {
   static const String raiseQueryPath = '/raiseQuery';
   static const String advocateCaseDeskPath = "/advocateCaseDesk";
   static const String notificationPath = "/notification";
+  static const String policyScreenPath = "/policyScreen";
+  static const String termsAndConditionsPath = "/termsAndConditions";
+  static const String deleteAccountPath = "/deleteAccountScreen";
+  static const String acceptPolicyPath = "/acceptPolicyScreen";
+  static const String deleteAccountRequestPath = "/deleteAccountRequestScreen";
 }

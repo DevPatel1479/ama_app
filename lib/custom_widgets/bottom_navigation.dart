@@ -1,4 +1,5 @@
 // lib/custom_widgets/bottom_navigation.dart
+
 import 'dart:ui';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,7 @@ class CustomBottomNav extends StatefulWidget {
 }
 
 class _CustomBottomNavState extends State<CustomBottomNav> {
-  // keep a field if you need local tracking or animations; here we mostly
-  // derive active tab from router, so this field is optional.
-  int _selectedIndex = 0;
-
+  // core logic unchanged
   final List<String> _labels = ["Home", "Services", "AMA", "Casedesk"];
   final List<String> _activeIcons = [
     AppAssets.homeActive,
@@ -62,89 +60,147 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
     final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
     final location = GoRouterState.of(context).uri.toString();
 
-    // derive active index from current route (keeps UI in sync with navigation)
     final activeIndex = _indexFromLocation(location);
 
-    return SizedBox(
-      height: navHeight,
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.04,
-          vertical: navHeight * 0.08,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(navHeight * 0.45),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2D23195C).withOpacity(0.25),
-                borderRadius: BorderRadius.circular(navHeight * 0.45),
-                border: GradientBoxBorder(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color.fromRGBO(210, 159, 42, 0.65),
-                      Color.fromRGBO(255, 255, 255, 0.65),
+    // safe area insets from device (home indicator, notches, corner shape)
+    final mq = MediaQuery.of(context);
+    final leftInset = mq.padding.left;
+    final rightInset = mq.padding.right;
+    final bottomInset = mq.padding.bottom;
+
+    // ensure the nav doesn't sit flush into the rounded corners:
+    // prefer your existing horizontal margin (screenWidth * 0.04) but make sure
+    // it's at least the device side inset + a small gap (12px).
+    final baseHorizontalMargin = screenWidth * 0.04;
+    final horizontalMargin = baseHorizontalMargin < (leftInset + 12)
+        ? (leftInset + 12)
+        : baseHorizontalMargin;
+    // if rightInset is larger (rare), keep symmetric - use max(left,right)
+    final symmetricHorizontalMargin = horizontalMargin < (rightInset + 12)
+        ? (rightInset + 12)
+        : horizontalMargin;
+
+    // total height includes a small portion of bottom inset so it floats above
+    // the home-indicator area
+    final totalHeight = navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0);
+
+    // cap corner radius so it doesn't become exaggerated on some screens
+    final navCornerRadius = BorderRadius.circular(
+      // keep the look but cap at 22 px (tweak if you want)
+      (navHeight * 0.45).clamp(8.0, 22.0),
+    );
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = const Color(0xFFD29F2A);
+    final inactiveTextColor = isDark ? Colors.white70 : Colors.black87;
+    final inactiveIconColor = isDark ? Colors.white70 : Colors.black87;
+
+    // Use SafeArea(top:false, bottom:false) so parent controls spacing precisely.
+    // The widget will itself use the horizontal margin computed above to avoid
+    // device corner clipping.
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: SizedBox(
+        height: totalHeight,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: symmetricHorizontalMargin,
+            vertical:
+                navHeight * 0.08 + (bottomInset > 0 ? bottomInset * 0.08 : 0.0),
+          ),
+          child: ClipRRect(
+            borderRadius: navCornerRadius,
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: navCornerRadius,
+                    border: GradientBoxBorder(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromRGBO(210, 159, 42, 0.65),
+                          Color.fromRGBO(255, 255, 255, 0.65),
+                        ],
+                      ),
+                      width: (navHeight * 0.03).clamp(1.0, 3.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
-                  width: (navHeight * 0.03).clamp(1.0, 3.0),
-                ),
-              ),
-              child: Row(
-                children: List.generate(_labels.length, (index) {
-                  final isActive = activeIndex == index;
-                  final iconSize = (navHeight * 0.35).clamp(16.0, 28.0);
-                  final labelSize = (navHeight * 0.18).clamp(10.0, 13.0);
+                  child: Row(
+                    children: List.generate(_labels.length, (index) {
+                      final isActive = activeIndex == index;
+                      final iconSize = (navHeight * 0.35).clamp(16.0, 28.0);
+                      final labelSize = (navHeight * 0.18).clamp(10.0, 13.0);
 
-                  // Make each tab expand equally so touch area is large and even.
-                  return Expanded(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        // makes whole area tappable and shows ripple
-                        onTap: () {
-                          if (isActive) return; // already on this tab
-                          // If you want a tiny instant feedback in UI you can setState
-                          // but it's not required; routing will update the active index.
-                          setState(() => _selectedIndex = index);
-                          _navigateToIndex(index);
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: navHeight * 0.08,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                isActive
-                                    ? _activeIcons[index]
-                                    : _inactiveIcons[index],
-                                width: iconSize,
-                                height: iconSize,
+                      final imageTint = isActive
+                          ? activeColor
+                          : inactiveIconColor;
+
+                      return Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              if (isActive) return;
+                              _navigateToIndex(index);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: navHeight * 0.08,
                               ),
-                              SizedBox(height: navHeight * 0.06),
-                              Text(
-                                _labels[index],
-                                style: TextStyle(
-                                  fontFamily: "Outfit",
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: labelSize,
-                                  height: 1,
-                                  color: isActive
-                                      ? const Color(0xFFD29F2A)
-                                      : Colors.white,
-                                ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    isActive
+                                        ? _activeIcons[index]
+                                        : _inactiveIcons[index],
+                                    width: iconSize,
+                                    height: iconSize,
+                                    color: !isActive ? Colors.white : imageTint,
+                                    colorBlendMode: BlendMode.srcIn,
+                                  ),
+                                  SizedBox(height: navHeight * 0.06),
+                                  Text(
+                                    _labels[index],
+                                    style: TextStyle(
+                                      fontFamily: "Outfit",
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: labelSize,
+                                      height: 1,
+                                      color: isActive
+                                          ? activeColor
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -200,10 +256,6 @@ class GradientBoxBorder extends BoxBorder {
   BorderSide get top => BorderSide(width: width, color: Colors.transparent);
   @override
   BorderSide get bottom => BorderSide(width: width, color: Colors.transparent);
-  @override
-  BorderSide get left => BorderSide(width: width, color: Colors.transparent);
-  @override
-  BorderSide get right => BorderSide(width: width, color: Colors.transparent);
 
   @override
   ShapeBorder scale(double t) {

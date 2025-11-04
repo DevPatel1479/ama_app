@@ -1,6 +1,4 @@
-import 'dart:ui';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
-import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:flutter/material.dart';
@@ -84,26 +82,26 @@ class _LightPortfolioScreenState extends State<LightPortfolioScreen> {
                   : const Color(0xFF008C38),
             ),
           ),
-          if (showEdit)
-            Row(
-              children: [
-                Image.asset(
-                  AppAssets.editIcon,
-                  width: 18,
-                  height: 18,
-                  color: const Color.fromARGB(225, 255, 255, 255),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "Edit",
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color.fromARGB(225, 255, 255, 255),
-                  ),
-                ),
-              ],
-            ),
+          // if (showEdit)
+          //   Row(
+          //     children: [
+          //       Image.asset(
+          //         AppAssets.editIcon,
+          //         width: 18,
+          //         height: 18,
+          //         color: const Color.fromARGB(225, 255, 255, 255),
+          //       ),
+          //       const SizedBox(width: 8),
+          //       Text(
+          //         "Edit",
+          //         style: GoogleFonts.outfit(
+          //           fontSize: 16,
+          //           fontWeight: FontWeight.w500,
+          //           color: const Color.fromARGB(225, 255, 255, 255),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
         ],
       ),
     );

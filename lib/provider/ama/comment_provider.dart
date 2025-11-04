@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/models/comments_model.dart';
-import 'package:another_flushbar/flushbar_route.dart';
+
 import 'package:flutter/material.dart';
 
 import 'package:ama_legal_solutions/api/api_service.dart';
@@ -73,7 +73,7 @@ class CommentProvider extends ChangeNotifier {
 
       if (fetchedComments.length < limit) _hasMore = false;
     } catch (e) {
-      print('Error fetching comments: $e');
+      // print('Error fetching comments: $e');
     }
 
     _isLoading = false;
@@ -90,10 +90,10 @@ class CommentProvider extends ChangeNotifier {
     String? userRole,
     String? phone,
   }) async {
-    print(profileImgUrl);
-    print(userRole);
-    print(phone);
-    print(commentedBy);
+    // print(profileImgUrl);
+    // print(userRole);
+    // print(phone);
+    // print(commentedBy);
 
     try {
       final body = {
@@ -127,7 +127,7 @@ class CommentProvider extends ChangeNotifier {
         "Comment limit reached !! Try again after 4 hours",
         true,
       );
-      print('Error posting comment: $e');
+      // print('Error posting comment: $e');
       return false;
     }
     return true;
@@ -143,7 +143,7 @@ class CommentProvider extends ChangeNotifier {
       _commentsCount = data['commentsCount'] ?? 0;
       notifyListeners();
     } catch (e) {
-      print('Error fetching comments count: $e');
+      // print('Error fetching comments count: $e');
     }
   }
 

@@ -1,6 +1,6 @@
-import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
-import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
@@ -51,6 +51,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
     final loginProvider = context.watch<LoginProvider>();
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
+      extendBody: true,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -118,21 +119,148 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                       fieldWidth,
                       fieldHeight,
                       () async {
+                        if (loginProvider.isLoading) return;
+
+                        final phone = loginProvider.phoneController.text.trim();
+                        final enteredOtp = loginProvider.otpControllers
+                            .map((c) => c.text)
+                            .join()
+                            .trim();
+                        // ✅ Check for Google Play Test scenario
+                        // print(phone);
+                        // print(enteredOtp);
+                        if (phone == "8734835064") {
+                          final verifyingSnack = SnackBar(
+                            duration: const Duration(
+                              days: 1,
+                            ), // keep until manually hidden
+                            backgroundColor: Colors.black87,
+                            behavior:
+                                SnackBarBehavior.floating, // allows more room
+                            margin: const EdgeInsets.all(
+                              12,
+                            ), // lifts it slightly
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            content: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.3,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Text(
+                                  "Verifying...",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontFamily: "Outfit",
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          // ✅ Show loading snackbar immediately
+                          final messenger = ScaffoldMessenger.of(context);
+                          messenger
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(verifyingSnack);
+
+                          const defaultOtp = "453423";
+
+                          // If OTPs match, treat as verified
+                          if (enteredOtp == defaultOtp) {
+                            await LocalStorageHelper.saveBool(
+                              "isUserLoggedIn",
+                              true,
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userPhone",
+                              phone,
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userName",
+                              "TestDp",
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userRole",
+                              "client",
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userEmail",
+                              "testdp@gmail.com",
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userWeekTopic",
+                              "third_week",
+                            );
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                content: Text(
+                                  "✅ Test OTP verified successfully!",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                            // Proceed to home screen
+                            context.go(AppPathsForScreen.userHomePath);
+                            return;
+                          } else {
+                            messenger.hideCurrentSnackBar();
+
+                            // Error message
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                content: Text(
+                                  "❗Please enter the test OTP: 453423",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                            return;
+                          }
+                        }
+
                         await loginProvider.verifyOtp(context);
 
-                        print(loginProvider.loginSuccess);
+                        // print(loginProvider.loginSuccess);
                         if (loginProvider.loginSuccess) {
-                          if (loginProvider.weekTopicEnabled) {
-                            await FirebaseMessagingService.instance
-                                .subscribeToTopicFor(
-                                  weekEnabled: loginProvider.weekTopicEnabled,
-                                  weekEnabledValue:
-                                      loginProvider.weekTopic ?? "",
-                                );
-                          } else {
-                            await FirebaseMessagingService.instance
-                                .subscribeToTopicFor();
-                          }
+                          // if (loginProvider.weekTopicEnabled) {
+                          //   await FirebaseMessagingService.instance
+                          //       .subscribeToTopicFor(
+                          //         weekEnabled: loginProvider.weekTopicEnabled,
+                          //         weekEnabledValue:
+                          //             loginProvider.weekTopic ?? "",
+                          //       );
+                          // } else {
+                          //   await FirebaseMessagingService.instance
+                          //       .subscribeToTopicFor();
+                          // }
 
                           context.go(AppPathsForScreen.userHomePath);
                         }
@@ -144,7 +272,25 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                       fieldWidth,
                       fieldHeight,
                       () {
-                        print("calling login side");
+                        if (loginProvider.isLoading) return;
+                        // print("calling login side");
+                        final phone = loginProvider.phoneController.text.trim();
+                        // ✅ Static check before sending OTP
+                        if (phone == "8734835064") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "⚠️ Test mode detected. Use OTP 453423 for login.",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.blueGrey,
+                            ),
+                          );
+                          loginProvider.otpSent = true;
+                          setState(() {});
+                          return;
+                        }
+
                         loginProvider.login(context);
                       },
                       "Login",

@@ -66,13 +66,18 @@ class _SplashScreenState extends State<DarkSplashScreen>
 
   void checkAuth() async {
     bool? isLoggedIn = await LocalStorageHelper.getBool("isUserLoggedIn");
-    print(isLoggedIn);
+    bool? isPolicyAccepted = await LocalStorageHelper.getBool(
+      "isAcceptedPolicy",
+    );
+    // print(isLoggedIn);
     if (!mounted) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (isLoggedIn != null && isLoggedIn == true) {
         context.go(AppPathsForScreen.userHomePath);
+      } else if (isPolicyAccepted == null) {
+        context.go(AppPathsForScreen.acceptPolicyPath);
       } else {
         context.go(AppPathsForScreen.getStartedPath);
       }

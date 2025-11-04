@@ -40,6 +40,12 @@ class FirebaseMessagingService {
         print('⚠️ Notification permission denied by user');
         return;
       }
+      await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+        alert: false,
+        badge: false,
+        sound: false,
+      );
+
       // await _subscribeToTopic();
       // Set background message handler
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

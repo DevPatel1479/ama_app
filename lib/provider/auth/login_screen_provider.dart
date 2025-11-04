@@ -3,6 +3,7 @@ import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginProvider extends ChangeNotifier {
@@ -109,6 +110,8 @@ class LoginProvider extends ChangeNotifier {
   }
 
   Future<void> verifyOtp(BuildContext context) async {
+    if (isLoading) return;
+
     final otp = otpControllers.map((c) => c.text).join();
     final phone = phoneController.text.trim();
 
@@ -130,11 +133,12 @@ class LoginProvider extends ChangeNotifier {
       if (response.statusCode == 200 && data["success"] == true) {
         await LocalStorageHelper.saveBool("isUserLoggedIn", true);
         await LocalStorageHelper.saveString("userPhone", phone);
-        showCustomMessage(
-          context,
-          data["message"] ?? "OTP verified successfully",
-          false,
-        );
+        // showCustomMessage(
+        //   context,
+        //   data["message"] ?? "OTP verified successfully",
+        //   false,
+        // );
+
         success = true;
         // _setLoading(false, successLogin: true);
       } else {
@@ -147,12 +151,23 @@ class LoginProvider extends ChangeNotifier {
     } catch (e) {
       showCustomMessage(context, e.toString(), true);
     }
-    _setLoading(false, successLogin: success);
+    await _setLoading(false, successLogin: success);
   }
 
-  void _setLoading(bool value, {bool successLogin = false}) {
+  Future<void> _setLoading(bool value, {bool successLogin = false}) async {
     isLoading = value;
     _loginSuccess = successLogin;
+    if (successLogin) {
+      if (weekTopicEnabled) {
+        await FirebaseMessagingService.instance.subscribeToTopicFor(
+          weekEnabled: weekTopicEnabled,
+          weekEnabledValue: weekTopic ?? "",
+        );
+      } else {
+        await FirebaseMessagingService.instance.subscribeToTopicFor();
+      }
+    }
+
     notifyListeners();
   }
 

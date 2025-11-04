@@ -16,6 +16,9 @@ class UserInfoProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   UserCompleteInfoModel? get userInfo => _userInfo;
 
+  String? _error;
+  String? get error => _error;
+
   Future<void> fetchUserInfo(
     BuildContext context,
     bool onlyBankInfoFetching,
@@ -40,6 +43,7 @@ class UserInfoProvider with ChangeNotifier {
       );
 
       final data = jsonDecode(response.body);
+      // print(data);
       if (data["success"] == true) {
         _userInfo = UserCompleteInfoModel.fromJson(data["data"]);
         if (onlyBankInfoFetching == false) {
@@ -56,10 +60,14 @@ class UserInfoProvider with ChangeNotifier {
           );
         }
       } else {
+        _error = data["message"] ?? "Failed to fetch";
         showCustomMessage(context, data["message"] ?? "Failed to fetch", true);
+        notifyListeners();
       }
     } catch (e) {
-      print(e);
+      // print(e);
+      _error = e.toString();
+      notifyListeners();
       showCustomMessage(context, "Error: $e", true);
     }
 
