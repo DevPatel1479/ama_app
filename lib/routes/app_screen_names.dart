@@ -18,4 +18,5 @@ class AppScreenNames {
   static const String acceptPolicyScreen = "accept_policy_screen";
   static const String deleteAccountRequestScreen =
       "delete_account_request_screen";
+  static const String notificationHistoryScreen = "notification_history_screen";
 }

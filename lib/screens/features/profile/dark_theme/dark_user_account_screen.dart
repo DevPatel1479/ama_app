@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/feedback_bottom_sheet.dart';
+import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +75,7 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  SizedBox(width: screenWidth * 0.12),
+                  SizedBox(width: screenWidth * 0.02),
                   Text(
                     "Account",
                     style: GoogleFonts.outfit(
@@ -92,6 +96,27 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                 children: [
                   GestureDetector(
                     onTap: () async {
+                      final String? userRole = await getUserRole();
+                      if (userRole?.toLowerCase() == "guest") {
+                        final isDark = Provider.of<ThemeProvider>(
+                          context,
+                          listen: false,
+                        ).isDarkMode;
+                        showDialog(
+                          context: context,
+                          builder: (_) => LoginRequiredDialog(
+                            isDarkTheme: isDark,
+
+                            onLoginPressed: () {
+                              Navigator.pop(context);
+                              context.goNamed(AppScreenNames.logIn);
+                              // context.pushNamed(AppScreenNames.l);
+                            },
+                          ),
+                        );
+                        return;
+                      }
+
                       final provider = Provider.of<ProfileProvider>(
                         context,
                         listen: false,
@@ -124,12 +149,16 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                             CircleAvatar(
                               radius: 55, // adjust radius
                               backgroundColor: Colors.grey[800],
-                              backgroundImage: provider.hasProfilePhoto
+                              backgroundImage: widget.role == "guest"
+                                  ? null
+                                  : provider.hasProfilePhoto
                                   ? NetworkImage(
                                       "${provider.profilePhotoUrl}?t=${DateTime.now().millisecondsSinceEpoch}",
                                     )
                                   : null,
-                              child: !provider.hasProfilePhoto
+                              child:
+                                  widget.role == "guest" ||
+                                      !provider.hasProfilePhoto
                                   ? Icon(
                                       Icons.person,
                                       size: 55,
@@ -168,23 +197,31 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.015),
-                  Text(
-                    "${widget.name}",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+
+                  ValueListenableBuilder(
+                    valueListenable: globalUserName,
+                    builder: (context, name, _) => Text(
+                      "$name",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
+
                   SizedBox(height: screenHeight * 0.005),
-                  Text(
-                    "${widget.email}",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.04,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.6),
+                  ValueListenableBuilder(
+                    valueListenable: globalEmail,
+                    builder: (context, email, _) => Text(
+                      "$email",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.04,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                     ),
                   ),
                 ],
@@ -247,7 +284,8 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     ),
 
                     SizedBox(height: screenHeight * 0.03),
-
+                    // if (widget.role.toLowerCase() != "user" &&
+                    //     widget.role.toLowerCase() != "users")
                     // Row: Portfolio + Text
                     Row(
                       children: [
@@ -259,8 +297,31 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         GestureDetector(
-                          onTap: () {
-                            context.pushNamed(AppScreenNames.portfolio);
+                          onTap: () async {
+                            final String? userRole = await getUserRole();
+                            if (userRole?.toLowerCase() == "guest") {
+                              final isDark = Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).isDarkMode;
+                              showDialog(
+                                context: context,
+                                builder: (_) => LoginRequiredDialog(
+                                  isDarkTheme: isDark,
+
+                                  onLoginPressed: () {
+                                    Navigator.pop(context);
+                                    context.goNamed(AppScreenNames.logIn);
+                                    // context.pushNamed(AppScreenNames.l);
+                                  },
+                                ),
+                              );
+                              return;
+                            }
+                            context.pushNamed(
+                              AppScreenNames.portfolio,
+                              queryParameters: {"userRole": userRole},
+                            );
                           },
                           child: Text(
                             "Portfolio",
@@ -273,7 +334,8 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         ),
                       ],
                     ),
-
+                    // if (widget.role.toLowerCase() != "user" &&
+                    //     widget.role.toLowerCase() != "users")
                     SizedBox(height: screenHeight * 0.05),
                     // 🔹 App Policies Header
                     Text(
@@ -298,9 +360,7 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         SizedBox(width: screenWidth * 0.04),
                         GestureDetector(
                           onTap: () {
-                            context.pushReplacement(
-                              AppPathsForScreen.policyScreenPath,
-                            );
+                            context.pushNamed(AppScreenNames.policyScreen);
                           },
                           child: Text(
                             "Privacy Policy",
@@ -328,8 +388,8 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         SizedBox(width: screenWidth * 0.04),
                         GestureDetector(
                           onTap: () {
-                            context.pushReplacement(
-                              AppPathsForScreen.termsAndConditionsPath,
+                            context.pushNamed(
+                              AppScreenNames.termsAndConditionsScreen,
                             );
                           },
                           child: Text(
@@ -357,8 +417,8 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         SizedBox(width: screenWidth * 0.04),
                         GestureDetector(
                           onTap: () {
-                            context.pushReplacement(
-                              AppPathsForScreen.deleteAccountPath,
+                            context.pushNamed(
+                              AppScreenNames.deleteAccountScreen,
                             );
                           },
                           child: Text(
@@ -385,13 +445,33 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         GestureDetector(
-                          onTap: () {
-                            context.pushReplacement(
-                              AppPathsForScreen.deleteAccountRequestPath,
+                          onTap: () async {
+                            final String? userRole = await getUserRole();
+                            if (userRole?.toLowerCase() == "guest") {
+                              final isDark = Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).isDarkMode;
+                              showDialog(
+                                context: context,
+                                builder: (_) => LoginRequiredDialog(
+                                  isDarkTheme: isDark,
+
+                                  onLoginPressed: () {
+                                    Navigator.pop(context);
+                                    context.goNamed(AppScreenNames.logIn);
+                                    // context.pushNamed(AppScreenNames.l);
+                                  },
+                                ),
+                              );
+                              return;
+                            }
+                            context.pushNamed(
+                              AppScreenNames.deleteAccountRequestScreen,
                             );
                           },
                           child: Text(
-                            "Delete Account Request",
+                            "Delete Account",
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
@@ -417,9 +497,9 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     SizedBox(height: screenHeight * 0.025),
                     GestureDetector(
                       onTap: () async {
-                        final role = await getUserRole();
-                        final phone = await getUserPhone();
-                        final userId = "${role}_$phone";
+                        // final role = await getUserRole();
+                        // final phone = await getUserPhone();
+                        final userId = "${widget.role}_${widget.phone}";
                         showFeedbackBottomSheet(context, userId);
                       },
                       child:
@@ -512,7 +592,7 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                         ),
                         SizedBox(width: screenWidth * 0.04),
                         Text(
-                          "+918700343611",
+                          "+91-8700343611",
                           style: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.040,
                             fontWeight: FontWeight.w400,
@@ -687,20 +767,37 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                                   ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       CircularProgressIndicator(
                                         color: const Color(0xFFD29F2A),
                                       ),
                                       SizedBox(height: screenHeight * 0.02),
                                       Text(
-                                        "Logging out...\nPlease wait",
+                                        "Logging out...",
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          fontSize: screenWidth * 0.045,
-                                          fontWeight: FontWeight.w500,
+                                          fontSize: screenWidth * 0.048,
+                                          fontWeight: FontWeight.w600,
                                           color: isDark
                                               ? Colors.white
                                               : Colors.black87,
+                                        ),
+                                      ),
+
+                                      SizedBox(height: screenHeight * 0.008),
+
+                                      // Subtitle text
+                                      Text(
+                                        "Please wait",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: screenWidth * 0.043,
+                                          fontWeight: FontWeight.w400,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black54,
                                         ),
                                       ),
                                     ],
@@ -713,7 +810,19 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                           try {
                             // Preserve the theme before clearing all storage
                             final wasDark = themeProvider.isDarkMode;
+                            final userProvider = Provider.of<UserProvider>(
+                              context,
+                              listen: false,
+                            );
+                            Provider.of<RealTimeRoleProvider>(
+                              context,
+                              listen: false,
+                            ).stop();
+                            bool isGuestLoggedOut = widget.role == "guest"
+                                ? true
+                                : false;
 
+                            userProvider.clearRole();
                             final weekTopic =
                                 await LocalStorageHelper.getString(
                                   "userWeekTopic",
@@ -730,6 +839,26 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                               "isAcceptedPolicy",
                               true,
                             );
+                            await LocalStorageHelper.saveBool(
+                              "isDeleteRequestMade",
+                              true,
+                            );
+                            await LocalStorageHelper.saveBool(
+                              "isGetStartedTapped",
+                              true,
+                            );
+
+                            if (isGuestLoggedOut) {
+                              await LocalStorageHelper.saveBool(
+                                "isGuestLoggedOut",
+                                true,
+                              );
+                            } else {
+                              await LocalStorageHelper.saveBool(
+                                "isNormalUser",
+                                true,
+                              );
+                            }
 
                             await Future.delayed(
                               const Duration(milliseconds: 800),

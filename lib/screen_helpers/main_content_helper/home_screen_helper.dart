@@ -4,6 +4,7 @@ import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home
 import 'package:ama_legal_solutions/screens/roles/user/light_theme/light_user_home_screen.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:provider/provider.dart';
 
 class HomeScreenHelper {

@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 class ApiService {
   // POST request
   Future<http.Response> post(String url, Map<String, dynamic> data) async {
-    print("calling this api ...");
+    // print("calling this api ${url}...");
+
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -76,4 +77,21 @@ class ApiService {
   //   // If you want, log or record the issue but don't throw
   //   print("HTTP error ${response.statusCode}: ${response.reasonPhrase}");
   // }
+
+  Future<http.Response> put(String url, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      return response;
+    } on SocketException {
+      throw Exception("No Internet connection");
+    } on FormatException {
+      throw Exception("Bad response format");
+    } catch (e) {
+      throw Exception("Unexpected error: $e");
+    }
+  }
 }

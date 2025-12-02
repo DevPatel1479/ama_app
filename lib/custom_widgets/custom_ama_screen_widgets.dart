@@ -1,7 +1,11 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
+import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -192,6 +196,7 @@ void _showAddCommentDialog(
             content: SizedBox(
               width: double.maxFinite,
               child: TextField(
+                textInputAction: TextInputAction.done,
                 controller: _controller,
                 maxLines: 4,
                 style: TextStyle(color: Colors.white),
@@ -308,6 +313,16 @@ void _showAddCommentDialog(
   );
 }
 
+String _formatTimestamp(int? timestampMs) {
+  if (timestampMs == null) return '';
+  try {
+    final dt = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+    return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+  } catch (_) {
+    return '';
+  }
+}
+
 void showAskDoubtBottomSheet(
   BuildContext context,
   CommentProvider provider,
@@ -316,20 +331,22 @@ void showAskDoubtBottomSheet(
   String? userName,
   String? userRole,
   String? userPhone,
+
   String? profileImgUrl,
+  dynamic question,
 ) {
   final screenWidth = MediaQuery.of(context).size.width;
   final screenHeight = MediaQuery.of(context).size.height;
   provider.clearExistingComments();
   provider.fetchComments(questionId, reset: true); // Initial fetch
-
+  String createdAtTime = _formatTimestamp(question.timestamp as int?);
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (BuildContext context) {
       return Container(
-        height: screenHeight * 0.8,
+        height: screenHeight * 0.95,
         decoration: BoxDecoration(
           color: mode == "dark" ? const Color(0xFF252525) : Colors.white,
           borderRadius: const BorderRadius.only(
@@ -380,6 +397,25 @@ void showAskDoubtBottomSheet(
                           : Colors.white,
                     ),
                     onPressed: () {
+                      if (userRole?.toLowerCase() == "guest") {
+                        final isDark = Provider.of<ThemeProvider>(
+                          context,
+                          listen: false,
+                        ).isDarkMode;
+                        showDialog(
+                          context: context,
+                          builder: (_) => LoginRequiredDialog(
+                            isDarkTheme: isDark,
+
+                            onLoginPressed: () {
+                              Navigator.pop(context);
+                              context.goNamed(AppScreenNames.logIn);
+                              // context.pushNamed(AppScreenNames.l);
+                            },
+                          ),
+                        );
+                        return;
+                      }
                       _showAddCommentDialog(
                         context,
                         provider,
@@ -396,6 +432,133 @@ void showAskDoubtBottomSheet(
                 ],
               ),
             ),
+
+            Container(
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color.fromRGBO(210, 159, 42, 0.65),
+                    Color.fromRGBO(255, 255, 255, 0.65),
+                  ],
+                ),
+              ),
+              child: Container(
+                margin: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2D2319),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.transparent,
+                          backgroundImage:
+                              (question.profileImgUrl != null &&
+                                  (question.profileImgUrl as String).isNotEmpty)
+                              ? NetworkImage(
+                                  "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                )
+                              : AssetImage(AppAssets.userIcon) as ImageProvider,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                question.userName ?? '',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                "${createdAtTime}",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      question.content ?? '',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (question.answer != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Image.asset(
+                                AppAssets.appIcon,
+                                width: 40,
+                                height: 20,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0x33FFFFFF),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "from ${question.answer!.role ?? ''}",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w400,
+                                      color: const Color(0xFFD29F2A),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            question.answer!.content ?? '',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: const Color(0xFFD29F2A),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Comments body
             Expanded(
@@ -448,7 +611,7 @@ void showAskDoubtBottomSheet(
                       itemBuilder: (context, index) {
                         if (index == commentProvider.comments.length) {
                           return Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: EdgeInsets.symmetric(vertical: 20),
                             child: Center(
                               child: CircularProgressIndicator(
                                 color: mode == "light"

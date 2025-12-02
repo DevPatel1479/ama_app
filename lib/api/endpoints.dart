@@ -33,10 +33,20 @@ class Endpoints {
   static String getNotifications(String role) =>
       "$baseUrl/notifications/get-notification/$role";
 
+  static String getNotificationHistory(String userId) =>
+      "$baseUrl/notifications/history/$userId";
+
   static final String getWeeklyClientsCount = "$baseUrl/clients/week-count";
 
   static final String sendNotificationToAllAdvocates =
       "$baseUrl/notification/advocate/send";
 
+
+
   static final String submitFeedback = "$baseUrl/feedback/submit";
+  static final String fileDispute = "$baseUrl/file-dispute";
+
+  static String getLeadByPhone(String? phone) =>
+      "$baseUrl/leads/$phone"; // GET /api/leads/:phone
+  static final String updateUserData = "$baseUrl/leads/update";
 }

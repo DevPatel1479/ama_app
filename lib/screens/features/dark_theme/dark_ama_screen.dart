@@ -4,12 +4,15 @@ import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/custom_ama_screen_widgets.dart';
+import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/models/question_model.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -394,6 +397,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
           content: SizedBox(
             width: screenWidth * 0.8,
             child: TextField(
+              textInputAction: TextInputAction.done,
               controller: _controller,
               maxLines: 5,
               minLines: 3,
@@ -517,17 +521,21 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final contentBottomPadding =
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
+    final role = context.watch<RealTimeRoleProvider>().role;
+    userRole = role;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBody: true,
       backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           Positioned.fill(
             child: SafeArea(
+              bottom: false,
               child: Column(
                 children: [
-                  // header + search
+                  // header + search (unchanged)
                   Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: screenWidth * 0.04 * scaleFactor,
@@ -542,19 +550,26 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                   context.go(AppPathsForScreen.userHomePath),
                               child: Image.asset(
                                 AppAssets.backArrowIcon,
-                                width: screenWidth * 0.05 * scaleFactor,
-                                height: screenWidth * 0.05 * scaleFactor,
+                                width: screenWidth * 0.06 * scaleFactor,
+                                height: screenWidth * 0.06 * scaleFactor,
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            SizedBox(width: screenWidth * 0.12 * scaleFactor),
+                            SizedBox(width: screenWidth * 0.02 * scaleFactor),
                             Text(
-                              "AMA",
+                              "Ask Me Anything",
                               style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.065 * scaleFactor,
+                                fontSize:
+                                    (screenWidth / 100) *
+                                    6.5 *
+                                    scaleFactor, // proportional but safe scaling
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
+                                height: 1.2, // keeps it compact for AppBar
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
                             const Spacer(),
                             SizedBox(
@@ -562,6 +577,25 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               height: screenHeight * 0.05 * scaleFactor,
                               child: ElevatedButton(
                                 onPressed: () {
+                                  if (userRole?.toLowerCase() == "guest") {
+                                    final isDark = Provider.of<ThemeProvider>(
+                                      context,
+                                      listen: false,
+                                    ).isDarkMode;
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => LoginRequiredDialog(
+                                        isDarkTheme: isDark,
+
+                                        onLoginPressed: () {
+                                          Navigator.pop(context);
+                                          context.goNamed(AppScreenNames.logIn);
+                                          // context.pushNamed(AppScreenNames.l);
+                                        },
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   context.pushNamed(
                                     AppScreenNames.raiseQuery,
                                     queryParameters: {
@@ -601,7 +635,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                   child: Container(
                                     alignment: Alignment.center,
                                     child: Text(
-                                      "Ask Doubt",
+                                      "Ask Question",
                                       style: GoogleFonts.outfit(
                                         fontSize: 14 * scaleFactor,
                                         fontWeight: FontWeight.w500,
@@ -615,6 +649,22 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.03 * scaleFactor),
+
+                        // <-- NEW LINE ADDED: short description above the search bar
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "A quick, reliable space to ask any legal question and get clear, expert-backed answers instantly.",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.040 * scaleFactor,
+                              fontWeight: FontWeight.w300,
+                              height: 1.25,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         // search bar
                         Container(
                           height:
@@ -643,6 +693,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               SizedBox(width: 10 * searchFieldScaleFactor),
                               Expanded(
                                 child: TextField(
+                                  textInputAction: TextInputAction.done,
                                   controller: _searchController,
                                   style: GoogleFonts.outfit(
                                     color: Colors.white70,
@@ -666,7 +717,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                     0.08 *
                                     searchFieldScaleFactor,
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: 20 * searchFieldScaleFactor,
+                                  horizontal: 30 * searchFieldScaleFactor,
                                 ),
                                 decoration: BoxDecoration(
                                   borderRadius: const BorderRadius.only(
@@ -716,7 +767,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                       ],
                     ),
                   ),
-                  // questions list
+                  // questions grid - FIXED: LOADER ONLY WHEN LOADING MORE
                   Expanded(
                     child: Consumer<QuestionProvider>(
                       builder: (context, provider, _) {
@@ -779,7 +830,14 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                         }
                         // Use filtered pagination only when not searching
                         final bool usePagination = _searchQuery.isEmpty;
-                        final int itemCount = usePagination && provider.hasMore
+
+                        // FIXED: Only add +1 to itemCount when actually loading more
+                        final bool shouldShowLoader =
+                            usePagination &&
+                            provider.hasMore &&
+                            provider.isLoading;
+
+                        final int itemCount = shouldShowLoader
                             ? uniqueQuestions.length + 1
                             : uniqueQuestions.length;
 
@@ -799,7 +857,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               _isSearching = false;
                             });
                           },
-                          child: ListView.builder(
+                          child: GridView.builder(
                             controller: _scrollController,
                             padding: EdgeInsets.only(
                               left: screenWidth * 0.04,
@@ -807,31 +865,46 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               top: screenHeight * 0.015,
                               bottom: contentBottomPadding,
                             ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: screenWidth < 600 ? 2 : 3,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: screenWidth < 600
+                                      ? 0.8
+                                      : 0.9,
+                                ),
                             itemCount: itemCount,
                             itemBuilder: (context, index) {
-                              if (usePagination &&
+                              // FIXED: Only show loader when actually loading more data
+                              if (shouldShowLoader &&
                                   index == uniqueQuestions.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16 * scaleFactor,
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: Colors.transparent,
                                   ),
-                                  child: Center(
-                                    child: provider.isLoading
-                                        ? const CircularProgressIndicator(
-                                            color: Colors.white,
-                                          )
-                                        : const SizedBox.shrink(),
+                                  child: Container(
+                                    margin: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 );
                               }
+
                               final question = uniqueQuestions[index];
                               final questionId = question.id as String;
                               // isExpanded = NOT collapsed
                               final isExpanded = !_collapsedIds.contains(
                                 questionId,
                               );
-                              // final commentsCount =
-                              //     _commentsCountMap[questionId] ?? 0;
                               final formattedDate = _formatTimestamp(
                                 question.timestamp as int?,
                               );
@@ -842,11 +915,8 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
 
                               return Container(
                                 key: ValueKey(questionId),
-                                margin: const EdgeInsets.only(
-                                  bottom: 16 * scaleFactor,
-                                ),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   gradient: const LinearGradient(
                                     colors: [
                                       Color.fromRGBO(210, 159, 42, 0.65),
@@ -854,29 +924,57 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                     ],
                                   ),
                                 ),
-                                child: Container(
-                                  margin: const EdgeInsets.all(2 * scaleFactor),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2D2319),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // top row
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    // <- Reuse the exact same logic as the "View Replies" button
+                                    onTap: () {
+                                      if (question.commentsCount >= 0 &&
+                                          isExpanded == true) {
+                                        final commentProvider = context
+                                            .read<CommentProvider>();
+                                        showAskDoubtBottomSheet(
+                                          context,
+                                          commentProvider,
+                                          "dark",
+                                          questionId,
+                                          userName,
+                                          userRole,
+                                          userPhone,
+                                          profilImgUrl,
+                                          question,
+                                        );
+                                      } else {
+                                        if (_collapsedIds.contains(
+                                          questionId,
+                                        )) {
+                                          _expand(questionId);
+                                        } else {
+                                          _collapse(questionId);
+                                        }
+                                      }
+                                    },
+
+                                    child: Container(
+                                      margin: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2D2319),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
+                                          // top row - compact for grid
                                           Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               CircleAvatar(
-                                                radius:
-                                                    screenWidth *
-                                                    0.05 *
-                                                    scaleFactor,
+                                                radius: 16,
                                                 backgroundColor:
                                                     Colors.transparent,
                                                 backgroundImage:
@@ -893,46 +991,42 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                           )
                                                           as ImageProvider,
                                               ),
-                                              const SizedBox(
-                                                width: 10 * scaleFactor,
-                                              ),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    question.userName ?? '',
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize:
-                                                          18 * scaleFactor,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      question.userName ?? '',
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: Colors.white,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    formattedDate,
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize:
-                                                          12 * scaleFactor,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: Colors.white,
+                                                    Text(
+                                                      formattedDate,
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        color: Colors.white70,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ],
-                                          ),
-                                          // Right side: Add Answer (if allowed & no answer) + collapse icon
-                                          Row(
-                                            children: [
-                                              if (showAddAnswerButton) ...[
-                                                SizedBox(
-                                                  height:
-                                                      screenHeight *
-                                                      0.05 *
-                                                      scaleFactor,
+                                              if (showAddAnswerButton)
+                                                Container(
+                                                  height: 28,
                                                   child: ElevatedButton(
                                                     onPressed: () {
                                                       _showAddAnswerDialog(
@@ -945,16 +1039,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                     style:
                                                         ElevatedButton.styleFrom(
                                                           padding:
-                                                              EdgeInsets.symmetric(
-                                                                vertical:
-                                                                    screenHeight *
-                                                                    0.003 *
-                                                                    scaleFactor,
-                                                                horizontal:
-                                                                    screenWidth *
-                                                                    0.025 *
-                                                                    scaleFactor,
-                                                              ),
+                                                              EdgeInsets.zero,
                                                           backgroundColor:
                                                               Colors
                                                                   .transparent,
@@ -962,7 +1047,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                           shape: RoundedRectangleBorder(
                                                             borderRadius:
                                                                 BorderRadius.circular(
-                                                                  8,
+                                                                  6,
                                                                 ),
                                                           ),
                                                         ).copyWith(
@@ -991,28 +1076,22 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                             ),
                                                         borderRadius:
                                                             BorderRadius.circular(
-                                                              8,
+                                                              6,
                                                             ),
                                                       ),
                                                       child: Container(
                                                         padding:
                                                             const EdgeInsets.symmetric(
-                                                              horizontal:
-                                                                  8 *
-                                                                  scaleFactor,
-                                                              vertical:
-                                                                  6 *
-                                                                  scaleFactor,
+                                                              horizontal: 8,
+                                                              vertical: 4,
                                                             ),
                                                         child: Text(
-                                                          "Add Answer",
+                                                          "Answer",
                                                           style:
                                                               GoogleFonts.outfit(
                                                                 color: Colors
                                                                     .black,
-                                                                fontSize:
-                                                                    12 *
-                                                                    scaleFactor,
+                                                                fontSize: 10,
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .w600,
@@ -1022,208 +1101,109 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(
-                                                  width: 8 * scaleFactor,
-                                                ),
-                                              ],
-
-                                              GestureDetector(
-                                                onTap: () =>
-                                                    _collapse(questionId),
-                                                child: Image.asset(
-                                                  AppAssets.closeBtnIcon,
-                                                  width:
-                                                      screenWidth *
-                                                      0.06 *
-                                                      scaleFactor,
-                                                  height:
-                                                      screenWidth *
-                                                      0.06 *
-                                                      scaleFactor,
-                                                ),
-                                              ),
                                             ],
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12 * scaleFactor),
+                                          const SizedBox(height: 8),
 
-                                      // question text with AnimatedSize
-                                      Stack(
-                                        children: [
-                                          ClipRect(
-                                            child: AnimatedSize(
-                                              duration: const Duration(
-                                                milliseconds: 500,
-                                              ),
-                                              curve: Curves.easeInOut,
-                                              child: ConstrainedBox(
-                                                constraints: isExpanded
-                                                    ? const BoxConstraints()
-                                                    : const BoxConstraints(
-                                                        maxHeight:
-                                                            54 * scaleFactor,
-                                                      ),
-                                                child: Text(
-                                                  question.content ?? '',
-                                                  style: GoogleFonts.outfit(
-                                                    fontSize: 14 * scaleFactor,
-                                                    fontWeight: FontWeight.w400,
-                                                    color: Colors.white,
-                                                    height: 1.3,
-                                                  ),
-                                                ),
-                                              ),
+                                          // QUESTION TEXT - 1 LINE WITH ELLIPSIS
+                                          Text(
+                                            question.content ?? '',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white,
                                             ),
+                                            maxLines: 1, // ONLY 1 LINE
+                                            overflow: TextOverflow
+                                                .ellipsis, // ... WHEN TOO LONG
                                           ),
 
-                                          if (!isExpanded)
-                                            Positioned(
-                                              left: 0,
-                                              right: 0,
-                                              bottom: 0,
-                                              height: 20 * scaleFactor,
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topCenter,
-                                                    end: Alignment.bottomCenter,
-                                                    colors: [
-                                                      const Color(
-                                                        0xFF2D2319,
-                                                      ).withOpacity(0.3),
-                                                      const Color(0xFF2D2319),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
+                                          const SizedBox(height: 8),
 
-                                      const SizedBox(height: 8 * scaleFactor),
-
-                                      // author / answer area (AnimatedSize animates its appearance)
-                                      AnimatedSize(
-                                        duration: const Duration(
-                                          milliseconds: 500,
-                                        ),
-                                        curve: Curves.easeInOut,
-                                        child: isExpanded
-                                            ? Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  SizedBox(
-                                                    height:
-                                                        screenHeight *
-                                                        0.015 *
-                                                        scaleFactor,
-                                                  ),
-                                                  if (question.answer !=
-                                                      null) ...[
-                                                    Row(
-                                                      children: [
-                                                        Image.asset(
-                                                          AppAssets
-                                                              .appLogoIcon2,
-                                                          width:
-                                                              screenWidth *
-                                                              0.15 *
-                                                              scaleFactor,
-                                                          height:
-                                                              screenHeight *
-                                                              0.05 *
-                                                              scaleFactor,
-                                                          fit: BoxFit.contain,
-                                                        ),
-                                                        const SizedBox(
-                                                          width:
-                                                              12 * scaleFactor,
-                                                        ),
-                                                        Container(
-                                                          padding:
-                                                              EdgeInsets.symmetric(
-                                                                vertical:
-                                                                    screenHeight *
-                                                                    0.005 *
-                                                                    scaleFactor,
-                                                                horizontal:
-                                                                    screenWidth *
-                                                                    0.045 *
-                                                                    scaleFactor,
+                                          // ANSWER SECTION - ONLY IF ANSWER EXISTS
+                                          if (question.answer != null)
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Image.asset(
+                                                      AppAssets.appIcon,
+                                                      width: 40,
+                                                      height: 20,
+                                                      fit: BoxFit.contain,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Flexible(
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 4,
+                                                              horizontal: 8,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
+                                                            0x33FFFFFF,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
                                                               ),
-                                                          decoration: BoxDecoration(
-                                                            color: const Color(
-                                                              0x33FFFFFF,
-                                                            ),
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  10,
-                                                                ),
-                                                            border: Border.all(
-                                                              color:
-                                                                  Colors.white,
-                                                              width: 1,
-                                                            ),
-                                                          ),
-                                                          child: Text(
-                                                            "from ${question.answer!.role ?? ''}",
-                                                            style: GoogleFonts.outfit(
-                                                              fontSize:
-                                                                  12 *
-                                                                  scaleFactor,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFFD29F2A,
-                                                                  ),
-                                                            ),
+                                                          border: Border.all(
+                                                            color: Colors.white,
+                                                            width: 1,
                                                           ),
                                                         ),
-                                                      ],
-                                                    ),
-                                                    SizedBox(
-                                                      height:
-                                                          screenHeight *
-                                                          0.015 *
-                                                          scaleFactor,
-                                                    ),
-                                                    Text(
-                                                      question
-                                                              .answer!
-                                                              .content ??
-                                                          '',
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize:
-                                                            14 * scaleFactor,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: const Color(
-                                                          0xFFD29F2A,
+                                                        child: Text(
+                                                          "from ${question.answer!.role ?? ''}",
+                                                          style:
+                                                              GoogleFonts.outfit(
+                                                                fontSize: 9,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w400,
+                                                                color:
+                                                                    const Color(
+                                                                      0xFFD29F2A,
+                                                                    ),
+                                                              ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
                                                         ),
-                                                        height: 1.3,
                                                       ),
                                                     ),
-                                                  ] else
-                                                    const SizedBox.shrink(),
-                                                ],
-                                              )
-                                            : const SizedBox.shrink(),
-                                      ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Text(
+                                                  question.answer!.content ??
+                                                      '',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: const Color(
+                                                      0xFFD29F2A,
+                                                    ),
+                                                  ),
+                                                  maxLines:
+                                                      2, // 2 LINES FOR ANSWER
+                                                  overflow: TextOverflow
+                                                      .ellipsis, // ... WHEN TOO LONG
+                                                ),
+                                                const SizedBox(height: 8),
+                                              ],
+                                            ),
 
-                                      const SizedBox(height: 8 * scaleFactor),
+                                          const Spacer(),
 
-                                      // view more / replies row
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () {
+                                          // VIEW MORE/REPLIES BUTTON
+                                          Container(
+                                            width: double.infinity,
+                                            height: 32,
+                                            child: ElevatedButton(
+                                              onPressed: () {
                                                 if (question.commentsCount >=
                                                         0 &&
                                                     isExpanded == true) {
@@ -1232,7 +1212,6 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                           .read<
                                                             CommentProvider
                                                           >();
-
                                                   showAskDoubtBottomSheet(
                                                     context,
                                                     commentProvider,
@@ -1242,68 +1221,77 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                     userRole,
                                                     userPhone,
                                                     profilImgUrl,
+                                                    question,
                                                   );
-                                                  return;
                                                 } else {
-                                                  // toggle collapsed state -> expands if collapsed
                                                   if (_collapsedIds.contains(
                                                     questionId,
                                                   )) {
                                                     _expand(questionId);
                                                   } else {
-                                                    // show replies if you want instead of toggling
-                                                    _collapse(
-                                                      questionId,
-                                                    ); // or toggle — pick desired behavior
+                                                    _collapse(questionId);
                                                   }
                                                 }
                                               },
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    isExpanded
-                                                        ? question.commentsCount ==
-                                                                  0
-                                                              ? "View Replies"
-                                                              : "View ${question.commentsCount} Replies"
-                                                        : "View More",
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize:
-                                                          14 * scaleFactor,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 4 * scaleFactor,
-                                                  ),
-                                                  const Icon(
-                                                    Icons.expand_more,
-                                                    color: Colors.white,
-                                                    size: 18 * scaleFactor,
-                                                  ),
-                                                ],
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                elevation: 0,
+                                                padding: EdgeInsets.zero,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
                                               ),
-                                            ),
-                                            if (isExpanded)
-                                              Positioned(
-                                                right: 0,
-                                                child: GestureDetector(
-                                                  onTap: () =>
-                                                      _collapse(questionId),
-                                                  child: Image.asset(
-                                                    AppAssets.unExpandedIcon,
-                                                    width: 20 * scaleFactor,
-                                                    height: 20 * scaleFactor,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: const Color(
+                                                      0xFFD29F2A,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Center(
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        isExpanded
+                                                            ? question.commentsCount ==
+                                                                      0
+                                                                  ? "View Replies"
+                                                                  : "View ${question.commentsCount} Replies"
+                                                            : "View More",
+                                                        style:
+                                                            GoogleFonts.outfit(
+                                                              fontSize: 11,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Icon(
+                                                        Icons.expand_more,
+                                                        color: Colors.white,
+                                                        size: 14,
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
-                                          ],
-                                        ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               );
@@ -1328,7 +1316,6 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
           ),
         ],
       ),
-      // bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }

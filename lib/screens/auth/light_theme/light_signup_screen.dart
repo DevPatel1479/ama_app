@@ -40,11 +40,17 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
     final signupProvider = context.watch<SignupProvider>();
 
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 0, // height becomes 0 → looks invisible
+        elevation: 0, // no shadow
+        backgroundColor: const Color(0xFFF8BD00),
+      ),
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: GradientTopLayout(
           headerContent: Image.asset(
-            AppAssets.appLogoWithText,
+            AppAssets.appLogoWithText2,
             width: screenWidth * 0.4,
             fit: BoxFit.contain,
           ),

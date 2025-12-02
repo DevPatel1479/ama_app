@@ -76,38 +76,63 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        automaticallyImplyLeading: false, // because we provide our own leading
+        leading: IconButton(
+          icon: Image.asset(
+            AppAssets.backArrowIcon,
+            width: screenWidth * 0.06,
+            height: screenWidth * 0.06,
+            fit: BoxFit.contain,
+          ),
+          onPressed: () => context.go(AppPathsForScreen.userHomePath),
+        ),
+        titleSpacing: 0,
+        title: Text(
+          "Notifications",
+          style: GoogleFonts.outfit(
+            fontSize: screenWidth * 0.065,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: false, // aligns title to left like your Row
+        toolbarHeight: screenHeight * 0.07, // optional, makes it responsive
+      ),
       body: SafeArea(
         child: Column(
           children: [
             // Custom AppBar
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.015,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.go(AppPathsForScreen.userHomePath),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.05,
-                      height: screenWidth * 0.05,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.12),
-                  Text(
-                    "Notifications",
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.065,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: EdgeInsets.symmetric(
+            //     horizontal: screenWidth * 0.04,
+            //     vertical: screenHeight * 0.015,
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       GestureDetector(
+            //         onTap: () => context.go(AppPathsForScreen.userHomePath),
+            //         child: Image.asset(
+            //           AppAssets.backArrowIcon,
+            //           width: screenWidth * 0.05,
+            //           height: screenWidth * 0.05,
+            //           fit: BoxFit.contain,
+            //         ),
+            //       ),
+            //       SizedBox(width: screenWidth * 0.12),
+            //       Text(
+            //         "Notifications",
+            //         style: GoogleFonts.outfit(
+            //           fontSize: screenWidth * 0.065,
+            //           fontWeight: FontWeight.w600,
+            //           color: Colors.white,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
             // Main Content
             Expanded(

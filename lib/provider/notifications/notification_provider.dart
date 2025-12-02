@@ -43,7 +43,7 @@ class NotificationProvider with ChangeNotifier {
           });
 
       final data = jsonDecode(response.body);
-
+      print(data);
       if (response.statusCode == 200 && data['success'] == true) {
         showCustomMessage(
           context,

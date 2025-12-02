@@ -16,6 +16,7 @@ import 'package:ama_legal_solutions/screen_helpers/main_content_helper/raise_que
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/services_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/get_started_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/splash_screen_helper.dart';
+import 'package:ama_legal_solutions/screens/notifications/dark_notification_history_screen.dart';
 
 import 'package:ama_legal_solutions/screens/notifications/dark_notification_screen.dart';
 
@@ -39,9 +40,11 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: SplashScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -55,9 +58,11 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: HomeScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -71,9 +76,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
+
           child: GetStartedScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -87,12 +95,14 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: ChangeNotifierProvider(
             create: (_) => SignupProvider(),
             child: SignupScreenHelper.getScreen(context),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -106,12 +116,14 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: ChangeNotifierProvider(
             create: (_) => LoginProvider(),
             child: LoginScreenHelper.getScreen(context),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -132,6 +144,7 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: ProfileScreenHelper.getScreen(
             context,
             name,
@@ -150,10 +163,11 @@ final GoRouter appRouter = GoRouter(
               end: end,
             ).chain(CurveTween(curve: curve));
 
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
+            // return SlideTransition(
+            //   position: animation.drive(tween),
+            //   child: child,
+            // );
+            return child;
           },
         );
       },
@@ -164,12 +178,16 @@ final GoRouter appRouter = GoRouter(
       path: AppPathsForScreen.portfolioPath,
       name: AppScreenNames.portfolio,
       pageBuilder: (context, state) {
+        final userRole = state.uri.queryParameters["userRole"] ?? "N/A";
+
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
-          child: PortfolioSreenHelper.getScreen(context),
+          transitionDuration: Duration.zero,
+          child: PortfolioSreenHelper.getScreen(context, userRole),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -182,10 +200,12 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         return CustomTransitionPage(
           key: state.pageKey,
+          transitionDuration: Duration.zero,
           opaque: true,
           child: AmaScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -199,9 +219,11 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: CaseDeskScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -215,9 +237,11 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: AdvocateCasedeskScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -231,9 +255,11 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           child: ServicesScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -246,13 +272,22 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final String isQuestionPosting =
             state.uri.queryParameters["isQuestionPosting"] ?? "";
+        final String isFilingDispute =
+            state.uri.queryParameters["isFilingDispute"] ?? "";
         bool questionPosting = isQuestionPosting == "true" ? true : false;
+        bool filingDispute = isFilingDispute == "true" ? true : false;
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
-          child: RaiseQueryScreenHelper.getScreen(context, questionPosting),
+          transitionDuration: Duration.zero,
+          child: RaiseQueryScreenHelper.getScreen(
+            context,
+            questionPosting,
+            filingDispute,
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -264,11 +299,28 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: const NotificationScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.notificationHistoryPath,
+      name: AppScreenNames.notificationHistoryScreen,
+      pageBuilder: (context, state) {
+        return MaterialPage(
+          key: state.pageKey,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              scaffoldBackgroundColor: Colors.black, // dark background
+            ),
+            child: const NotificationHistoryScreen(),
+          ),
         );
       },
     ),
@@ -279,10 +331,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: PrivacyScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -294,10 +348,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: TermsAndConditionsScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -309,10 +365,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: DeleteAccountScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -325,10 +383,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: AcceptPolicyScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },
@@ -340,10 +400,12 @@ final GoRouter appRouter = GoRouter(
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
+          transitionDuration: Duration.zero,
           // child: ServicesScreenHelper.getScreen(context),
           child: DeleteAccountRequestScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class LightPrivacyPolicyScreen extends StatelessWidget {
@@ -9,16 +10,29 @@ class LightPrivacyPolicyScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFD29F2A),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+
+        // ONLY this — no outer AnnotatedRegion!
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFD29F2A),
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+        ),
+
+        centerTitle: true,
         title: const Text(
           'Privacy Policy',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        centerTitle: true,
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -73,7 +87,7 @@ class LightPrivacyPolicyScreen extends StatelessWidget {
               _sectionTitle("2. Information We Collect"),
               const Text(
                 "We may collect and process the following personal information from users:\n"
-                "• Full Name\n• Email Address\n• Phone Number\n• State / Location\n• Profile Picture\n\n"
+                "• Full Name\n• Email Address\n• Phone Number\n• State\n• Profile Picture\n\n"
                 "This data helps us verify your identity, connect you with the right advocate, and provide personalized legal support.",
                 style: TextStyle(height: 1.5, color: Colors.black),
               ),

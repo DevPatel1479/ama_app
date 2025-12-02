@@ -75,7 +75,7 @@ class DarkPrivacyPolicyScreen extends StatelessWidget {
               _sectionTitle("2. Information We Collect"),
               const Text(
                 "We may collect and process the following personal information from users:\n"
-                "• Full Name\n• Email Address\n• Phone Number\n• State / Location\n• Profile Picture\n\n"
+                "• Full Name\n• Email Address\n• Phone Number\n• State\n• Profile Picture\n\n"
                 "This data helps us verify your identity, connect you with the right advocate, and provide personalized legal support.",
                 style: TextStyle(height: 1.5, color: Colors.white),
               ),

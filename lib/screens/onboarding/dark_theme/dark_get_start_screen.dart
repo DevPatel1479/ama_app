@@ -1,11 +1,13 @@
-import 'dart:math';
-
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class DarkGetStartedScreen extends StatefulWidget {
   const DarkGetStartedScreen({super.key});
@@ -154,7 +156,7 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
                         width: screenWidth * 0.4,
                         height: screenWidth * 0.4,
                         child: Image.asset(
-                          AppAssets.appLogoWithText,
+                          AppAssets.appLogoWithText2,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -229,11 +231,23 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
                             _scale = 0.95; // Scale down on tap
                           });
                         },
-                        onTapUp: (_) {
+                        onTapUp: (_) async {
                           setState(() {
                             _scale = 1.0; // Return to normal
                           });
-                          context.go("/signUp");
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (_) =>
+                                GuestOrLoginSheet(isDarkTheme: true),
+                          );
+                          // final ctx = context;
+                          // await LocalStorageHelper.saveBool(
+                          //   "isGetStartedTapped",
+                          //   true,
+                          // );
+                          // ctx.go(AppPathsForScreen.userHomePath);
                         },
                         onTapCancel: () {
                           setState(() {
@@ -300,9 +314,12 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () {
+                                ..onTap = () async {
                                   // Handle login tap here
-
+                                  await LocalStorageHelper.saveBool(
+                                    "isGetStartedTapped",
+                                    true,
+                                  );
                                   context.go('/logIn');
                                 },
                             ),
@@ -315,6 +332,170 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class GuestOrLoginSheet extends StatelessWidget {
+  final bool isDarkTheme;
+
+  const GuestOrLoginSheet({super.key, required this.isDarkTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: isDarkTheme ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.06,
+          vertical: screenHeight * 0.03,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sheet handle
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isDarkTheme ? Colors.white24 : Colors.black26,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            SizedBox(height: screenHeight * 0.03),
+
+            Text(
+              "Continue As",
+              style: TextStyle(
+                fontSize: screenWidth * 0.055,
+                fontWeight: FontWeight.w600,
+                color: isDarkTheme ? Colors.white : Colors.black87,
+                fontFamily: "Outfit",
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.03),
+
+            // ⚡ Continue as Guest Button
+            _buildButton(
+              context,
+              text: "Continue as Guest",
+              isDarkTheme: isDarkTheme,
+              onTap: () async {
+                await LocalStorageHelper.saveBool("isGetStartedTapped", true);
+                Provider.of<RealTimeRoleProvider>(
+                  context,
+                  listen: false,
+                ).setGuestRole();
+                if (!context.mounted) return;
+
+                Navigator.pop(context);
+
+                if (!context.mounted) return;
+
+                context.go(AppPathsForScreen.userHomePath);
+              },
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            // ⚡ Login Button
+            _buildButton(
+              context,
+              text: "Login",
+              isDarkTheme: isDarkTheme,
+              onTap: () async {
+                await LocalStorageHelper.saveBool("isGetStartedTapped", true);
+                await LocalStorageHelper.saveBool("isGuestLoggedOut", true);
+                if (!context.mounted) return;
+
+                Navigator.pop(context);
+
+                if (!context.mounted) return;
+
+                context.go(AppPathsForScreen.logInPath);
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+
+            // ⚡ Signup Button
+            _buildButton(
+              context,
+              text: "Signup",
+              isDarkTheme: isDarkTheme,
+              onTap: () async {
+                await LocalStorageHelper.saveBool("isGetStartedTapped", true);
+                await LocalStorageHelper.saveBool("isGuestLoggedOut", true);
+                if (!context.mounted) return;
+
+                Navigator.pop(context);
+
+                if (!context.mounted) return;
+
+                context.go(AppPathsForScreen.signUpPath);
+              },
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(
+    BuildContext context, {
+    required String text,
+    required bool isDarkTheme,
+    required VoidCallback onTap,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Container(
+      width: screenWidth * 0.85,
+      height: screenHeight * 0.06,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: isDarkTheme
+            ? const LinearGradient(
+                colors: [Color(0xFFD29F2A), Colors.white],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFF3E2723), Color(0xFF5D4037)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                fontWeight: FontWeight.w500,
+                fontSize: screenWidth * 0.045,
+                color: isDarkTheme ? Colors.black : Colors.white,
+              ),
+            ),
+          ),
         ),
       ),
     );

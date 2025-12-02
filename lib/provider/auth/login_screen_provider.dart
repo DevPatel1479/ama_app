@@ -1,10 +1,14 @@
+import 'dart:async' show Timer;
 import 'dart:convert';
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -27,8 +31,44 @@ class LoginProvider extends ChangeNotifier {
     (_) => TextEditingController(),
   );
 
+  int _secondsRemaining = 30;
+  bool get isResendAvailable => _secondsRemaining == 0;
+  int get secondsRemaining => _secondsRemaining;
+  Timer? _resendTimer;
+
   // Focus nodes for OTP boxes (required for backward/forward movement)
   final List<FocusNode> otpFocusNodes = List.generate(6, (_) => FocusNode());
+
+  // Start the countdown timer
+  void startResendTimer() {
+    _secondsRemaining = 30;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        _secondsRemaining--;
+        notifyListeners();
+      } else {
+        _resendTimer?.cancel();
+        notifyListeners();
+      }
+    });
+  }
+
+  // Stop timer when no longer needed
+  void stopResendTimer() {
+    _resendTimer?.cancel();
+    _resendTimer = null;
+    _secondsRemaining = 0;
+    notifyListeners();
+  }
+
+  // Resend OTP logic
+  Future<void> resendOtp(BuildContext context) async {
+    if (!isResendAvailable) return;
+    final phone = phoneController.text.trim();
+    await sendOtp(context, phone);
+    startResendTimer();
+  }
 
   Future<void> login(BuildContext context) async {
     final phone = phoneController.text.trim();
@@ -51,11 +91,16 @@ class LoginProvider extends ChangeNotifier {
         weekTopic = data["week_topic"];
         weekTopicEnabled = true;
 
+        updateGlobalUserName(name!);
+        updateGlobalUserEmail(email!);
         // Save name and role in local storage
         await LocalStorageHelper.saveString("userName", name!);
         await LocalStorageHelper.saveString("userRole", role!);
         await LocalStorageHelper.saveString("userEmail", email!);
         await LocalStorageHelper.saveString("userWeekTopic", weekTopic!);
+
+        final userProvider = context.read<UserProvider>();
+        await userProvider.loadUserRole();
 
         // _showFlushbar(context, "Login successful", Colors.green);
         // showCustomMessage(context, "Login successful", true);
@@ -91,6 +136,7 @@ class LoginProvider extends ChangeNotifier {
 
       if (response.statusCode == 200 && data["success"] == true) {
         otpSent = true;
+        startResendTimer();
         notifyListeners();
         showCustomMessage(
           context,
@@ -151,10 +197,11 @@ class LoginProvider extends ChangeNotifier {
     } catch (e) {
       showCustomMessage(context, e.toString(), true);
     }
-    await _setLoading(false, successLogin: success);
+    await _setLoading(success, successLogin: success);
   }
 
   Future<void> _setLoading(bool value, {bool successLogin = false}) async {
+    // if (!hasListeners) return;
     isLoading = value;
     _loginSuccess = successLogin;
     if (successLogin) {
@@ -168,7 +215,7 @@ class LoginProvider extends ChangeNotifier {
       }
     }
 
-    notifyListeners();
+    if (hasListeners) notifyListeners();
   }
 
   //   void _showFlushbar(BuildContext context, String message, Color color) {
@@ -181,4 +228,9 @@ class LoginProvider extends ChangeNotifier {
   //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   //   }
   // }
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    super.dispose();
+  }
 }

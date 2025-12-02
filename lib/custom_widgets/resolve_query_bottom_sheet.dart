@@ -114,6 +114,7 @@ void openResolveQueryBottomSheet(BuildContext context, QueryModel query) {
                           padding: EdgeInsets.all(screenWidth * 0.04),
                           child: TextField(
                             controller: _controller,
+                            textInputAction: TextInputAction.done,
                             maxLines: 5,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w300,

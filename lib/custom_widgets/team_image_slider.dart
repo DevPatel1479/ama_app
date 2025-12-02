@@ -158,267 +158,271 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
     final bool anySelected = _selectedIndices.isNotEmpty;
     final double sliderHeight = anySelected ? finalExpandedHeight : _imageSize;
 
-    return AnimatedSize(
-      duration: _animDur,
-      curve: Curves.easeInOut,
-      child: SizedBox(
-        height: sliderHeight + 12, // small extra padding
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            // detect user drag start / end
-            if (notification is ScrollStartNotification) {
-              // only mark dragging if it was a user drag (dragDetails != null)
-              if (notification.dragDetails != null) {
-                _isUserDragging = true;
+    return RepaintBoundary(
+      child: AnimatedSize(
+        duration: _animDur,
+        curve: Curves.easeInOut,
+        child: SizedBox(
+          height: sliderHeight + 12, // small extra padding
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              // detect user drag start / end
+              if (notification is ScrollStartNotification) {
+                // only mark dragging if it was a user drag (dragDetails != null)
+                if (notification.dragDetails != null) {
+                  _isUserDragging = true;
+                }
+              } else if (notification is ScrollEndNotification ||
+                  notification is UserScrollNotification) {
+                // end of scrolling - mark not dragging
+                _isUserDragging = false;
               }
-            } else if (notification is ScrollEndNotification ||
-                notification is UserScrollNotification) {
-              // end of scrolling - mark not dragging
-              _isUserDragging = false;
-            }
-            return false;
-          },
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: leftPadding),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(images.length, (index) {
-                  final bool isSelected = _selectedIndices.contains(index);
+              return false;
+            },
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: leftPadding),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(images.length, (index) {
+                    final bool isSelected = _selectedIndices.contains(index);
 
-                  // when any item is selected, every item container height becomes sliderHeight
-                  final double containerHeight = anySelected
-                      ? sliderHeight
-                      : _imageSize;
+                    // when any item is selected, every item container height becomes sliderHeight
+                    final double containerHeight = anySelected
+                        ? sliderHeight
+                        : _imageSize;
 
-                  // selected item gets expanded width else keep image width
-                  final double containerWidth = isSelected
-                      ? _expandedWidth
-                      : _imageSize;
+                    // selected item gets expanded width else keep image width
+                    final double containerWidth = isSelected
+                        ? _expandedWidth
+                        : _imageSize;
 
-                  // For non-selected items, center the thumbnail vertically in the container
-                  final double nonSelectedTopPadding =
-                      (anySelected && !isSelected)
-                      ? (containerHeight - _imageSize) / 2
-                      : 0.0;
+                    // For non-selected items, center the thumbnail vertically in the container
+                    final double nonSelectedTopPadding =
+                        (anySelected && !isSelected)
+                        ? (containerHeight - _imageSize) / 2
+                        : 0.0;
 
-                  // choose actual top padding: selected uses fixed topPaddingWhenSelected, others are centered
-                  final double actualTopPadding = isSelected
-                      ? topPaddingWhenSelected
-                      : nonSelectedTopPadding;
+                    // choose actual top padding: selected uses fixed topPaddingWhenSelected, others are centered
+                    final double actualTopPadding = isSelected
+                        ? topPaddingWhenSelected
+                        : nonSelectedTopPadding;
 
-                  // footer height for selected (tight and clamped so no large empty space)
-                  final double footerHeight = isSelected
-                      ? max(
-                          _minFooterHeight,
-                          containerHeight - actualTopPadding - _imageSize,
-                        )
-                      : 0.0;
+                    // footer height for selected (tight and clamped so no large empty space)
+                    final double footerHeight = isSelected
+                        ? max(
+                            _minFooterHeight,
+                            containerHeight - actualTopPadding - _imageSize,
+                          )
+                        : 0.0;
 
-                  // scale non-selected thumbnails while one (or more) is expanded
-                  final double scale = !anySelected
-                      ? 1.0
-                      : (isSelected ? 1.0 : 0.86);
+                    // scale non-selected thumbnails while one (or more) is expanded
+                    final double scale = !anySelected
+                        ? 1.0
+                        : (isSelected ? 1.0 : 0.86);
 
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      right: index == images.length - 1 ? 0 : itemSpacing,
-                    ),
-                    child: GestureDetector(
-                      onTap: () async {
-                        // Toggle selection
-                        if (isSelected) {
-                          setState(() {
-                            _selectedIndices.remove(index);
-                          });
-                          return;
-                        }
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        right: index == images.length - 1 ? 0 : itemSpacing,
+                      ),
+                      child: GestureDetector(
+                        onTap: () async {
+                          // Toggle selection
+                          if (isSelected) {
+                            setState(() {
+                              _selectedIndices.remove(index);
+                            });
+                            return;
+                          }
 
-                        // If selecting, try to center tapped item (accurately), then add to selected set and expand.
-                        // But do not auto-scroll if user is actively dragging.
-                        _scrollToCenterAccurate(
-                          index,
-                          screenWidth,
-                          itemSpacing,
-                        );
-                        await Future.delayed(const Duration(milliseconds: 120));
-                        if (mounted) {
-                          setState(() {
-                            _selectedIndices.add(index);
-                          });
-                        }
-                      },
-                      child: ClipRect(
-                        // prevents scaled children from overflowing while animating
-                        child: AnimatedScale(
-                          scale: scale,
-                          duration: _animDur,
-                          curve: Curves.easeInOut,
-                          child: AnimatedContainer(
+                          // If selecting, try to center tapped item (accurately), then add to selected set and expand.
+                          // But do not auto-scroll if user is actively dragging.
+                          _scrollToCenterAccurate(
+                            index,
+                            screenWidth,
+                            itemSpacing,
+                          );
+                          await Future.delayed(
+                            const Duration(milliseconds: 120),
+                          );
+                          if (mounted) {
+                            setState(() {
+                              _selectedIndices.add(index);
+                            });
+                          }
+                        },
+                        child: ClipRect(
+                          // prevents scaled children from overflowing while animating
+                          child: AnimatedScale(
+                            scale: scale,
                             duration: _animDur,
-                            width: containerWidth,
-                            height: containerHeight,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                isSelected ? 20 : 12,
-                              ),
-                              color: isSelected ? Colors.white : null,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        // color: Colors.white,
-                                        color: Colors.black26,
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            // Use Stack to position image and footer precisely (no flex issues)
-                            child: Stack(
-                              children: [
-                                // Image positioned with actualTopPadding, centered horizontally
-                                Positioned(
-                                  top: actualTopPadding,
-                                  left: (containerWidth - _imageSize) / 2,
-                                  child: SizedBox(
-                                    width: _imageSize,
-                                    height: _imageSize,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(
-                                          isSelected ? 20 : 25,
-                                        ),
-                                        topRight: Radius.circular(
-                                          isSelected ? 20 : 25,
-                                        ),
-                                        bottomLeft: Radius.circular(
-                                          isSelected ? 20 : 25,
-                                        ),
-                                        bottomRight: Radius.circular(
-                                          isSelected ? 20 : 25,
-                                        ),
-                                      ),
-                                      child: Image.asset(
-                                        images[index],
-                                        fit: BoxFit.cover,
-                                        width: _imageSize,
-                                        height: _imageSize,
-                                      ),
-                                    ),
-                                  ),
+                            curve: Curves.easeInOut,
+                            child: AnimatedContainer(
+                              duration: _animDur,
+                              width: containerWidth,
+                              height: containerHeight,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  isSelected ? 20 : 12,
                                 ),
-
-                                // footer area anchored to bottom when selected
-                                if (isSelected)
-                                  Positioned(
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    height: footerHeight,
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.vertical(
-                                          bottom: Radius.circular(20),
+                                color: isSelected ? Colors.white : null,
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          // color: Colors.white,
+                                          color: Colors.black26,
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
                                         ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                        horizontal: 12,
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            TeamData.names[index],
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.outfit(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.black,
-                                            ),
+                                      ]
+                                    : null,
+                              ),
+                              // Use Stack to position image and footer precisely (no flex issues)
+                              child: Stack(
+                                children: [
+                                  // Image positioned with actualTopPadding, centered horizontally
+                                  Positioned(
+                                    top: actualTopPadding,
+                                    left: (containerWidth - _imageSize) / 2,
+                                    child: SizedBox(
+                                      width: _imageSize,
+                                      height: _imageSize,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(
+                                            isSelected ? 20 : 25,
                                           ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            TeamData.roles[index],
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.outfit(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.black87,
-                                            ),
+                                          topRight: Radius.circular(
+                                            isSelected ? 20 : 25,
                                           ),
-
-                                          // tappable social icons (small spacing)
-                                          const SizedBox(height: 8),
-                                          // Row(
-                                          //   mainAxisAlignment:
-                                          //       MainAxisAlignment.center,
-                                          //   children: [
-                                          //     Material(
-                                          //       color: Colors.transparent,
-                                          //       child: InkWell(
-                                          //         borderRadius:
-                                          //             BorderRadius.circular(8),
-                                          //         onTap: () {
-                                          //           // TODO: open Instagram
-                                          //         },
-                                          //         child: Padding(
-                                          //           padding:
-                                          //               const EdgeInsets.all(
-                                          //                 6.0,
-                                          //               ),
-                                          //           child: Image.asset(
-                                          //             AppAssets.tmInstaImg,
-                                          //             width: 28,
-                                          //             height: 28,
-                                          //             fit: BoxFit.contain,
-                                          //           ),
-                                          //         ),
-                                          //       ),
-                                          //     ),
-                                          //     const SizedBox(width: 12),
-                                          //     Material(
-                                          //       color: Colors.transparent,
-                                          //       child: InkWell(
-                                          //         borderRadius:
-                                          //             BorderRadius.circular(8),
-                                          //         onTap: () {
-                                          //           // TODO: open LinkedIn
-                                          //         },
-                                          //         child: Padding(
-                                          //           padding:
-                                          //               const EdgeInsets.all(
-                                          //                 6.0,
-                                          //               ),
-                                          //           child: Image.asset(
-                                          //             AppAssets.tmLinkedInImg,
-                                          //             width: 28,
-                                          //             height: 28,
-                                          //             fit: BoxFit.contain,
-                                          //           ),
-                                          //         ),
-                                          //       ),
-                                          //     ),
-                                          //   ],
-                                          // ),
-                                        ],
+                                          bottomLeft: Radius.circular(
+                                            isSelected ? 20 : 25,
+                                          ),
+                                          bottomRight: Radius.circular(
+                                            isSelected ? 20 : 25,
+                                          ),
+                                        ),
+                                        child: Image.asset(
+                                          images[index],
+                                          fit: BoxFit.cover,
+                                          width: _imageSize,
+                                          height: _imageSize,
+                                        ),
                                       ),
                                     ),
                                   ),
-                              ],
+
+                                  // footer area anchored to bottom when selected
+                                  if (isSelected)
+                                    Positioned(
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      height: footerHeight,
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.vertical(
+                                            bottom: Radius.circular(20),
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 12,
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              TeamData.names[index],
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              TeamData.roles[index],
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+
+                                            // tappable social icons (small spacing)
+                                            const SizedBox(height: 8),
+                                            // Row(
+                                            //   mainAxisAlignment:
+                                            //       MainAxisAlignment.center,
+                                            //   children: [
+                                            //     Material(
+                                            //       color: Colors.transparent,
+                                            //       child: InkWell(
+                                            //         borderRadius:
+                                            //             BorderRadius.circular(8),
+                                            //         onTap: () {
+                                            //           // TODO: open Instagram
+                                            //         },
+                                            //         child: Padding(
+                                            //           padding:
+                                            //               const EdgeInsets.all(
+                                            //                 6.0,
+                                            //               ),
+                                            //           child: Image.asset(
+                                            //             AppAssets.tmInstaImg,
+                                            //             width: 28,
+                                            //             height: 28,
+                                            //             fit: BoxFit.contain,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     ),
+                                            //     const SizedBox(width: 12),
+                                            //     Material(
+                                            //       color: Colors.transparent,
+                                            //       child: InkWell(
+                                            //         borderRadius:
+                                            //             BorderRadius.circular(8),
+                                            //         onTap: () {
+                                            //           // TODO: open LinkedIn
+                                            //         },
+                                            //         child: Padding(
+                                            //           padding:
+                                            //               const EdgeInsets.all(
+                                            //                 6.0,
+                                            //               ),
+                                            //           child: Image.asset(
+                                            //             AppAssets.tmLinkedInImg,
+                                            //             width: 28,
+                                            //             height: 28,
+                                            //             fit: BoxFit.contain,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     ),
+                                            //   ],
+                                            // ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ),
           ),

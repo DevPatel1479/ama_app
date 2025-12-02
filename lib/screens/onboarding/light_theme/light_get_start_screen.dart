@@ -1,3 +1,7 @@
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+
+import 'package:ama_legal_solutions/screens/onboarding/dark_theme/dark_get_start_screen.dart'
+    show GuestOrLoginSheet;
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -160,7 +164,7 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                         width: screenWidth * 0.4,
                         height: screenWidth * 0.4,
                         child: Image.asset(
-                          AppAssets.appLogoWithText,
+                          AppAssets.appLogoWithText2,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -235,11 +239,25 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                             _scale = 0.95; // Scale down on tap
                           });
                         },
-                        onTapUp: (_) {
+                        onTapUp: (_) async {
                           setState(() {
                             _scale = 1.0; // Return to normal
                           });
-                          context.go("/signUp");
+
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (_) =>
+                                GuestOrLoginSheet(isDarkTheme: false),
+                          );
+                          // final ctx = context;
+                          // await LocalStorageHelper.saveBool(
+                          //   "isGetStartedTapped",
+                          //   true,
+                          // );
+                          // ctx.go(AppPathsForScreen.userHomePath);
+                          // context.go("/signUp");
                         },
                         onTapCancel: () {
                           setState(() {
@@ -303,9 +321,12 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () {
+                                ..onTap = () async {
                                   // Handle login tap here
-
+                                  await LocalStorageHelper.saveBool(
+                                    "isGetStartedTapped",
+                                    true,
+                                  );
                                   context.go('/logIn');
                                 },
                             ),

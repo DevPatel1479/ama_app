@@ -17,4 +17,5 @@ class AppPathsForScreen {
   static const String deleteAccountPath = "/deleteAccountScreen";
   static const String acceptPolicyPath = "/acceptPolicyScreen";
   static const String deleteAccountRequestPath = "/deleteAccountRequestScreen";
+  static const String notificationHistoryPath = "/notificationHistoryScreen";
 }

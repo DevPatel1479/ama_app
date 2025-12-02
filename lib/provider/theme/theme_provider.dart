@@ -1,5 +1,6 @@
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -22,6 +23,7 @@ class ThemeProvider extends ChangeNotifier {
   /// ✅ Toggle between light and dark theme
   Future<void> toggleTheme() async {
     _isDarkMode = !_isDarkMode;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, _isDarkMode);
     notifyListeners();

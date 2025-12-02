@@ -1,8 +1,11 @@
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -25,6 +28,9 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      precacheImage(const AssetImage(AppAssets.appLogoWithText2), context);
+    });
     otpControllers = List.generate(otpLength, (_) => TextEditingController());
     otpFocusNodes = List.generate(otpLength, (_) => FocusNode());
   }
@@ -59,8 +65,8 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
             children: [
               const SizedBox(height: 20),
               Image.asset(
-                AppAssets.appLogoWithText,
-                width: screenWidth * 0.4,
+                AppAssets.appLogoWithText2,
+                height: 140,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 12),
@@ -107,10 +113,55 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
               const SizedBox(height: 16),
 
               // OTP Input Boxes
-              if (loginProvider.otpSent)
+              if (loginProvider.otpSent &&
+                  loginProvider.phoneController.text != "8734835064") ...[
                 _otpInputBoxes(screenWidth, loginProvider),
-
-              const SizedBox(height: 35),
+                const SizedBox(height: 14),
+                Text(
+                  "Check your WhatsApp for OTP",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "Outfit",
+                    fontWeight: FontWeight.w400,
+                    fontSize:
+                        screenWidth * 0.045, // auto adjusts with screen width
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // 🕒 Timer + Resend Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!loginProvider.isResendAvailable)
+                      Text(
+                        "Resend OTP in ${loginProvider.secondsRemaining}s",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontFamily: "Outfit",
+                          fontSize: 16,
+                        ),
+                      )
+                    else
+                      TextButton(
+                        onPressed: loginProvider.isResendAvailable
+                            ? () => loginProvider.resendOtp(context)
+                            : null,
+                        child: const Text(
+                          "Resend OTP",
+                          style: TextStyle(
+                            color: Color(0xFFD29F2A),
+                            fontSize: 16,
+                            fontFamily: "Outfit",
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ] else if (loginProvider.otpSent)
+                _otpInputBoxes(screenWidth, loginProvider),
+              const SizedBox(height: 25),
 
               // Login Button
               // _gradientLoginButton(fieldWidth, fieldHeight, () {}),
@@ -130,53 +181,18 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                         // print(phone);
                         // print(enteredOtp);
                         if (phone == "8734835064") {
-                          final verifyingSnack = SnackBar(
-                            duration: const Duration(
-                              days: 1,
-                            ), // keep until manually hidden
-                            backgroundColor: Colors.black87,
-                            behavior:
-                                SnackBarBehavior.floating, // allows more room
-                            margin: const EdgeInsets.all(
-                              12,
-                            ), // lifts it slightly
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            content: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.3,
-                                    color: Colors.amber,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Text(
-                                  "Verifying...",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontFamily: "Outfit",
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-
                           // ✅ Show loading snackbar immediately
                           final messenger = ScaffoldMessenger.of(context);
-                          messenger
-                            ..hideCurrentSnackBar()
-                            ..showSnackBar(verifyingSnack);
+                          // messenger
+                          //   ..hideCurrentSnackBar()
+                          //   ..showSnackBar(verifyingSnack);
 
                           const defaultOtp = "453423";
 
                           // If OTPs match, treat as verified
                           if (enteredOtp == defaultOtp) {
+                            updateGlobalUserName("TestDp");
+                            updateGlobalUserEmail("testdp@gmail.com");
                             await LocalStorageHelper.saveBool(
                               "isUserLoggedIn",
                               true,
@@ -201,6 +217,8 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                               "userWeekTopic",
                               "third_week",
                             );
+                            final userProvider = context.read<UserProvider>();
+                            await userProvider.loadUserRole();
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(
                               const SnackBar(
@@ -250,6 +268,11 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
 
                         // print(loginProvider.loginSuccess);
                         if (loginProvider.loginSuccess) {
+                          String userPhone = "91${phone}";
+                          Provider.of<RealTimeRoleProvider>(
+                            context,
+                            listen: false,
+                          ).startRoleListener(userPhone);
                           // if (loginProvider.weekTopicEnabled) {
                           //   await FirebaseMessagingService.instance
                           //       .subscribeToTopicFor(
@@ -297,6 +320,23 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                       loginProvider,
                     ),
               const SizedBox(height: 20),
+              _guestModeButton(fieldWidth, fieldHeight, () async {
+                final ctx = context;
+                final userProvider = context.read<UserProvider>();
+                Provider.of<RealTimeRoleProvider>(
+                  context,
+                  listen: false,
+                ).setGuestRole();
+                await LocalStorageHelper.saveString("userRole", "guest");
+                await LocalStorageHelper.saveBool("isGuestLoggedOut", false);
+                await LocalStorageHelper.saveBool("isNormalUser", false);
+                await userProvider.loadUserRole();
+                updateGlobalUserName("Guest User");
+                updateGlobalUserEmail("guest@gmail.com");
+
+                ctx.pushReplacement(AppPathsForScreen.userHomePath);
+              }, "Continue as Guest"),
+              const SizedBox(height: 16),
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
@@ -361,6 +401,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               maxLength: 10,
+              enabled: !provider.otpSent,
               controller: provider.phoneController,
               style: const TextStyle(color: Colors.white),
               keyboardType: TextInputType.number,
@@ -486,6 +527,50 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                         color: Colors.black,
                       ),
                     ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _guestModeButton(
+    double width,
+    double height,
+    VoidCallback onPressed,
+    String text,
+  ) {
+    return Center(
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFB8860B), // Dark Goldenrod (premium)
+              Color(0xFF3A3A3A), // Charcoal grey for contrast
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: onPressed,
+            child: Center(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: "Outfit",
+                  fontWeight: FontWeight.w500,
+                  fontSize: 20,
+                  color: Colors.white, // White fits this gradient best
+                ),
+              ),
             ),
           ),
         ),

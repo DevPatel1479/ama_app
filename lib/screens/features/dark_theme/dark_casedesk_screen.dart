@@ -9,8 +9,10 @@ import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/models/query_model.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +37,8 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   bool _userScrolled = false;
   String? userRole;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _queriesSubscription;
-
+  String? _role;
+  String? _phone;
   // Example list of bank details
   final List<Map<String, dynamic>> bankDetails = [
     {
@@ -55,6 +58,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
       "amountColor": Color(0xFFFF5858),
     },
   ];
+  String? _lastRole;
 
   @override
   void initState() {
@@ -65,23 +69,89 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     fetchUserRole();
     Future.microtask(() async {
       final provider = Provider.of<QueryProvider>(context, listen: false);
-      final role = await LocalStorageHelper.getString("userRole");
-      final phone = await LocalStorageHelper.getString("userPhone");
+      // final role = await LocalStorageHelper.getString("userRole");
+      // final phone = await LocalStorageHelper.getString("userPhone");
 
-      if (role != null && phone != null) {
-        provider.fetchQueries(context: context, role: role, phone: phone);
+      if (_role != null && _phone != null) {
+        provider.fetchQueries(
+          context: context,
+          role: _role ?? "",
+          phone: _phone ?? "",
+          status: isPendingActive ? 'pending' : 'resolved',
+        );
         // attach realtime listener only if My Case active
         if (isMyCaseActive) {
-          _attachFirestoreListener(context, role, phone, isMyCaseActive);
+          _attachFirestoreListener(
+            context,
+            _role ?? "",
+            _phone ?? "",
+            isMyCaseActive,
+          );
         }
       }
     });
   }
 
-  Future<void> fetchUserRole() async {
-    final role = await LocalStorageHelper.getString("userRole");
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newRole = context.watch<RealTimeRoleProvider>().role;
+
+    // Only refetch if role has actually changed
+    if (newRole != null && newRole != _lastRole) {
+      _lastRole = newRole;
+      _onRoleChanged(newRole);
+    }
+  }
+
+  Future<void> _onRoleChanged(String newRole) async {
+    print("🔄 Role changed to $newRole — refetching queries...");
+
+    final provider = Provider.of<QueryProvider>(context, listen: false);
+
+    // Keep local variables in sync with provider
+    _role = newRole;
     setState(() {
-      userRole = role;
+      userRole = newRole;
+    });
+
+    // detach old listener first, clear caches, reset scroll state
+    await _detachFirestoreListener();
+    provider.clearAllCaches(); // keep your provider clearing logic
+
+    // reset local pagination flags so scroll listener will work correctly
+    _userScrolled = false;
+    if (_scrollController.hasClients) {
+      // move back to top safely
+      _scrollController.jumpTo(0);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      });
+    }
+
+    final phone = await LocalStorageHelper.getString("userPhone");
+    if (phone != null) {
+      _phone = phone; // keep local phone in sync too
+
+      await provider.fetchQueries(
+        context: context,
+        role: newRole,
+        phone: phone,
+        status: isPendingActive ? 'pending' : 'resolved',
+        reset: true,
+      );
+
+      // attach a listener for the new role/phone
+      _attachFirestoreListener(context, newRole, phone, isMyCaseActive);
+    }
+  }
+
+  Future<void> fetchUserRole() async {
+    _role = await LocalStorageHelper.getString("userRole");
+    _phone = await LocalStorageHelper.getString("userPhone");
+    setState(() {
+      userRole = _role;
     });
   }
 
@@ -93,34 +163,79 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     String phone,
     bool isMyCaseActive,
   ) {
+    // always reattach only if no subscription present
     if (_queriesSubscription != null) return;
-    // Get the provider reference NOW, while widget is still mounted
+
     final queryProvider = Provider.of<QueryProvider>(context, listen: false);
+
+    // Prefer scoped listener if your documents have a user identifier:
+    // final subcollectionRef = FirebaseFirestore.instance
+    //     .collection('allQueries')
+    //     .where('user_id', isEqualTo: '${role}_$phone');
 
     final subcollectionRef = FirebaseFirestore.instance.collection(
       'allQueries',
     );
 
     _queriesSubscription = subcollectionRef.snapshots().listen(
-      (querySnap) async {
-        // print("Firestore userQueries changes detected...");
+      (snapshot) {
         if (!mounted || !isMyCaseActive) return;
 
-        // final queryProvider = Provider.of<QueryProvider>(
-        //   context,
-        //   listen: false,
-        // );
+        for (final change in snapshot.docChanges) {
+          final doc = change.doc;
+          final raw = doc.data();
+          if (raw == null) continue;
 
-        // refetch queries for this user
-        await queryProvider.fetchQueries(
-          context: context,
-          role: role,
-          phone: phone,
-          reset: true,
-        );
+          // --- FILTER out docs not belonging to this user (important) ---
+          // Try several common field names; adjust to your DB shape.
+          final docPhone =
+              (raw['phone'] ??
+                      raw['userPhone'] ??
+                      (raw['user_id'] is String
+                          ? (raw['user_id'] as String).split('_').last
+                          : null))
+                  ?.toString();
+
+          final docRole = (raw['role'] ?? raw['user_role'] ?? null)?.toString();
+
+          if (docPhone == null) {
+            // if there is no phone field, optionally skip — safer to skip
+            continue;
+          }
+
+          if (docPhone != phone) continue;
+          if (docRole != null && docRole != role) continue;
+
+          // Build map and normalize
+          final Map<String, dynamic> map = Map<String, dynamic>.from(
+            raw as Map<String, dynamic>,
+          );
+          map['id'] = doc.id;
+
+          final submittedRaw = map['submitted_at'] ?? map['submittedAt'];
+          if (submittedRaw is int) {
+            map['submitted_at'] = submittedRaw;
+          } else if (submittedRaw is String) {
+            map['submitted_at'] = int.tryParse(submittedRaw) ?? 0;
+          } else if (submittedRaw is Map &&
+              submittedRaw.containsKey('_seconds')) {
+            map['submitted_at'] = (submittedRaw['_seconds'] is int)
+                ? submittedRaw['_seconds']
+                : int.tryParse(submittedRaw['_seconds'].toString()) ?? 0;
+          }
+
+          final qm = QueryModel.fromJson(map);
+
+          if (change.type == DocumentChangeType.added ||
+              change.type == DocumentChangeType.modified) {
+            queryProvider.upsertQueryInCache(qm);
+          } else if (change.type == DocumentChangeType.removed) {
+            queryProvider.removeQueryById(doc.id);
+          }
+        }
       },
       onError: (err) {
-        print("Firestore listener error: $err");
+        print('Firestore listener error: $err');
       },
     );
   }
@@ -153,16 +268,17 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
 
     if (shouldTrigger) {
       provider.isFetchingMore = true; // will notify listeners and show loader
-      final role = await LocalStorageHelper.getString("userRole");
-      final phone = await LocalStorageHelper.getString("userPhone");
+      final role = _role;
+      final phone = _phone;
 
       if (role != null && phone != null) {
         await provider.fetchQueries(
           context: context,
           role: role,
           phone: phone,
-          // lastDocId: provider.nextPageCursor,
+          lastDocId: provider.nextPageCursor,
           append: true,
+          status: isPendingActive ? 'pending' : 'resolved',
         );
       }
       provider.isFetchingMore = false; // hide loader
@@ -176,8 +292,8 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
 
     if (isMyCaseActive) {
       // attach listener
-      final role = await LocalStorageHelper.getString("userRole");
-      final phone = await LocalStorageHelper.getString("userPhone");
+      final role = _role;
+      final phone = _phone;
       if (role != null && phone != null) {
         _attachFirestoreListener(context, role, phone, isMyCaseActive);
       }
@@ -190,6 +306,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _detachFirestoreListener();
     super.dispose();
   }
 
@@ -230,16 +347,19 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     // amount of extra space to reserve at bottom so the last item is fully visible
     final contentBottomPadding =
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
-
+    final role = context.watch<RealTimeRoleProvider>().role;
+    userRole = role;
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       body: Consumer<UserInfoProvider>(
         builder: (context, provider, _) {
           return Stack(
             children: [
               Positioned.fill(
                 child: SafeArea(
+                  bottom: false,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -256,12 +376,12 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                   context.go(AppPathsForScreen.userHomePath),
                               child: Image.asset(
                                 AppAssets.backArrowIcon,
-                                width: screenWidth * 0.05 * scaleFactor,
-                                height: screenWidth * 0.05 * scaleFactor,
+                                width: screenWidth * 0.06 * scaleFactor,
+                                height: screenWidth * 0.06 * scaleFactor,
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            SizedBox(width: screenWidth * 0.12 * scaleFactor),
+                            SizedBox(width: screenWidth * 0.02 * scaleFactor),
                             Text(
                               "My Casedesk",
                               style: GoogleFonts.outfit(
@@ -270,84 +390,170 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                 color: Colors.white,
                               ),
                             ),
+                            const Spacer(),
+
+                            if (userRole?.toLowerCase() != "admin")
+                              SizedBox(
+                                width: screenWidth * 0.35 * scaleFactor,
+                                height: screenHeight * 0.05 * scaleFactor,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final result = await context.pushNamed(
+                                      AppScreenNames.raiseQuery,
+                                      // you can pass extra if needed
+                                    );
+
+                                    // result could be true when new query created
+                                    if (result == true) {
+                                      final provider =
+                                          Provider.of<QueryProvider>(
+                                            context,
+                                            listen: false,
+                                          );
+                                      final role =
+                                          await LocalStorageHelper.getString(
+                                            "userRole",
+                                          );
+                                      final phone =
+                                          await LocalStorageHelper.getString(
+                                            "userPhone",
+                                          );
+                                      if (role != null && phone != null) {
+                                        await provider.fetchQueries(
+                                          context: context,
+                                          role: role,
+                                          phone: phone,
+                                          status: isPendingActive
+                                              ? 'pending'
+                                              : 'resolved',
+                                          reset: true,
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style:
+                                      ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            41,
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.black.withOpacity(
+                                          0.3,
+                                        ),
+                                        elevation: 6,
+                                      ).copyWith(
+                                        backgroundColor:
+                                            MaterialStateProperty.all(
+                                              Colors.transparent,
+                                            ),
+                                      ),
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        begin: Alignment(-1.0, 0.0),
+                                        end: Alignment(1.0, 0.0),
+                                        colors: [
+                                          Color(0xFFD29F2A),
+                                          Color(0xFFFFFFFF),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(41),
+                                    ),
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "Ask Query",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 14 * scaleFactor,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
-
-                      SizedBox(height: screenHeight * 0.03 * scaleFactor),
-
-                      // Primary Toggle bar (My Case / Bank Details)
-                      Center(
-                        child: Container(
-                          width: screenWidth * 0.8 * scaleFactor,
-                          height: screenHeight * 0.06 * scaleFactor,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.white,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => _onToggleMyCase(true),
-                                  child: Container(
-                                    margin: EdgeInsets.all(
-                                      screenWidth * 0.01 * scaleFactor,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isMyCaseActive
-                                          ? const Color(0xFFD29F2A)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "My Case",
-                                      style: GoogleFonts.outfit(
-                                        fontSize:
-                                            screenWidth * 0.04 * scaleFactor,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
+                      if (userRole?.toLowerCase() != "admin")
+                        SizedBox(height: screenHeight * 0.03 * scaleFactor),
+                      if (userRole?.toLowerCase() != "admin")
+                        // Primary Toggle bar (My Case / Bank Details)
+                        Center(
+                          child: Container(
+                            width: screenWidth * 0.8 * scaleFactor,
+                            height: screenHeight * 0.06 * scaleFactor,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Colors.white,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => _onToggleMyCase(true),
+                                    child: Container(
+                                      margin: EdgeInsets.all(
+                                        screenWidth * 0.01 * scaleFactor,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isMyCaseActive
+                                            ? const Color(0xFFD29F2A)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "My Case",
+                                        style: GoogleFonts.outfit(
+                                          fontSize:
+                                              screenWidth * 0.04 * scaleFactor,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    _onToggleMyCase(false);
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      _onToggleMyCase(false);
 
-                                    if (provider.userInfo != null) return;
-                                    provider.fetchUserInfo(context, true);
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.all(
-                                      screenWidth * 0.01 * scaleFactor,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: !isMyCaseActive
-                                          ? const Color(0xFFD29F2A)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Bank Details",
-                                      style: GoogleFonts.outfit(
-                                        fontSize:
-                                            screenWidth * 0.04 * scaleFactor,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
+                                      if (provider.userInfo != null) return;
+                                      provider.fetchUserInfo(context, true);
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.all(
+                                        screenWidth * 0.01 * scaleFactor,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: !isMyCaseActive
+                                            ? const Color(0xFFD29F2A)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "Bank Details",
+                                        style: GoogleFonts.outfit(
+                                          fontSize:
+                                              screenWidth * 0.04 * scaleFactor,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
                       SizedBox(height: screenHeight * 0.025 * scaleFactor),
 
@@ -362,8 +568,47 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                             children: [
                               // Pending
                               GestureDetector(
-                                onTap: () =>
-                                    setState(() => isPendingActive = true),
+                                onTap: () async {
+                                  if (isPendingActive) return; // already active
+                                  setState(() => isPendingActive = true);
+
+                                  // reset scroll to top and pagination flags
+                                  if (_scrollController.hasClients) {
+                                    _scrollController.jumpTo(0);
+                                  } else {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          if (_scrollController.hasClients) {
+                                            _scrollController.jumpTo(0);
+                                          }
+                                        });
+                                  }
+                                  _userScrolled = false;
+
+                                  final provider = Provider.of<QueryProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  final role =
+                                      await LocalStorageHelper.getString(
+                                        "userRole",
+                                      );
+                                  final phone =
+                                      await LocalStorageHelper.getString(
+                                        "userPhone",
+                                      );
+                                  if (role != null && phone != null) {
+                                    // Replace list with first page of pending
+                                    await provider.fetchQueries(
+                                      context: context,
+                                      role: role,
+                                      phone: phone,
+                                      status: 'pending',
+                                      // reset: false (default) -> replace provider cache for that status
+                                    );
+                                  }
+                                },
+
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -399,8 +644,46 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                               ),
                               // Resolved
                               GestureDetector(
-                                onTap: () =>
-                                    setState(() => isPendingActive = false),
+                                onTap: () async {
+                                  if (!isPendingActive)
+                                    return; // already resolved
+                                  setState(() => isPendingActive = false);
+
+                                  // reset scroll to top and pagination flags
+                                  if (_scrollController.hasClients) {
+                                    _scrollController.jumpTo(0);
+                                  } else {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          if (_scrollController.hasClients) {
+                                            _scrollController.jumpTo(0);
+                                          }
+                                        });
+                                  }
+                                  _userScrolled = false;
+
+                                  final provider = Provider.of<QueryProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  final role =
+                                      await LocalStorageHelper.getString(
+                                        "userRole",
+                                      );
+                                  final phone =
+                                      await LocalStorageHelper.getString(
+                                        "userPhone",
+                                      );
+                                  if (role != null && phone != null) {
+                                    // Replace list with first page of resolved
+                                    await provider.fetchQueries(
+                                      context: context,
+                                      role: role,
+                                      phone: phone,
+                                      status: 'resolved',
+                                    );
+                                  }
+                                },
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -475,22 +758,45 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                     );
                                   }
 
-                                  // Filter by Pending / Resolved
-                                  final filteredQueries = provider.queries
-                                      .where(
-                                        (q) => isPendingActive
-                                            ? q.status == 'pending'
-                                            : q.status == 'resolved',
-                                      )
-                                      .toList();
+                                  // // Filter by Pending / Resolved
+                                  // final filteredQueries = provider.queries
+                                  //     .where(
+                                  //       (q) => isPendingActive
+                                  //           ? q.status == 'pending'
+                                  //           : q.status == 'resolved',
+                                  //     )
+                                  //     .toList();
 
-                                  // Sort by submitted_at descending
-                                  filteredQueries.sort(
+                                  // // Sort by submitted_at descending
+                                  // filteredQueries.sort(
+                                  //   (a, b) =>
+                                  //       b.submittedAt.compareTo(a.submittedAt),
+                                  // );
+                                  final activeQueries = provider.queries;
+                                  activeQueries.sort(
                                     (a, b) =>
                                         b.submittedAt.compareTo(a.submittedAt),
                                   );
-
-                                  if (filteredQueries.isEmpty) {
+                                  if (provider.isLoading) {
+                                    // Show shimmer placeholders while switching between tabs
+                                    return ListView.builder(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal:
+                                            screenWidth * 0.04 * scaleFactor,
+                                        vertical:
+                                            screenHeight * 0.015 * scaleFactor,
+                                      ).copyWith(bottom: contentBottomPadding),
+                                      itemCount: 3,
+                                      itemBuilder: (context, index) => Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom:
+                                              screenHeight * 0.02 * scaleFactor,
+                                        ),
+                                        child: const ShimmerBankCard(),
+                                      ),
+                                    );
+                                  }
+                                  if (activeQueries.isEmpty) {
                                     return Center(
                                       child: Text(
                                         "No queries found",
@@ -502,7 +808,8 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                       ),
                                     );
                                   }
-
+                                  final hasMoreData =
+                                      provider.nextPageCursor != null;
                                   return RefreshIndicator(
                                     onRefresh: () async {
                                       final role =
@@ -517,7 +824,10 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                         context: context,
                                         role: role!,
                                         phone: phone!,
-                                        reset: true,
+                                        status: isPendingActive
+                                            ? 'pending'
+                                            : 'resolved',
+                                        // default behavior replaces the active status cache (do not use reset:true here)
                                       );
                                     },
                                     child: ListView.builder(
@@ -543,12 +853,12 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                             // to the visible nav footprint so last items can scroll above it
                                             bottom: contentBottomPadding,
                                           ),
-                                      itemCount:
-                                          filteredQueries.length +
-                                          1, // +1 for loader placeholder
+                                      itemCount: hasMoreData
+                                          ? activeQueries.length + 1
+                                          : activeQueries.length,
                                       itemBuilder: (context, index) {
-                                        if (index < filteredQueries.length) {
-                                          final query = filteredQueries[index];
+                                        if (index < activeQueries.length) {
+                                          final query = activeQueries[index];
                                           return Padding(
                                             padding: EdgeInsets.only(
                                               bottom:
@@ -562,7 +872,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                             ),
                                           );
                                         } else {
-                                          // Show bottom loader ONLY while fetching more
+                                          // only visible if pagination is happening
                                           return provider.isFetchingMore
                                               ? Padding(
                                                   padding: EdgeInsets.symmetric(
@@ -746,6 +1056,7 @@ class BankCard extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     const scaleFactor = 0.85;
+
     return Container(
       decoration: ShapeDecoration(
         color: const Color(0xFF2D2319),
@@ -801,7 +1112,7 @@ class BankCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               _bankText(
-                "\$$amount",
+                "₹$amount",
                 color: amountColor,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

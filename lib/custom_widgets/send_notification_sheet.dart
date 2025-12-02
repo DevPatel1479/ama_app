@@ -460,6 +460,7 @@ class _SendNotificationSheetState extends State<SendNotificationSheet> {
         ),
         child: TextField(
           controller: controller,
+          textInputAction: TextInputAction.done,
           onChanged: onChanged,
           maxLines: maxLines,
           style: GoogleFonts.outfit(

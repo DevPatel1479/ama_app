@@ -97,7 +97,7 @@ class CommentProvider extends ChangeNotifier {
 
     try {
       final body = {
-        'content': content,
+        'content': content, 
         'commentedBy': commentedBy,
         'profileImgUrl': profileImgUrl,
         'userRole': userRole,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:go_router/go_router.dart';
 
 class LightTermsAndConditions extends StatelessWidget {
@@ -147,16 +148,28 @@ By using the Ama Legal Solutions app, you acknowledge that you have read, unders
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFD29F2A),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFD29F2A),
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+
         title: const Text(
           'Terms & Conditions',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
+
         centerTitle: true,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),

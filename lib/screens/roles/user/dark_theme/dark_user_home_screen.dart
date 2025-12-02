@@ -1,24 +1,32 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/client_testimonial_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
+import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
+import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
 import 'package:ama_legal_solutions/custom_widgets/team_image_slider.dart';
+import 'package:ama_legal_solutions/custom_widgets/video_lazy_loading_widget.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
-import 'package:chewie/chewie.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
+// import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:video_player/video_player.dart';
+// import 'package:shimmer/shimmer.dart';
+// import 'package:video_player/video_player.dart';
 
 class DarkHomeScreen extends StatefulWidget {
   const DarkHomeScreen({super.key});
@@ -66,8 +74,190 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
     }
   }
 
+  Widget _buildAppBarForHomeScreen({
+    required BuildContext context,
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? userRole,
+    required double avatarDiameter,
+    required double fontSize,
+    required double iconSize,
+    required double dotSize,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    const scaleFactor = 0.85;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04 * scaleFactor,
+        vertical: screenHeight * 0.015 * scaleFactor,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Consumer<ProfileProvider>(
+                builder: (context, provider, child) {
+                  return InkWell(
+                    onTap: () {
+                      context.pushNamed(
+                        AppScreenNames.userAccount,
+                        queryParameters: {
+                          "name": userName,
+                          "email": userEmail,
+                          "profile_photo": userRole == "guest"
+                              ? AppAssets.userIcon
+                              : provider.hasProfilePhoto
+                              ? provider.profilePhotoUrl!
+                              : AppAssets.userIcon,
+                          "phone": userPhone,
+                          "role": userRole,
+                        },
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(avatarDiameter / 2),
+                    child: CircleAvatar(
+                      radius: avatarDiameter / 2,
+                      backgroundImage: userRole == "guest"
+                          ? const AssetImage(AppAssets.userIcon)
+                                as ImageProvider
+                          : provider.hasProfilePhoto
+                          ? NetworkImage(
+                              "${provider.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                            )
+                          : const AssetImage(AppAssets.userIcon)
+                                as ImageProvider,
+                    ),
+                  );
+                },
+              ),
+              SizedBox(width: screenWidth * 0.03 * scaleFactor),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "Hi, ",
+                    style: GoogleFonts.outfit(
+                      fontSize: fontSize * scaleFactor,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  ValueListenableBuilder<String?>(
+                    valueListenable: globalUserName,
+                    builder: (context, name, _) => Text(
+                      "$name",
+                      style: GoogleFonts.outfit(
+                        fontSize: fontSize * scaleFactor,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFD29F2A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              /// Notification History Icon
+              if (userRole?.toLowerCase() == "admin")
+                GestureDetector(
+                  onTap: () {
+                    context.pushNamed(AppScreenNames.notificationHistoryScreen);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: screenWidth * 0.03 * scaleFactor,
+                    ),
+                    child: Icon(
+                      Icons
+                          .history, // or Icons.notifications_outlined for a similar feel
+                      size: iconSize,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+
+              /// Notification Icon with badge
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (userRole?.toLowerCase() == "guest") {
+                        final isDark = Provider.of<ThemeProvider>(
+                          context,
+                          listen: false,
+                        ).isDarkMode;
+                        showDialog(
+                          context: context,
+                          builder: (_) => LoginRequiredDialog(
+                            isDarkTheme: isDark,
+
+                            onLoginPressed: () {
+                              Navigator.pop(context);
+                              context.goNamed(AppScreenNames.logIn);
+                              // context.pushNamed(AppScreenNames.l);
+                            },
+                          ),
+                        );
+                        return;
+                      }
+                      if (userRole?.toLowerCase() == "admin") {
+                        String userId = "${userRole}_${userPhone}";
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => SendNotificationSheet(userId: userId),
+                        );
+                      } else {
+                        context.pushNamed(AppScreenNames.notificationScreen);
+                      }
+                    },
+                    child: Icon(
+                      Icons.notifications,
+                      size: iconSize,
+                      color: Colors.white,
+                    ),
+                  ),
+                  if (userRole == "client" ||
+                      userRole == "advocate" ||
+                      userRole == "user")
+                    Positioned(
+                      right: 2,
+                      top: 2,
+                      child: Container(
+                        width: dotSize,
+                        height: dotSize,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // SystemChrome.setSystemUIOverlayStyle(
+    //   const SystemUiOverlayStyle(
+    //     statusBarColor: Colors.transparent,
+    //     statusBarIconBrightness: Brightness.light,
+    //     statusBarBrightness: Brightness.dark,
+    //   ),
+    // );
     // Screen size
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -82,23 +272,16 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
     // Card sizes
     final statCardHeight = screenHeight * 0.14;
 
-    final statNumberFont = screenWidth * 0.05;
-    final statLabelFont = screenWidth * 0.025;
+    final statNumberFont = screenWidth * 0.06;
+    final statLabelFont = screenWidth * 0.035;
     final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
     final bottomInset = MediaQuery.of(context).padding.bottom;
     // amount of extra space to reserve at bottom so the last item is fully visible
     final contentBottomPadding =
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
     // ----------------------------
-
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
-    );
-
+    final role = context.watch<RealTimeRoleProvider>().role;
+    userRole = role;
     // Responsive button
     Widget fileDisputeButton(BuildContext context) {
       final screenWidth = MediaQuery.of(context).size.width;
@@ -112,7 +295,30 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
 
       return GestureDetector(
         onTap: () {
-          context.pushNamed(AppScreenNames.raiseQuery);
+          if (userRole?.toLowerCase() == "guest") {
+            final isDark = Provider.of<ThemeProvider>(
+              context,
+              listen: false,
+            ).isDarkMode;
+            showDialog(
+              context: context,
+              builder: (_) => LoginRequiredDialog(
+                isDarkTheme: isDark,
+
+                onLoginPressed: () {
+                  Navigator.pop(context);
+                  context.goNamed(AppScreenNames.logIn);
+                  // context.pushNamed(AppScreenNames.l);
+                },
+              ),
+            );
+            return;
+          }
+
+          context.pushNamed(
+            AppScreenNames.raiseQuery,
+            queryParameters: {"isFilingDispute": "true"},
+          );
         },
         child: Container(
           width: buttonWidth,
@@ -143,7 +349,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                 width: screenWidth * 0.02 * scaleFactor,
               ), // very close to text
               Text(
-                "File a Dispute",
+                "Raise a Query",
                 style: GoogleFonts.outfit(
                   fontSize:
                       screenWidth * 0.05 * scaleFactor, // responsive ~20px
@@ -215,402 +421,185 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: const Color(0xFF171717),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: PreferredSize(
+        preferredSize: Size.zero,
+        child: AppBar(
+          surfaceTintColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          toolbarHeight: 0,
+          automaticallyImplyLeading: false,
 
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  /// Fixed AppBar
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.04 * scaleFactor,
-                      vertical: screenHeight * 0.015 * scaleFactor,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+
+            /// ANDROID ICONS → white
+            statusBarIconBrightness: Brightness.light,
+
+            /// iOS ICONS → white
+            statusBarBrightness: Brightness.dark,
+          ),
+        ),
+      ),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxScrolled) {
+          return [
+            SliverAppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              pinned: true,
+              elevation: 0,
+              toolbarHeight: 70,
+
+              flexibleSpace: ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Consumer<ProfileProvider>(
-                              builder: (context, provider, child) {
-                                return InkWell(
-                                  onTap: () {
-                                    context.pushNamed(
-                                      AppScreenNames.userAccount,
-                                      queryParameters: {
-                                        "name": userName,
-                                        "email": userEmail,
-                                        "profile_photo":
-                                            provider.hasProfilePhoto
-                                            ? provider.profilePhotoUrl!
-                                            : AppAssets.userIcon,
-                                        "phone": userPhone!,
-                                        "role": userRole!,
-                                      },
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(
-                                    avatarDiameter / 2,
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: avatarDiameter / 2,
-                                    backgroundImage: provider.hasProfilePhoto
-                                        ? NetworkImage(
-                                            "${provider.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                          )
-                                        : const AssetImage(AppAssets.userIcon)
-                                              as ImageProvider,
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(width: screenWidth * 0.03 * scaleFactor),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "Hi, ",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: fontSize * scaleFactor,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Transform.translate(
-                                  offset: const Offset(0, 3),
-                                  child: Text(
-                                    "${userName}",
-                                    style: GoogleFonts.satisfy(
-                                      fontSize: fontSize,
-                                      fontWeight: FontWeight.w400,
-                                      color: const Color(0xFFD29F2A),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                if (userRole?.toLowerCase() == "admin") {
-                                  String userId = "${userRole}_${userPhone}";
-
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (_) =>
-                                        SendNotificationSheet(userId: userId),
-                                  );
-                                } else {
-                                  context.pushNamed(
-                                    AppScreenNames.notificationScreen,
-                                  );
-                                }
-                              },
-                              child: Icon(
-                                Icons.notifications,
-                                size: iconSize,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (userRole == "client" ||
-                                userRole == "advocate" ||
-                                userRole == "user")
-                              Positioned(
-                                right: 2,
-                                top: 2,
-                                child: Container(
-                                  width: dotSize,
-                                  height: dotSize,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                    color: Colors.black.withOpacity(0.20), // frosted effect
+                    child: _buildAppBarForHomeScreen(
+                      context: context,
+                      userName: userName,
+                      userEmail: userEmail,
+                      userPhone: userPhone,
+                      userRole: userRole,
+                      avatarDiameter: avatarDiameter,
+                      fontSize: fontSize,
+                      iconSize: iconSize,
+                      dotSize: dotSize,
                     ),
                   ),
+                ),
+              ),
+            ),
+          ];
+        },
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: SafeArea(
+                bottom: false,
+                top: false,
+                child: Column(
+                  children: [
+                    /// Fixed AppBar
 
-                  // SizedBox(height: screenHeight * 0.04),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding:
-                          EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.04 * scaleFactor,
-                            vertical: screenHeight * 0.015 * scaleFactor,
-                          ).copyWith(
-                            // ensure the scrollable content has extra bottom padding equal
-                            // to the visible nav footprint so last items can scroll above it
-                            bottom: contentBottomPadding,
-                          ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              vertical: statCardHeight * 0.15,
-                              horizontal: screenWidth * 0.05,
+                    // SizedBox(height: screenHeight * 0.04),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding:
+                            EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04 * scaleFactor,
+                              vertical: screenHeight * 0.015 * scaleFactor,
+                            ).copyWith(
+                              // ensure the scrollable content has extra bottom padding equal
+                              // to the visible nav footprint so last items can scroll above it
+                              bottom: contentBottomPadding,
                             ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Color.fromRGBO(210, 159, 42, 0.7),
-                                  Color.fromRGBO(45, 35, 25, 0.7),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                vertical: statCardHeight * 0.15,
+                                horizontal: screenWidth * 0.05,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color.fromRGBO(210, 159, 42, 0.7),
+                                    Color.fromRGBO(45, 35, 25, 0.7),
+                                  ],
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x40000000),
+                                    offset: Offset(0, -4),
+                                    blurRadius: 4,
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: const Color(0x26FFFFFF),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  statItem("10k+", "Case\nhandled"),
+                                  verticalLine(statCardHeight * 0.6),
+                                  statItem("40+", "Year\nExperience"),
+                                  verticalLine(statCardHeight * 0.6),
+                                  statItem("5k+", "Client\nServed"),
                                 ],
                               ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x40000000),
-                                  offset: Offset(0, -4),
-                                  blurRadius: 4,
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                              border: Border.all(
-                                color: const Color(0x26FFFFFF),
-                                width: 2,
+                            ),
+
+                            SizedBox(height: screenHeight * 0.04 * scaleFactor),
+
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF262626),
+                                borderRadius: BorderRadius.circular(25),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isTablet = constraints.maxWidth > 600;
+                                  final aspectRatio = isTablet
+                                      ? 21 / 9
+                                      : 16 / 9; // adaptive
+
+                                  return AspectRatio(
+                                    aspectRatio: aspectRatio,
+                                    // child: _VideoPlayerWidget(),
+                                    child: const LazyVideoPlayer(),
+                                  );
+                                },
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                statItem("200+", "Case\nhandled"),
-                                verticalLine(statCardHeight * 0.5),
-                                statItem("40+", "Year\nExperience"),
-                                verticalLine(statCardHeight * 0.5),
-                                statItem("200+", "Client\nServed"),
-                              ],
-                            ),
-                          ),
 
-                          SizedBox(height: screenHeight * 0.04 * scaleFactor),
+                            SizedBox(
+                              height: screenHeight * 0.03 * scaleFactor,
+                            ), // spacing
 
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF262626),
-                              borderRadius: BorderRadius.circular(25),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isTablet = constraints.maxWidth > 600;
-                                final aspectRatio = isTablet
-                                    ? 21 / 9
-                                    : 16 / 9; // adaptive
-
-                                return AspectRatio(
-                                  aspectRatio: aspectRatio,
-                                  child: _VideoPlayerWidget(),
-                                );
-                              },
-                            ),
-                          ),
-
-                          SizedBox(
-                            height: screenHeight * 0.03 * scaleFactor,
-                          ), // spacing
-                          fileDisputeButton(context),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top:
-                                  screenHeight *
-                                  0.03 *
-                                  scaleFactor, // space below button
-                              left: screenWidth * 0.01 * scaleFactor,
-                              right: screenWidth * 0.04 * scaleFactor,
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft, // ⬅ left align
-                              child: Text(
-                                "Providing Solutions To",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1,
-                                  letterSpacing: 0,
-                                ),
+                            if (userRole?.toLowerCase() != "admin")
+                              fileDisputeButton(context),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.03 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.04 * scaleFactor,
                               ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: screenHeight * 0.02 * scaleFactor,
-                          ), // spacing
-                          const AutoScrollSlider(),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top:
-                                  screenHeight *
-                                  0.03 *
-                                  scaleFactor, // space below button
-                              left: screenWidth * 0.01 * scaleFactor,
-                              right: screenWidth * 0.04 * scaleFactor,
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft, // ⬅ left align
-                              child: Text(
-                                "Our Locations",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1,
-                                  letterSpacing: 0,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.01 * scaleFactor,
-                              vertical: screenHeight * 0.02 * scaleFactor,
-                            ),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final totalWidth = constraints.maxWidth;
-                                final columnSpacing =
-                                    screenWidth * 0.03 * scaleFactor;
-                                final columnWidth =
-                                    (totalWidth - 2 * columnSpacing) / 3;
-
-                                return Stack(
-                                  children: [
-                                    // The main row with images
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // First column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Image.asset(
-                                                AppAssets.locationImg1,
-                                                fit: BoxFit.cover,
-                                              ),
-                                              SizedBox(
-                                                height:
-                                                    screenHeight *
-                                                    0.015 *
-                                                    scaleFactor,
-                                              ), // reduced space
-                                              Image.asset(
-                                                AppAssets.locationImg4,
-                                                fit: BoxFit.cover,
-                                              ),
-                                              // Removed extra space here; locationImg5 will overlap
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(width: columnSpacing),
-
-                                        // Second column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: Image.asset(
-                                            AppAssets.locationImg2,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        SizedBox(width: columnSpacing),
-
-                                        // Third column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Image.asset(
-                                                AppAssets.locationImg3,
-                                                fit: BoxFit.cover,
-                                              ),
-                                              SizedBox(
-                                                height:
-                                                    screenHeight *
-                                                    0.02 *
-                                                    scaleFactor,
-                                              ),
-                                              Image.asset(
-                                                AppAssets.locationImg6,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // Positioned locationImg5 stretched as required
-                                    Positioned(
-                                      left: 0,
-                                      top: null,
-                                      bottom: 0,
-                                      child: Container(
-                                        width: columnWidth * 2 + columnSpacing,
-                                        // Position it just below locationImg4
-                                        margin: EdgeInsets.only(
-                                          top:
-                                              screenHeight *
-                                                  0.015 + // space below locationImg1
-                                              // assume locationImg1 height + spacing
-                                              // plus locationImg4 height (approximated or static if possible)
-                                              150, // adjust this based on actual image heights
-                                        ),
-                                        height: null, // stretch to the bottom
-                                        child: Image.asset(
-                                          AppAssets.locationImg5,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top: screenHeight * 0.0001, // space below button
-                              left: screenWidth * 0.01,
-                              right: screenWidth * 0.000015,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Our Team",
+                              child: Align(
+                                alignment: Alignment.centerLeft, // ⬅ left align
+                                child: Text(
+                                  "Providing Solutions To",
                                   style: GoogleFonts.outfit(
                                     fontSize: screenWidth * 0.04 * scaleFactor,
                                     fontWeight: FontWeight.w500,
@@ -619,326 +608,426 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                     letterSpacing: 0,
                                   ),
                                 ),
-                                // TextButton(
-                                //   onPressed: () {
-                                //     // Handle "See all" tap here
-                                //   },
-                                //   child: Text(
-                                //     "See all",
-                                //     style: GoogleFonts.outfit(
-                                //       fontSize: screenWidth * 0.035 * scaleFactor,
-                                //       fontWeight: FontWeight.w500,
-                                //       color: const Color(0xFFD29F2A),
-                                //     ),
-                                //   ),
-                                // ),
-                              ],
+                              ),
                             ),
-                          ),
-                          // Below the Padding containing "Our Team" and "See all"
-                          SizedBox(
-                            height: screenHeight * 0.02,
-                          ), // spacing between sections
-                          const TeamSlider(),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top: screenHeight * 0.03, // space below button
-                              left: screenWidth * 0.01,
-                              right: screenWidth * 0.04,
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft, // ⬅ left align
-                              child: Text(
-                                "Our Legacy",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  height: 1,
-                                  letterSpacing: 0,
+                            SizedBox(
+                              height: screenHeight * 0.02 * scaleFactor,
+                            ), // spacing
+                            const AutoScrollSlider(),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.03 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.04 * scaleFactor,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft, // ⬅ left align
+                                child: Text(
+                                  "Our Locations",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.04 * scaleFactor,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1,
+                                    letterSpacing: 0,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.01 * scaleFactor,
+                                vertical: screenHeight * 0.02 * scaleFactor,
+                              ),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final totalWidth = constraints.maxWidth;
+                                  final columnSpacing =
+                                      screenWidth * 0.04 * scaleFactor;
+                                  final columnWidth =
+                                      (totalWidth - 2 * columnSpacing) / 3;
 
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.01 * scaleFactor,
-                            ),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                return IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                  return Stack(
                                     children: [
-                                      // Left Image with gradient border
-                                      Container(
-                                        width:
-                                            screenWidth *
-                                            0.4 *
-                                            scaleFactor, // responsive width
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            25,
+                                      // The main row with images
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // First column
+                                          SizedBox(
+                                            width: columnWidth,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Image.asset(
+                                                  AppAssets.locationImg1,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                      screenHeight *
+                                                      0.025 *
+                                                      scaleFactor,
+                                                ), // reduced space
+                                                Image.asset(
+                                                  AppAssets.locationImg4,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                                // Removed extra space here; locationImg5 will overlap
+                                              ],
+                                            ),
                                           ),
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color.fromRGBO(
-                                                210,
-                                                159,
-                                                42,
-                                                0.65,
-                                              ),
-                                              Color.fromRGBO(
-                                                255,
-                                                255,
-                                                255,
-                                                0.65,
-                                              ),
-                                            ],
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.all(
-                                          2,
-                                        ), // border thickness
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              25,
-                                            ), // slightly smaller for inner image
-                                            image: DecorationImage(
-                                              image: AssetImage(
-                                                AppAssets.ourLegacyImg,
-                                              ),
+                                          SizedBox(width: columnSpacing),
+
+                                          // Second column
+                                          SizedBox(
+                                            width: columnWidth,
+                                            child: Image.asset(
+                                              AppAssets.locationImg2,
                                               fit: BoxFit.cover,
                                             ),
                                           ),
-                                        ),
+                                          SizedBox(width: columnSpacing),
+
+                                          // Third column
+                                          SizedBox(
+                                            width: columnWidth,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Image.asset(
+                                                  AppAssets.locationImg3,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                      screenHeight *
+                                                      0.025 *
+                                                      scaleFactor,
+                                                ),
+                                                Image.asset(
+                                                  AppAssets.locationImg6,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      SizedBox(
-                                        width: screenWidth * 0.04 * scaleFactor,
-                                      ), // spacing
-                                      // Right Text Column
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Late Adv. R.C. Malik",
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w500,
-                                                color: Color(0xFFD29F2A),
-                                                height: 20 / 15,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height:
-                                                  screenHeight *
-                                                  0.005 *
-                                                  scaleFactor,
-                                            ),
-                                            Text(
-                                              "Ex-Comptroller and Auditor General of India\nDirector General of Audit (Central-Receipt)",
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.white,
-                                                height: 16 / 12,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height:
-                                                  screenHeight *
-                                                  0.01 *
-                                                  scaleFactor,
-                                            ),
-                                            Text(
-                                              "R.C. Malik started his professional journey as a "
-                                              "gazetted officer at DGACR, progressing through "
-                                              "different roles within the Income Tax Department "
-                                              "before taking on administrative duties at the "
-                                              "Office of the Comptroller and Auditor General "
-                                              "(CAG) of India.",
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.white,
-                                                height: 14 / 10,
-                                              ),
-                                            ),
-                                          ],
+
+                                      // Positioned locationImg5 stretched as required
+                                      Positioned(
+                                        left: 0,
+                                        top: null,
+                                        bottom: 0,
+                                        child: Container(
+                                          width:
+                                              columnWidth * 2 + columnSpacing,
+                                          // Position it just below locationImg4
+                                          margin: EdgeInsets.only(
+                                            top:
+                                                screenHeight *
+                                                    0.015 + // space below locationImg1
+                                                // assume locationImg1 height + spacing
+                                                // plus locationImg4 height (approximated or static if possible)
+                                                150, // adjust this based on actual image heights
+                                          ),
+                                          height: null, // stretch to the bottom
+                                          child: Image.asset(
+                                            AppAssets.locationImg5,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     ],
+                                  );
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight * 0.0001, // space below button
+                                left: screenWidth * 0.01,
+                                right: screenWidth * 0.000015,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Our Team",
+                                    style: GoogleFonts.outfit(
+                                      fontSize:
+                                          screenWidth * 0.04 * scaleFactor,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1,
+                                      letterSpacing: 0,
+                                    ),
                                   ),
-                                );
-                              },
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     // Handle "See all" tap here
+                                  //   },
+                                  //   child: Text(
+                                  //     "See all",
+                                  //     style: GoogleFonts.outfit(
+                                  //       fontSize: screenWidth * 0.035 * scaleFactor,
+                                  //       fontWeight: FontWeight.w500,
+                                  //       color: const Color(0xFFD29F2A),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(height: screenHeight * 0.02 * scaleFactor),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top:
-                                  screenHeight *
-                                  0.0001 *
-                                  scaleFactor, // space below button
-                              left: screenWidth * 0.01 * scaleFactor,
-                              right: screenWidth * 0.000015 * scaleFactor,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Client Testimonials",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: screenWidth * 0.04 * scaleFactor,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                    height: 1,
-                                    letterSpacing: 0,
-                                  ),
-                                ),
-                                // TextButton(
-                                //   onPressed: () {
-                                //     // Handle "See all" tap here
-                                //   },
-                                //   child: Text(
-                                //     "See all",
-                                //     style: GoogleFonts.outfit(
-                                //       fontSize: screenWidth * 0.035 * scaleFactor,
-                                //       fontWeight: FontWeight.w500,
-                                //       color: const Color(0xFFD29F2A),
-                                //     ),
-                                //   ),
-                                // ),
-                              ],
-                            ),
-                          ),
-                          // Below the Padding containing "Our Team" and "See all"
-                          SizedBox(height: screenHeight * 0.001 * scaleFactor),
-                          TestimonialCard(),
-                        ],
-                      ),
-                    ),
+                            // Below the Padding containing "Our Team" and "See all"
+                            SizedBox(
+                              height: screenHeight * 0.02,
+                            ), // spacing between sections
+                            const TeamSlider(),
+                            // Padding(
+                            //   padding: EdgeInsets.only(
+                            //     top: screenHeight * 0.03, // space below button
+                            //     left: screenWidth * 0.01,
+                            //     right: screenWidth * 0.04,
+                            //   ),
+                            //   child: Align(
+                            //     alignment: Alignment.centerLeft, // ⬅ left align
+                            //     child: Text(
+                            //       "Our Legacy",
+                            //       style: GoogleFonts.outfit(
+                            //         fontSize: screenWidth * 0.04 * scaleFactor,
+                            //         fontWeight: FontWeight.w500,
+                            //         color: Colors.white,
+                            //         height: 1,
+                            //         letterSpacing: 0,
+                            //       ),
+                            //     ),
+                            //   ),
+                            // ),
+                            // SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
-                    /// Stats card
-                  ),
-                ],
+                            // Padding(
+                            //   padding: EdgeInsets.symmetric(
+                            //     horizontal: screenWidth * 0.01 * scaleFactor,
+                            //   ),
+                            //   child: LayoutBuilder(
+                            //     builder: (context, constraints) {
+                            //       return IntrinsicHeight(
+                            //         child: Row(
+                            //           crossAxisAlignment:
+                            //               CrossAxisAlignment.stretch,
+                            //           children: [
+                            //             // Left Image with gradient border
+                            //             Container(
+                            //               width:
+                            //                   screenWidth *
+                            //                   0.4 *
+                            //                   scaleFactor, // responsive width
+                            //               decoration: BoxDecoration(
+                            //                 borderRadius: BorderRadius.circular(
+                            //                   25,
+                            //                 ),
+                            //                 gradient: const LinearGradient(
+                            //                   colors: [
+                            //                     Color.fromRGBO(
+                            //                       210,
+                            //                       159,
+                            //                       42,
+                            //                       0.65,
+                            //                     ),
+                            //                     Color.fromRGBO(
+                            //                       255,
+                            //                       255,
+                            //                       255,
+                            //                       0.65,
+                            //                     ),
+                            //                   ],
+                            //                   begin: Alignment.centerLeft,
+                            //                   end: Alignment.centerRight,
+                            //                 ),
+                            //               ),
+                            //               padding: const EdgeInsets.all(
+                            //                 2,
+                            //               ), // border thickness
+                            //               child: Container(
+                            //                 decoration: BoxDecoration(
+                            //                   borderRadius: BorderRadius.circular(
+                            //                     25,
+                            //                   ), // slightly smaller for inner image
+                            //                   image: DecorationImage(
+                            //                     image: AssetImage(
+                            //                       AppAssets.ourLegacyImg,
+                            //                     ),
+                            //                     fit: BoxFit.cover,
+                            //                   ),
+                            //                 ),
+                            //               ),
+                            //             ),
+                            //             SizedBox(
+                            //               width: screenWidth * 0.04 * scaleFactor,
+                            //             ), // spacing
+                            //             // Right Text Column
+                            //             Expanded(
+                            //               child: Column(
+                            //                 crossAxisAlignment:
+                            //                     CrossAxisAlignment.start,
+                            //                 mainAxisAlignment:
+                            //                     MainAxisAlignment.start,
+                            //                 children: [
+                            //                   Text(
+                            //                     "Late Adv. R.C. Malik",
+                            //                     style: GoogleFonts.outfit(
+                            //                       fontSize: 15,
+                            //                       fontWeight: FontWeight.w500,
+                            //                       color: Color(0xFFD29F2A),
+                            //                       height: 20 / 15,
+                            //                     ),
+                            //                   ),
+                            //                   SizedBox(
+                            //                     height:
+                            //                         screenHeight *
+                            //                         0.005 *
+                            //                         scaleFactor,
+                            //                   ),
+                            //                   Text(
+                            //                     "Ex-Comptroller and Auditor General of India\nDirector General of Audit (Central-Receipt)",
+                            //                     style: GoogleFonts.outfit(
+                            //                       fontSize: 12,
+                            //                       fontWeight: FontWeight.w400,
+                            //                       color: Colors.white,
+                            //                       height: 16 / 12,
+                            //                     ),
+                            //                   ),
+                            //                   SizedBox(
+                            //                     height:
+                            //                         screenHeight *
+                            //                         0.01 *
+                            //                         scaleFactor,
+                            //                   ),
+                            //                   Text(
+                            //                     "R.C. Malik started his professional journey as a "
+                            //                     "gazetted officer at DGACR, progressing through "
+                            //                     "different roles within the Income Tax Department "
+                            //                     "before taking on administrative duties at the "
+                            //                     "Office of the Comptroller and Auditor General "
+                            //                     "(CAG) of India.",
+                            //                     style: GoogleFonts.outfit(
+                            //                       fontSize: 10,
+                            //                       fontWeight: FontWeight.w400,
+                            //                       color: Colors.white,
+                            //                       height: 14 / 10,
+                            //                     ),
+                            //                   ),
+                            //                 ],
+                            //               ),
+                            //             ),
+                            //           ],
+                            //         ),
+                            //       );
+                            //     },
+                            //   ),
+                            // ),
+                            OurLegacySection(
+                              screenWidth: screenWidth,
+                              screenHeight: screenHeight,
+                              scaleFactor: scaleFactor,
+                              isDark: true,
+                            ),
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.0001 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.000015 * scaleFactor,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Client Testimonials",
+                                    style: GoogleFonts.outfit(
+                                      fontSize:
+                                          screenWidth * 0.04 * scaleFactor,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     // Handle "See all" tap here
+                                  //   },
+                                  //   child: Text(
+                                  //     "See all",
+                                  //     style: GoogleFonts.outfit(
+                                  //       fontSize: screenWidth * 0.035 * scaleFactor,
+                                  //       fontWeight: FontWeight.w500,
+                                  //       color: const Color(0xFFD29F2A),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
+                            ),
+                            // Below the Padding containing "Our Team" and "See all"
+                            SizedBox(
+                              height: screenHeight * 0.001 * scaleFactor,
+                            ),
+                            TestimonialCard(
+                              name: "Pratichi Pradhan",
+                              testimonial:
+                                  "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price.",
+                              clientImage: AppAssets.clientImage1,
+                            ),
+                            SizedBox(
+                              height: screenHeight * 0.001 * scaleFactor,
+                            ),
+                            TestimonialCard(
+                              name: "Sk Nazir",
+                              testimonial:
+                                  "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
+                              clientImage: AppAssets.clientImage2,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      /// Stats card
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          // ========== OVERLAY: CustomBottomNav (always on top) ==========
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: const CustomBottomNav(),
+            // ========== OVERLAY: CustomBottomNav (always on top) ==========
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: const CustomBottomNav(),
+              ),
             ),
-          ),
-        ],
-      ),
-
-      // bottomNavigationBar: const CustomBottomNav(),
-    );
-  }
-}
-
-class _VideoPlayerWidget extends StatefulWidget {
-  const _VideoPlayerWidget({Key? key}) : super(key: key);
-
-  @override
-  State<_VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
-}
-
-class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
-  late VideoPlayerController _videoController;
-  ChewieController? _chewieController;
-  bool _isLoading = true;
-  final videoUrl = dotenv.env['VIDEO_URL']!;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeVideo();
-  }
-
-  Future<void> _initializeVideo() async {
-    try {
-      // ✅ Load cached video if exists
-      final file = await DefaultCacheManager().getSingleFile(videoUrl);
-
-      _videoController = VideoPlayerController.file(file);
-      await _videoController.initialize();
-
-      _chewieController = ChewieController(
-        videoPlayerController: _videoController,
-        autoPlay: false, // user must tap play
-        looping: true,
-        allowFullScreen: false,
-        allowMuting: true,
-        showControlsOnInitialize: false,
-        autoInitialize: true,
-        materialProgressColors: ChewieProgressColors(
-          playedColor: Colors.blueAccent,
-          handleColor: Colors.white,
-          backgroundColor: Colors.grey.shade800,
-          bufferedColor: Colors.grey.shade500,
+          ],
         ),
-      );
 
-      setState(() => _isLoading = false);
-    } catch (e) {
-      debugPrint("Video init error: $e");
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _videoController.dispose();
-    _chewieController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey.shade800,
-        highlightColor: Colors.grey.shade700,
-        child: Container(
-          width: double.infinity,
-          height: 200,
-          color: Colors.grey.shade900,
-        ),
-      );
-    }
-
-    if (_chewieController == null) {
-      return const Center(
-        child: Text(
-          "Failed to load video",
-          style: TextStyle(color: Colors.white70),
-        ),
-      );
-    }
-
-    return AspectRatio(
-      aspectRatio: _videoController.value.aspectRatio,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: Chewie(controller: _chewieController!),
+        // bottomNavigationBar: const CustomBottomNav(),
       ),
     );
   }

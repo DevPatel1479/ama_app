@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:go_router/go_router.dart';
 
 class LightDeleteAccountScreen extends StatelessWidget {
@@ -68,15 +69,26 @@ By submitting a deletion request, you acknowledge that your account and associat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFD29F2A),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        // Put system overlay style here (native)
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFD29F2A),
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
         title: const Text(
           'Delete Account Policy',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
+        centerTitle: true,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),

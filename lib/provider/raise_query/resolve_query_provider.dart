@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:ama_legal_solutions/api/endpoints.dart';
+import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/models/resolve_query_model.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
+import 'package:provider/provider.dart';
 
 class ResolveQueryProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -45,7 +47,11 @@ class ResolveQueryProvider with ChangeNotifier {
         showCustomMessage(context, apiMessage, true);
       } else {
         final result = ResolveQueryModel.fromJson(data);
-
+        final queryProvider = Provider.of<QueryProvider>(
+          context,
+          listen: false,
+        );
+        queryProvider.removeQueryById(queryId);
         showCustomMessage(context, result.message, !result.success);
       }
     } catch (e) {

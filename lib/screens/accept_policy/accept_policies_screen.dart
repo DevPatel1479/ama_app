@@ -1,10 +1,13 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class AcceptPoliciesScreen extends StatefulWidget {
   final bool isDark;
@@ -60,7 +63,7 @@ class _AcceptPoliciesScreenState extends State<AcceptPoliciesScreen> {
                 AppAssets.appLogoWithText,
                 width: size.width * 0.55,
                 fit: BoxFit.contain,
-                color: !(widget.isDark) ? Colors.black : null,
+                // color: !(widget.isDark) ? Colors.black : null,
               ),
             ),
 
@@ -191,11 +194,26 @@ class _AcceptPoliciesScreenState extends State<AcceptPoliciesScreen> {
                       child: ElevatedButton(
                         onPressed: canContinue
                             ? () async {
+                                if (!mounted) return;
+                                final ctx = context;
+                                final userProvider = ctx.read<UserProvider>();
                                 await LocalStorageHelper.saveBool(
                                   "isAcceptedPolicy",
                                   true,
                                 );
-                                context.pushReplacement(
+                                await LocalStorageHelper.saveString(
+                                  "userRole",
+                                  "guest",
+                                );
+
+                                await userProvider.loadUserRole();
+                                updateGlobalUserName("Guest User");
+                                updateGlobalUserEmail("guest@gmail.com");
+
+                                // ctx.pushReplacement(
+                                //   AppPathsForScreen.userHomePath,
+                                // );
+                                ctx.pushReplacement(
                                   AppPathsForScreen.getStartedPath,
                                 );
                               }

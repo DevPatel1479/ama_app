@@ -64,7 +64,9 @@ class _DeleteAccountRequestScreenState
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent,
+
+        backgroundColor: (!isDark) ? Color(0xFFD29F2A) : bgColor,
         elevation: 0,
         title: Text(
           "Delete Account Request",
@@ -83,8 +85,9 @@ class _DeleteAccountRequestScreenState
                     )
                   : SystemUiOverlayStyle.light
             : const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: Brightness.dark,
+                statusBarColor: Color(0xFFD29F2A),
+                statusBarIconBrightness: Brightness.dark, // dark icons
+                statusBarBrightness: Brightness.light, // for iOS
               ),
       ),
       body: Padding(

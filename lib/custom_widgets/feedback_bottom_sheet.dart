@@ -70,6 +70,7 @@ void showFeedbackBottomSheet(BuildContext context, String userId) {
                   // 💬 Comment Box
                   TextField(
                     style: const TextStyle(color: Colors.white),
+                    textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
                       hintText: "Write your feedback...",
                       hintStyle: const TextStyle(color: Colors.grey),

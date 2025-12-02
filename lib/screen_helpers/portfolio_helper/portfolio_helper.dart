@@ -7,16 +7,16 @@ import 'package:provider/provider.dart';
 
 class PortfolioSreenHelper {
   /// Returns the appropriate Get Started screen based on theme
-  static Widget getScreen(BuildContext context) {
+  static Widget getScreen(BuildContext context, String userRole) {
     final isDarkMode = Provider.of<ThemeProvider>(
       context,
       listen: false,
     ).isDarkMode;
 
     if (isDarkMode) {
-      return const DarkPortfolioScreen();
+      return DarkPortfolioScreen(userRole: userRole);
     } else {
-      return const LightPortfolioScreen();
+      return LightPortfolioScreen(userRole: userRole);
     }
   }
 }

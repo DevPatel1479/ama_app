@@ -61,11 +61,6 @@ class ProfileProvider with ChangeNotifier {
       } else {
         _profilePhotoUrl = null;
         _hasProfilePhoto = false;
-        showCustomMessage(
-          context,
-          data['message'] ?? 'Profile photo not found. Using default icon.',
-          true,
-        );
       }
     } catch (e) {
       _profilePhotoUrl = null;
@@ -112,12 +107,13 @@ class ProfileProvider with ChangeNotifier {
           'profile_photo_url',
           _profilePhotoUrl!,
         );
-        await fetchProfilePhoto(
-          context,
-          phone: phone,
-          role: role,
-          forceRefresh: true, // bypass cache
-        );
+        // await fetchProfilePhoto(
+        //   context,
+        //   phone: phone,
+        //   role: role,
+        //   forceRefresh: true, // bypass cache
+        // );
+        notifyListeners();
         showCustomMessage(
           context,
           'Profile photo uploaded successfully!',

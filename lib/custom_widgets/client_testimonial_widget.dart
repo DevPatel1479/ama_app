@@ -3,7 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
 class TestimonialCard extends StatefulWidget {
-  const TestimonialCard({super.key});
+  final String name;
+  final String testimonial;
+  final String clientImage;
+
+  const TestimonialCard({
+    super.key,
+    required this.name,
+    required this.testimonial,
+    required this.clientImage,
+  });
 
   @override
   State<TestimonialCard> createState() => _TestimonialCardState();
@@ -12,11 +21,8 @@ class TestimonialCard extends StatefulWidget {
 class _TestimonialCardState extends State<TestimonialCard> {
   final GlobalKey _textKey = GlobalKey();
   double _measuredTextHeight = 0;
-
-  // Small threshold to avoid repeated setState on tiny diffs
   static const double _heightDiffThreshold = 0.5;
 
-  // Measure after each frame to pick up text wrapping changes
   void _measureTextHeight() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _textKey.currentContext;
@@ -25,9 +31,7 @@ class _TestimonialCardState extends State<TestimonialCard> {
       if (rb is RenderBox) {
         final newH = rb.size.height;
         if ((newH - _measuredTextHeight).abs() > _heightDiffThreshold) {
-          setState(() {
-            _measuredTextHeight = newH;
-          });
+          setState(() => _measuredTextHeight = newH);
         }
       }
     });
@@ -36,7 +40,6 @@ class _TestimonialCardState extends State<TestimonialCard> {
   @override
   void initState() {
     super.initState();
-    // initial measure on first frame
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureTextHeight());
   }
 
@@ -51,28 +54,19 @@ class _TestimonialCardState extends State<TestimonialCard> {
     final screenWidth = MediaQuery.of(context).size.width;
     const scaleFactor = 0.85;
 
-    // Responsive sizes / fallbacks
-    final double iconWidth =
-        screenWidth * 0.20 * scaleFactor; // typical icon width
-    final double iconMinHeight =
-        iconWidth * scaleFactor; // keep icon square at minimum
+    final double iconWidth = screenWidth * 0.20 * scaleFactor;
+    final double iconMinHeight = iconWidth * scaleFactor;
     final double horizontalPadding = screenWidth * 0.04 * scaleFactor;
 
-    // Use measured text height if available, otherwise fallback to min size
     final double targetIconHeight = (_measuredTextHeight > 0)
         ? _measuredTextHeight
         : iconMinHeight;
-
-    // Slight padding inside the card so icon doesn't touch edges
     final double innerVerticalPadding = 13;
-
-    // Finally clamp the icon height to avoid huge values if user has extremely long text
     final double clampedIconHeight = targetIconHeight.clamp(
       iconMinHeight,
       MediaQuery.of(context).size.height * 0.6,
     );
 
-    // Keep measuring each build (safe: setState only when value changes)
     _measureTextHeight();
 
     return Padding(
@@ -87,15 +81,12 @@ class _TestimonialCardState extends State<TestimonialCard> {
         ),
         child: Stack(
           children: [
-            // Gradient border
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: CustomPaint(painter: _GradientBorderPainter()),
               ),
             ),
-
-            // Content row
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
@@ -104,46 +95,40 @@ class _TestimonialCardState extends State<TestimonialCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Animated icon container - height follows measured text height
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
                     width: iconWidth,
                     height: clampedIconHeight,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      // optional subtle shadow to separate from background
                       boxShadow: [
-                        if (true)
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
                       ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: Image.asset(
-                        AppAssets.clientIcon,
+                        widget.clientImage,
                         fit: BoxFit.cover,
                         width: iconWidth,
                         height: clampedIconHeight,
                       ),
                     ),
                   ),
-
                   SizedBox(width: screenWidth * 0.03 * scaleFactor),
-
-                  // Text column that we measure using _textKey
                   Expanded(
                     child: Container(
-                      key: _textKey, // measure this container's height
+                      key: _textKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "Pratichi Pradhan",
+                            widget.name,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w500,
                               fontSize: screenWidth * 0.05 * scaleFactor,
@@ -152,8 +137,7 @@ class _TestimonialCardState extends State<TestimonialCard> {
                           ),
                           SizedBox(height: 6 * scaleFactor),
                           Text(
-                            // your testimonial text (wraps to multiple lines as needed)
-                            "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price,",
+                            widget.testimonial,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w400,
                               fontSize: screenWidth * 0.035 * scaleFactor,
@@ -175,7 +159,6 @@ class _TestimonialCardState extends State<TestimonialCard> {
   }
 }
 
-// Gradient border painter (keeps your previous styling)
 class _GradientBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

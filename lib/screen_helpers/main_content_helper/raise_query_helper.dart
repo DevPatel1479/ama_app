@@ -8,16 +8,26 @@ import 'package:provider/provider.dart';
 
 class RaiseQueryScreenHelper {
   /// Returns the appropriate Get Started screen based on theme
-  static Widget getScreen(BuildContext context, bool questionPosting) {
+  static Widget getScreen(
+    BuildContext context,
+    bool questionPosting,
+    bool isFilingDispute,
+  ) {
     final isDarkMode = Provider.of<ThemeProvider>(
       context,
       listen: false,
     ).isDarkMode;
 
     if (isDarkMode) {
-      return DarkRaiseQueryScreen(isQuestionPosting: questionPosting);
+      return DarkRaiseQueryScreen(
+        isQuestionPosting: questionPosting,
+        isFilingDispute: isFilingDispute,
+      );
     } else {
-      return LightRaiseQueryScreen(isQuestionPosting: questionPosting);
+      return LightRaiseQueryScreen(
+        isQuestionPosting: questionPosting,
+        isFilingDispute: isFilingDispute,
+      );
     }
   }
 }

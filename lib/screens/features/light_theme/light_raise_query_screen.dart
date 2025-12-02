@@ -14,7 +14,12 @@ import 'package:provider/provider.dart';
 
 class LightRaiseQueryScreen extends StatefulWidget {
   final bool? isQuestionPosting;
-  const LightRaiseQueryScreen({super.key, this.isQuestionPosting});
+  final bool? isFilingDispute;
+  const LightRaiseQueryScreen({
+    super.key,
+    this.isQuestionPosting,
+    this.isFilingDispute,
+  });
 
   @override
   State<LightRaiseQueryScreen> createState() => _LightRaiseQueryScreenState();
@@ -22,6 +27,22 @@ class LightRaiseQueryScreen extends StatefulWidget {
 
 class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
   final TextEditingController _queryController = TextEditingController();
+  String? selectedService;
+
+  final List<String> services = [
+    "Banking & Finance",
+    "Loan Settlement",
+    "Intellectual Property Rights",
+    "Entertainment Law",
+    "Real Estate",
+    "Criminal Law",
+    "Corporate Law",
+    "Arbitration Law",
+    "IT & Cyber Law",
+    "Civil Law",
+    "Drafting",
+    "Litigation",
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -37,55 +58,113 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     const scaleFactor = 0.85;
 
+    final headerVisualHeight = screenHeight * 0.03; // tweak if you need taller
+    final appBarHeight =
+        MediaQuery.of(context).padding.top + headerVisualHeight;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFF8BD00),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color.fromARGB(255, 244, 206, 83),
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+
+        // ⭐ NATIVE WAY TO ROUND ONLY BOTTOM
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(screenWidth * 0.07),
+            bottomRight: Radius.circular(screenWidth * 0.07),
+          ),
+        ),
+
+        titleSpacing: 0,
+        toolbarHeight: kToolbarHeight,
+
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: () => (widget.isQuestionPosting == true)
+                  ? context.go(AppPathsForScreen.userHomePath)
+                  : Navigator.pop(context),
+              child: Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.04),
+                child: Image.asset(
+                  AppAssets.backArrowIcon,
+                  width: screenWidth * 0.06,
+                  height: screenWidth * 0.06,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            SizedBox(width: screenWidth * 0.02 * scaleFactor),
+            Text(
+              "Raise your Queries",
+              style: GoogleFonts.outfit(
+                fontSize: screenWidth * 0.055,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+
       body: SafeArea(
         child: GradientTopLayout(
           screenName: "home",
-          headerContent: Container(
-            width: double.infinity,
+          // headerContent: Container(
+          //   width: double.infinity,
 
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04 * scaleFactor,
-              vertical: screenHeight * 0.015 * scaleFactor,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD29F2A),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
-                bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
-              ),
-            ),
+          //   padding: EdgeInsets.symmetric(
+          //     horizontal: screenWidth * 0.04 * scaleFactor,
+          //     vertical: screenHeight * 0.015 * scaleFactor,
+          //   ),
+          //   decoration: BoxDecoration(
+          //     color: const Color(0xFFD29F2A),
+          //     borderRadius: BorderRadius.only(
+          //       bottomLeft: Radius.circular(screenWidth * 0.07), // ~responsive
+          //       bottomRight: Radius.circular(screenWidth * 0.07), // ~responsive
+          //     ),
+          //   ),
 
-            child: Column(
-              children: [
-                /// Fixed Custom AppBar
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.go(AppPathsForScreen.userHomePath),
-                      child: Image.asset(
-                        AppAssets.backArrowIcon,
-                        width: screenWidth * 0.05,
-                        height: screenWidth * 0.05,
-                        fit: BoxFit.contain,
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(width: screenWidth * 0.12 * scaleFactor),
-                    Text(
-                      "Raise your Queries",
-                      style: GoogleFonts.outfit(
-                        fontSize: screenWidth * 0.065 * scaleFactor,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          //   child: Column(
+          //     children: [
+          //       /// Fixed Custom AppBar
+          //       Row(
+          //         children: [
+          //           GestureDetector(
+          //             onTap: () =>
+          //                 (widget.isQuestionPosting != null &&
+          //                     widget.isQuestionPosting == true)
+          //                 ? context.go(AppPathsForScreen.userHomePath)
+          //                 : Navigator.pop(context),
+          //             child: Image.asset(
+          //               AppAssets.backArrowIcon,
+          //               width: screenWidth * 0.05,
+          //               height: screenWidth * 0.05,
+          //               fit: BoxFit.contain,
+          //               color: Colors.black,
+          //             ),
+          //           ),
+          //           SizedBox(width: screenWidth * 0.12 * scaleFactor),
+          //           Text(
+          //             "Raise your Queries",
+          //             style: GoogleFonts.outfit(
+          //               fontSize: screenWidth * 0.065 * scaleFactor,
+          //               fontWeight: FontWeight.w600,
+          //               color: Colors.black,
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ],
+          //   ),
+          // ),
           child:
               /// Scrollable content below
               ///
@@ -110,13 +189,96 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.04 * scaleFactor),
+                  if (widget.isFilingDispute == true)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            // left: screenWidth * 0.10 * scaleFactor,
+                            bottom: screenHeight * 0.015 * scaleFactor,
+                          ),
+                          child: Text(
+                            "Select Service",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.045 * scaleFactor,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: screenWidth * 0.92 * scaleFactor,
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            gradient: const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Color.fromRGBO(210, 159, 42, 0.65),
+                                Color.fromRGBO(255, 255, 255, 0.65),
+                              ],
+                            ),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2D2319),
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04 * scaleFactor,
+                              vertical: screenHeight * 0.005 * scaleFactor,
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedService,
+                                dropdownColor: const Color(0xFF2D2319),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
+                                ),
+                                isExpanded: true,
+                                borderRadius: BorderRadius.circular(15),
+                                hint: Text(
+                                  "Select a Service",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.04 * scaleFactor,
+                                    fontWeight: FontWeight.w300,
+                                    color: const Color(0xBFFFFFFF),
+                                  ),
+                                ),
+                                style: GoogleFonts.outfit(
+                                  fontSize: screenWidth * 0.04 * scaleFactor,
+                                  color: Colors.white,
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedService = value;
+                                  });
+                                },
+                                items: services
+                                    .map(
+                                      (service) => DropdownMenuItem(
+                                        value: service,
+                                        child: Text(service),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.03 * scaleFactor),
+                      ],
+                    ),
 
                   /// Query Label
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: EdgeInsets.only(
-                        left: screenWidth * 0.10 * scaleFactor,
+                        left: screenWidth * 0.12 * scaleFactor,
                       ),
 
                       child: Text(
@@ -155,6 +317,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                       ),
                       child: TextField(
                         controller: _queryController,
+                        textInputAction: TextInputAction.done,
                         maxLines: null,
                         expands: true,
                         style: GoogleFonts.outfit(
@@ -210,7 +373,15 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                                         "";
                                     final queryText = _queryController.text
                                         .trim();
-
+                                    if (selectedService == null &&
+                                        widget.isFilingDispute == true) {
+                                      showCustomMessage(
+                                        context,
+                                        "Please select service",
+                                        true,
+                                      );
+                                      return;
+                                    }
                                     if (queryText.isEmpty) {
                                       showCustomMessage(
                                         context,
@@ -220,13 +391,31 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                                       return;
                                     }
 
-                                    await provider.raiseQuery(
-                                      context: context,
-                                      role: role,
-                                      phone: phone,
-                                      name: name,
-                                      queryText: queryText,
-                                    );
+                                    if (widget.isFilingDispute != null &&
+                                        widget.isFilingDispute == true) {
+                                      await provider.raiseQuery(
+                                        context: context,
+                                        role: role,
+                                        phone: phone,
+                                        name: name,
+                                        queryText: queryText,
+                                        selectedService: selectedService,
+                                        fileDispute: true,
+                                      );
+                                    } else {
+                                      final success = await provider.raiseQuery(
+                                        context: context,
+                                        role: role,
+                                        phone: phone,
+                                        name: name,
+                                        queryText: queryText,
+                                        fileDispute: false,
+                                      );
+
+                                      if (success) {
+                                        context.pop(true);
+                                      }
+                                    }
 
                                     _queryController.clear();
                                   },

@@ -28,6 +28,7 @@ class AppAssets {
   static const String locationImg6 = "assets/images/location_img6.png";
 
   static const String ourLegacyImg = "assets/images/our_legacy_img.png";
+  static const String ourFoundImg = "assets/images/founder.png";
   static const String teamMemberImg1 = "assets/images/tm_img1.png";
   static const String teamMemberImg2 = "assets/images/tm_img2.png";
   static const String teamMemberImg3 = "assets/images/tm_img3.png";
@@ -48,11 +49,20 @@ class AppAssets {
   static const String tmInstaImg = "assets/images/tm_inst_img.png";
   static const String tmLinkedInImg = "assets/images/tm_lk_img.png";
 
+  static const String clientImage1 = "assets/images/client1.png";
+  static const String clientImage2 = "assets/images/client2.png";
+
   static const String testProfile = 'assets/images/test_profile.png';
 
   static const String rightArrow = "assets/images/right_arrow.png";
 
-  static const String appLogoWithText = "assets/icons/app_logo_with_text.png";
+  static const String appLogoWithText = "assets/images/app_logo_with_text.jpg";
+
+  static const String appLogoWithText2 = "assets/icons/app_logo_with_text.png";
+
+  static const String splashLoader = "assets/splash/Loader.gif";
+
+  static const String darkSplashLoader = "assets/splash/dark_loader.gif";
 
   static const String googleIcon = "assets/icons/google_icon.png";
   static const String appleIcon = "assets/icons/apple_icon.png";
@@ -84,6 +94,8 @@ class AppAssets {
   static const String closeBtnIcon = "assets/icons/close_btn_icon.png";
 
   static const String unExpandedIcon = "assets/icons/unexpanded_icon.png";
+
+  static const String appIcon = "assets/icons/app_logo.jpg";
 
   static const String editIcon = "assets/icons/edit_icon.png";
 
