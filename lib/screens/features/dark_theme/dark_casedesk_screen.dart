@@ -559,7 +559,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                           children: [
                             SizedBox(height: 24),
                             Text(
-                              "No case found",
+                              "Pending",
                               style: GoogleFonts.outfit(
                                 fontSize: 16,
                                 color: isDark ? Colors.white : Colors.black,
@@ -672,7 +672,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
       );
     } else if (remarksProv.remarks.isEmpty) {
       liveStatusContent = Text(
-        "No case found",
+        "Pending",
         style: GoogleFonts.outfit(
           fontSize: MediaQuery.of(context).size.width * 0.045,
           fontWeight: FontWeight.w500,
