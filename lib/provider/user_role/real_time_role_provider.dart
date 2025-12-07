@@ -76,6 +76,18 @@ class RealTimeRoleProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setTesterRole() async {
+    _subscription?.cancel(); // Stop any running listener safely
+    _subscription = null;
+
+    _role = "client";
+    // await LocalStorageHelper.saveString("userRole", "client");
+
+    print("👤 Client mode activated. No Firestore listener.");
+
+    notifyListeners();
+  }
+
   /// Stop listener (call on logout)
   void stop() {
     _subscription?.cancel();

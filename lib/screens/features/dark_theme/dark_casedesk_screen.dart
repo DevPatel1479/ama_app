@@ -392,7 +392,8 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                             ),
                             const Spacer(),
 
-                            if (userRole?.toLowerCase() != "admin")
+                            if (userRole?.toLowerCase() != "admin" &&
+                                userRole?.toLowerCase() != "advocate")
                               SizedBox(
                                 width: screenWidth * 0.35 * scaleFactor,
                                 height: screenHeight * 0.05 * scaleFactor,
@@ -479,9 +480,11 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                           ],
                         ),
                       ),
-                      if (userRole?.toLowerCase() != "admin")
+                      if (userRole?.toLowerCase() != "admin" &&
+                          userRole?.toLowerCase() != "advocate")
                         SizedBox(height: screenHeight * 0.03 * scaleFactor),
-                      if (userRole?.toLowerCase() != "admin")
+                      if (userRole?.toLowerCase() != "admin" &&
+                          userRole?.toLowerCase() != "advocate")
                         // Primary Toggle bar (My Case / Bank Details)
                         Center(
                           child: Container(

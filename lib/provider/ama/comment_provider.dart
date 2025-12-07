@@ -9,9 +9,9 @@ import 'package:ama_legal_solutions/api/api_service.dart';
 
 class CommentProvider extends ChangeNotifier {
   final ApiService apiService;
-
+  bool isSending = false;
   CommentProvider({required this.apiService});
-
+  TextEditingController commentController = TextEditingController();
   List<Comment> _comments = [];
   List<Comment> get comments => _comments;
 
@@ -80,6 +80,12 @@ class CommentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSending(bool value) {
+    if (isSending == value) return;
+    isSending = value;
+    notifyListeners();
+  }
+
   /// Add a comment using ApiService
   Future<bool> postComment({
     required BuildContext context,
@@ -97,7 +103,7 @@ class CommentProvider extends ChangeNotifier {
 
     try {
       final body = {
-        'content': content, 
+        'content': content,
         'commentedBy': commentedBy,
         'profileImgUrl': profileImgUrl,
         'userRole': userRole,

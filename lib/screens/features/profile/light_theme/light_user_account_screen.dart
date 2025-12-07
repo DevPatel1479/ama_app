@@ -327,54 +327,54 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Row: QR + Text
-                      SizedBox(height: screenHeight * 0.01),
-                      Row(
-                        children: [
-                          Image.asset(
-                            AppAssets.themeIcon,
-                            width: screenWidth * 0.04,
-                            height: screenWidth * 0.04,
-                            fit: BoxFit.contain,
-                            color: Colors.black,
-                          ),
-                          SizedBox(width: screenWidth * 0.04),
-                          GestureDetector(
-                            onTap: () {
-                              final isDark = Provider.of<ThemeProvider>(
-                                context,
-                                listen: false,
-                              ).isDarkMode;
-                              if (isDark) {
-                                context.go(
-                                  AppPathsForScreen.userHomePath,
-                                ); // go to light home
-                                Provider.of<ThemeProvider>(
-                                  context,
-                                  listen: false,
-                                ).setTheme(false);
-                              } else {
-                                context.go(
-                                  AppPathsForScreen.userHomePath,
-                                ); // go to dark home
-                                Provider.of<ThemeProvider>(
-                                  context,
-                                  listen: false,
-                                ).setTheme(true);
-                              }
-                            },
-                            child: Text(
-                              "Theme / Appearance",
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.040,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      // Row(
+                      //   children: [
+                      //     Image.asset(
+                      //       AppAssets.themeIcon,
+                      //       width: screenWidth * 0.04,
+                      //       height: screenWidth * 0.04,
+                      //       fit: BoxFit.contain,
+                      //       color: Colors.black,
+                      //     ),
+                      //     SizedBox(width: screenWidth * 0.04),
+                      //     GestureDetector(
+                      //       onTap: () {
+                      //         final isDark = Provider.of<ThemeProvider>(
+                      //           context,
+                      //           listen: false,
+                      //         ).isDarkMode;
+                      //         if (isDark) {
+                      //           context.go(
+                      //             AppPathsForScreen.userHomePath,
+                      //           ); // go to light home
+                      //           Provider.of<ThemeProvider>(
+                      //             context,
+                      //             listen: false,
+                      //           ).setTheme(false);
+                      //         } else {
+                      //           context.go(
+                      //             AppPathsForScreen.userHomePath,
+                      //           ); // go to dark home
+                      //           Provider.of<ThemeProvider>(
+                      //             context,
+                      //             listen: false,
+                      //           ).setTheme(true);
+                      //         }
+                      //       },
+                      //       child: Text(
+                      //         "Theme / Appearance",
+                      //         style: GoogleFonts.outfit(
+                      //           fontSize: screenWidth * 0.040,
+                      //           fontWeight: FontWeight.w400,
+                      //           color: Colors.black,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
 
-                      SizedBox(height: screenHeight * 0.03),
+                      // SizedBox(height: screenHeight * 0.03),
 
                       // Row: Portfolio + Text
                       // if (widget.role.toLowerCase() != "user" &&
@@ -429,7 +429,7 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                       ),
                       // if (widget.role.toLowerCase() != "user" &&
                       //     widget.role.toLowerCase() != "users")
-                      SizedBox(height: screenHeight * 0.05),
+                      SizedBox(height: screenHeight * 0.03),
                       // 🔹 App Policies Header
                       Text(
                         "App Policies",

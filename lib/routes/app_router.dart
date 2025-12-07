@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/screen_helpers/accept_policy/accept_policy_helper.dart';
@@ -25,6 +27,7 @@ import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 
 import 'package:ama_legal_solutions/screen_helpers/portfolio_helper/portfolio_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/profile_helper/profile_helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
@@ -129,30 +132,41 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // User Account → slide-from-left
     GoRoute(
       path: AppPathsForScreen.userAccountPath,
       name: AppScreenNames.userAccount,
       pageBuilder: (context, state) {
         String? name = state.uri.queryParameters["name"] ?? "";
         String? email = state.uri.queryParameters["email"] ?? "";
-        String? profile_photo =
-            state.uri.queryParameters["profile_photo"] ?? "";
+        String? profilePhoto = state.uri.queryParameters["profile_photo"] ?? "";
         String? role = state.uri.queryParameters["role"] ?? "";
         String? phone = state.uri.queryParameters["phone"] ?? "";
 
+        final child = ProfileScreenHelper.getScreen(
+          context,
+          name,
+          email,
+          profilePhoto,
+          phone,
+          role,
+        );
+
+        // -------------------------------
+        // ✅ iOS — Use CupertinoPage
+        // This enables full swipe-back gesture automatically.
+        // -------------------------------
+        if (Platform.isIOS) {
+          return CupertinoPage(key: state.pageKey, child: child);
+        }
+
+        // -------------------------------
+        // ✅ Android — Keep your slide transition
+        // -------------------------------
         return CustomTransitionPage(
           key: state.pageKey,
           opaque: true,
-          transitionDuration: Duration.zero,
-          child: ProfileScreenHelper.getScreen(
-            context,
-            name,
-            email,
-            profile_photo,
-            phone,
-            role,
-          ),
+          transitionDuration: const Duration(milliseconds: 250),
+          child: child,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(-1.0, 0.0);
             const end = Offset.zero;
@@ -163,16 +177,14 @@ final GoRouter appRouter = GoRouter(
               end: end,
             ).chain(CurveTween(curve: curve));
 
-            // return SlideTransition(
-            //   position: animation.drive(tween),
-            //   child: child,
-            // );
-            return child;
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
           },
         );
       },
     ),
-
     // Portfolio
     GoRoute(
       path: AppPathsForScreen.portfolioPath,

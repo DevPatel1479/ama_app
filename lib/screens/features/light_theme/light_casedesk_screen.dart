@@ -385,7 +385,8 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
                     ),
                   ),
                   Spacer(),
-                  if (userRole?.toLowerCase() != "admin")
+                  if (userRole?.toLowerCase() != "admin" &&
+                      userRole?.toLowerCase() != "advocate")
                     /// Ask Doubt Button at top-right
                     SizedBox(
                       width: screenWidth * 0.35 * scaleFactor,
@@ -581,10 +582,12 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
                         Column(
                           children: [
                             // Primary Toggle bar (My Case / Bank Details)
-                            if (userRole?.toLowerCase() != "admin")
+                            if (userRole?.toLowerCase() != "admin" &&
+                                userRole?.toLowerCase() != "advocate")
                               SizedBox(height: screenHeight * 0.03),
 
-                            if (userRole?.toLowerCase() != "admin")
+                            if (userRole?.toLowerCase() != "admin" &&
+                                userRole?.toLowerCase() != "advocate")
                               Center(
                                 child: Container(
                                   width: screenWidth * 0.8,

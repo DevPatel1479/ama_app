@@ -13,6 +13,7 @@ import 'package:ama_legal_solutions/custom_widgets/video_lazy_loading_widget.dar
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
@@ -164,6 +165,33 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
           ),
           Row(
             children: [
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) {
+                  final isDark = themeProvider.isDarkMode;
+
+                  return GestureDetector(
+                    onTap: () {
+                      // Toggle theme
+                      themeProvider.setTheme(!isDark);
+                    },
+                    behavior: HitTestBehavior
+                        .opaque, // ensures the whole padding is tappable
+                    child: Padding(
+                      padding: const EdgeInsets.all(8), // enough touch area
+                      child: Image.asset(
+                        isDark
+                            ? AppAssets.darkThemeIcon
+                            : AppAssets.lightThemeIcon,
+
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(width: screenWidth * 0.02 * scaleFactor),
+
               /// Notification History Icon
               if (userRole?.toLowerCase() == "admin")
                 GestureDetector(
@@ -585,7 +613,8 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                               height: screenHeight * 0.03 * scaleFactor,
                             ), // spacing
 
-                            if (userRole?.toLowerCase() != "admin")
+                            if (userRole?.toLowerCase() != "admin" &&
+                                userRole?.toLowerCase() != "advocate")
                               fileDisputeButton(context),
                             Padding(
                               padding: EdgeInsets.only(
@@ -750,50 +779,15 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                 },
                               ),
                             ),
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top:
-                                    screenHeight * 0.0001, // space below button
-                                left: screenWidth * 0.01,
-                                right: screenWidth * 0.000015,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Our Team",
-                                    style: GoogleFonts.outfit(
-                                      fontSize:
-                                          screenWidth * 0.04 * scaleFactor,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white,
-                                      height: 1,
-                                      letterSpacing: 0,
-                                    ),
-                                  ),
-                                  // TextButton(
-                                  //   onPressed: () {
-                                  //     // Handle "See all" tap here
-                                  //   },
-                                  //   child: Text(
-                                  //     "See all",
-                                  //     style: GoogleFonts.outfit(
-                                  //       fontSize: screenWidth * 0.035 * scaleFactor,
-                                  //       fontWeight: FontWeight.w500,
-                                  //       color: const Color(0xFFD29F2A),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            ),
+
                             // Below the Padding containing "Our Team" and "See all"
-                            SizedBox(
-                              height: screenHeight * 0.02,
-                            ), // spacing between sections
-                            const TeamSlider(),
+                            OurLegacySection(
+                              screenWidth: screenWidth,
+                              screenHeight: screenHeight,
+                              scaleFactor: scaleFactor,
+                              isDark: true,
+                            ),
+
                             // Padding(
                             //   padding: EdgeInsets.only(
                             //     top: screenHeight * 0.03, // space below button
@@ -937,12 +931,52 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                             //     },
                             //   ),
                             // ),
-                            OurLegacySection(
-                              screenWidth: screenWidth,
-                              screenHeight: screenHeight,
-                              scaleFactor: scaleFactor,
-                              isDark: true,
+                            SizedBox(
+                              height: screenHeight * 0.02,
+                            ), // spacing between sections
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight * 0.0001, // space below button
+                                left: screenWidth * 0.01,
+                                right: screenWidth * 0.000015,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Our Team",
+                                    style: GoogleFonts.outfit(
+                                      fontSize:
+                                          screenWidth * 0.04 * scaleFactor,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     // Handle "See all" tap here
+                                  //   },
+                                  //   child: Text(
+                                  //     "See all",
+                                  //     style: GoogleFonts.outfit(
+                                  //       fontSize: screenWidth * 0.035 * scaleFactor,
+                                  //       fontWeight: FontWeight.w500,
+                                  //       color: const Color(0xFFD29F2A),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
                             ),
+                            SizedBox(
+                              height: screenHeight * 0.02,
+                            ), // spacing between sections
+                            const TeamSlider(),
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
                             Padding(
                               padding: EdgeInsets.only(

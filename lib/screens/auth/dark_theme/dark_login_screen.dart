@@ -218,6 +218,11 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                               "third_week",
                             );
                             final userProvider = context.read<UserProvider>();
+
+                            Provider.of<RealTimeRoleProvider>(
+                              context,
+                              listen: false,
+                            ).setTesterRole();
                             await userProvider.loadUserRole();
                             messenger.hideCurrentSnackBar();
                             messenger.showSnackBar(

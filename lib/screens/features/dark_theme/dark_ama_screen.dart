@@ -857,7 +857,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               _isSearching = false;
                             });
                           },
-                          child: GridView.builder(
+                          child: ListView.builder(
                             controller: _scrollController,
                             padding: EdgeInsets.only(
                               left: screenWidth * 0.04,
@@ -865,21 +865,15 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               top: screenHeight * 0.015,
                               bottom: contentBottomPadding,
                             ),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: screenWidth < 600 ? 2 : 3,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                  childAspectRatio: screenWidth < 600
-                                      ? 0.8
-                                      : 0.9,
-                                ),
                             itemCount: itemCount,
                             itemBuilder: (context, index) {
-                              // FIXED: Only show loader when actually loading more data
+                              // loader row (pagination)
                               if (shouldShowLoader &&
                                   index == uniqueQuestions.length) {
                                 return Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     color: Colors.transparent,
@@ -901,20 +895,32 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
 
                               final question = uniqueQuestions[index];
                               final questionId = question.id as String;
-                              // isExpanded = NOT collapsed
                               final isExpanded = !_collapsedIds.contains(
                                 questionId,
                               );
                               final formattedDate = _formatTimestamp(
                                 question.timestamp as int?,
                               );
-
                               final showAddAnswerButton =
                                   _canUserAddAnswer() &&
                                   _questionHasNoAnswer(question);
 
+                              // determine answer preview limit (adjust as needed)
+                              final answerText = question.answer?.content ?? '';
+                              final int charLimit = screenWidth < 600
+                                  ? 100
+                                  : 160;
+                              final bool answerTooLong =
+                                  answerText.length > charLimit;
+                              final String answerPreview = answerTooLong
+                                  ? answerText
+                                        .substring(0, charLimit)
+                                        .trimRight()
+                                  : answerText;
+
                               return Container(
                                 key: ValueKey(questionId),
+                                margin: const EdgeInsets.symmetric(vertical: 6),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   gradient: const LinearGradient(
@@ -929,7 +935,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                   borderRadius: BorderRadius.circular(14),
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(14),
-                                    // <- Reuse the exact same logic as the "View Replies" button
+                                    // Entire card tap uses same logic as previous "View Replies" button
                                     onTap: () {
                                       if (question.commentsCount >= 0 &&
                                           isExpanded == true) {
@@ -965,10 +971,12 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                       ),
                                       padding: const EdgeInsets.all(12),
                                       child: Column(
+                                        mainAxisSize: MainAxisSize
+                                            .min, // <- fixes the unbounded-height + Spacer issue
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // top row - compact for grid
+                                          // top row - identical to original
                                           Row(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -1103,9 +1111,10 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                 ),
                                             ],
                                           ),
+
                                           const SizedBox(height: 8),
 
-                                          // QUESTION TEXT - 1 LINE WITH ELLIPSIS
+                                          // QUESTION TEXT - remains 1 line ellipsis (no view more)
                                           Text(
                                             question.content ?? '',
                                             style: GoogleFonts.outfit(
@@ -1113,28 +1122,34 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                               fontWeight: FontWeight.w400,
                                               color: Colors.white,
                                             ),
-                                            maxLines: 1, // ONLY 1 LINE
-                                            overflow: TextOverflow
-                                                .ellipsis, // ... WHEN TOO LONG
+                                            // maxLines: 1,
+                                            // overflow: TextOverflow.ellipsis,
                                           ),
 
-                                          const SizedBox(height: 8),
+                                          const SizedBox(height: 10),
 
                                           // ANSWER SECTION - ONLY IF ANSWER EXISTS
                                           if (question.answer != null)
                                             Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
+
                                               children: [
                                                 Row(
                                                   children: [
-                                                    Image.asset(
-                                                      AppAssets.appIcon,
-                                                      width: 40,
-                                                      height: 20,
-                                                      fit: BoxFit.contain,
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ), // your desired radius
+                                                      child: Image.asset(
+                                                        AppAssets.appIcon,
+                                                        width: 20,
+                                                        height: 20,
+                                                        fit: BoxFit.cover,
+                                                      ),
                                                     ),
-                                                    const SizedBox(width: 6),
+                                                    const SizedBox(width: 10),
                                                     Flexible(
                                                       child: Container(
                                                         padding:
@@ -1177,118 +1192,79 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                   ],
                                                 ),
                                                 const SizedBox(height: 6),
-                                                Text(
-                                                  question.answer!.content ??
-                                                      '',
-                                                  style: GoogleFonts.outfit(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w400,
-                                                    color: const Color(
-                                                      0xFFD29F2A,
-                                                    ),
-                                                  ),
-                                                  maxLines:
-                                                      2, // 2 LINES FOR ANSWER
-                                                  overflow: TextOverflow
-                                                      .ellipsis, // ... WHEN TOO LONG
-                                                ),
-                                                const SizedBox(height: 8),
-                                              ],
-                                            ),
 
-                                          const Spacer(),
-
-                                          // VIEW MORE/REPLIES BUTTON
-                                          Container(
-                                            width: double.infinity,
-                                            height: 32,
-                                            child: ElevatedButton(
-                                              onPressed: () {
-                                                if (question.commentsCount >=
-                                                        0 &&
-                                                    isExpanded == true) {
-                                                  final commentProvider =
-                                                      context
-                                                          .read<
-                                                            CommentProvider
-                                                          >();
-                                                  showAskDoubtBottomSheet(
-                                                    context,
-                                                    commentProvider,
-                                                    "dark",
-                                                    questionId,
-                                                    userName,
-                                                    userRole,
-                                                    userPhone,
-                                                    profilImgUrl,
-                                                    question,
-                                                  );
-                                                } else {
-                                                  if (_collapsedIds.contains(
-                                                    questionId,
-                                                  )) {
-                                                    _expand(questionId);
-                                                  } else {
-                                                    _collapse(questionId);
-                                                  }
-                                                }
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                elevation: 0,
-                                                padding: EdgeInsets.zero,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                              ),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                    color: const Color(
-                                                      0xFFD29F2A,
-                                                    ),
-                                                    width: 1,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Center(
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        isExpanded
-                                                            ? question.commentsCount ==
-                                                                      0
-                                                                  ? "View Replies"
-                                                                  : "View ${question.commentsCount} Replies"
-                                                            : "View More",
-                                                        style:
-                                                            GoogleFonts.outfit(
+                                                // ANSWER TEXT: truncated + "... view more" when long
+                                                // (the whole card tap still opens replies)
+                                                if (answerText.isNotEmpty)
+                                                  Text.rich(
+                                                    TextSpan(
+                                                      children: [
+                                                        TextSpan(
+                                                          text: answerTooLong
+                                                              ? "$answerPreview..." // truncated part + ellipsis
+                                                              : answerPreview,
+                                                          style:
+                                                              GoogleFonts.outfit(
+                                                                fontSize: 11,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w400,
+                                                                color:
+                                                                    const Color(
+                                                                      0xFFD29F2A,
+                                                                    ),
+                                                              ),
+                                                        ),
+                                                        if (answerTooLong)
+                                                          TextSpan(
+                                                            text: " view more",
+                                                            style: GoogleFonts.outfit(
                                                               fontSize: 11,
                                                               fontWeight:
                                                                   FontWeight
-                                                                      .w500,
+                                                                      .w600,
+                                                              // keep the same accent color or change if desired
                                                               color:
-                                                                  Colors.white,
+                                                                  const Color(
+                                                                    0xFFFFFFFF,
+                                                                  ),
                                                             ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Icon(
-                                                        Icons.expand_more,
-                                                        color: Colors.white,
-                                                        size: 14,
-                                                      ),
-                                                    ],
+                                                          ),
+                                                      ],
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
+
+                                                const SizedBox(height: 8),
+                                              ],
+                                            ),
+                                          Row(
+                                            children: [
+                                              Image.asset(
+                                                AppAssets.commentBtn,
+                                                width: 20,
+                                                height: 20,
+                                                fit: BoxFit.contain,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                "Comments",
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ),
+                                          // const Spacer(),
+
+                                          // Removed the bottom "View Replies/View More" button entirely
+                                          // to fulfill the requirement (card itself handles taps).
+                                          // To keep visual spacing consistent, keep a small bottom padding:
+                                          // SizedBox(height: 8),
                                         ],
                                       ),
                                     ),

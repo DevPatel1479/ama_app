@@ -262,6 +262,7 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                                 "userRole",
                                 "client",
                               );
+
                               await LocalStorageHelper.saveString(
                                 "userEmail",
                                 "testdp@gmail.com",
@@ -271,6 +272,10 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                                 "third_week",
                               );
                               final userProvider = context.read<UserProvider>();
+                              Provider.of<RealTimeRoleProvider>(
+                                context,
+                                listen: false,
+                              ).setTesterRole();
                               await userProvider.loadUserRole();
                               messenger.hideCurrentSnackBar();
                               messenger.showSnackBar(

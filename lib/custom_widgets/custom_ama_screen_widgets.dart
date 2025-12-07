@@ -1,11 +1,15 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
-import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
+// import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
+// import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+// import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+// import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -175,137 +179,100 @@ void _showAddCommentDialog(
     context: context,
     builder: (context) {
       final screenWidth = MediaQuery.of(context).size.width;
+      final screenHeight = MediaQuery.of(context).size.height;
       final isSmallScreen = screenWidth < 360;
 
       return StatefulBuilder(
         builder: (context, setState) {
-          return AlertDialog(
-            backgroundColor: mode == "light"
-                ? Colors.white
-                : const Color(0xFF1E1E1E),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          bool isSending = false;
+          Future<void> _sendComment() async {
+            final text = provider.commentController.text.trim();
+            if (text.isEmpty) return;
+
+            setState(() => isSending = true);
+
+            final success = await provider.postComment(
+              context: context,
+              questionId: questionId,
+              content: text,
+              commentedBy: userName ?? "",
+              userRole: userRole ?? "",
+              phone: userPhone ?? "",
+              profileImgUrl: profileImgUrl ?? "",
+            );
+
+            if (success) {
+              provider.commentController.clear();
+            }
+
+            setState(() => isSending = false);
+          }
+
+          return Container(
+            padding: EdgeInsets.only(
+              left: screenWidth * 0.03,
+              right: screenWidth * 0.03,
+              top: screenHeight * 0.01,
+              bottom:
+                  MediaQuery.of(context).viewInsets.bottom +
+                  screenHeight * 0.01,
             ),
-            title: Text(
-              "Add Comment",
-              style: TextStyle(
-                color: mode == "light" ? const Color(0xFF1E1E1E) : Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: TextField(
-                textInputAction: TextInputAction.done,
-                controller: _controller,
-                maxLines: 4,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFF2C2C2C),
-                  hintText: "Write your comment...",
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.amber),
-                  ),
+            decoration: BoxDecoration(
+              color: Color(0xFF323232),
+              borderRadius: BorderRadius.circular(33),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 22.8,
+                  offset: Offset(0, 4),
                 ),
-              ),
+              ],
             ),
-            actionsPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+            margin: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.05,
+              vertical: screenHeight * 0.01,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: isLoading
-                    ? null
-                    : () async {
-                        if (_controller.text.trim().isEmpty) {
-                          showCustomMessage(
-                            context,
-                            "Please enter comment",
-                            true,
-                          );
-                          return;
-                        }
-
-                        setState(() => isLoading = true);
-
-                        await provider.postComment(
-                          context: context,
-                          questionId: questionId,
-                          content: _controller.text.trim(),
-                          commentedBy:
-                              userName ?? "", // TODO: Replace with actual user
-                          userRole: userRole ?? "",
-                          phone: userPhone ?? "",
-                          profileImgUrl: profileImgUrl ?? "",
-                        );
-
-                        setState(() => isLoading = false);
-
-                        // Only pop if comment was posted successfully
-                        await Future.delayed(Duration(seconds: 1));
-                        Navigator.pop(context);
-                      },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 16 : 24,
-                    vertical: isSmallScreen ? 8 : 12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: provider.commentController,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.04,
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(2, 4),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Your Comment",
+                      hintStyle: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.04,
                       ),
-                    ],
+                    ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendComment(),
                   ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                GestureDetector(
+                  onTap: isSending ? null : _sendComment,
+                  child: isSending
+                      ? SizedBox(
+                          width: screenWidth * 0.06,
+                          height: screenWidth * 0.06,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
                             strokeWidth: 2,
+                            color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          "Send",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      : Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: screenWidth * 0.06,
                         ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       );
@@ -331,320 +298,492 @@ void showAskDoubtBottomSheet(
   String? userName,
   String? userRole,
   String? userPhone,
-
   String? profileImgUrl,
   dynamic question,
 ) {
   final screenWidth = MediaQuery.of(context).size.width;
   final screenHeight = MediaQuery.of(context).size.height;
+
+  // Reset comments and fetch first page
   provider.clearExistingComments();
-  provider.fetchComments(questionId, reset: true); // Initial fetch
-  String createdAtTime = _formatTimestamp(question.timestamp as int?);
+  provider.fetchComments(questionId, reset: true);
+
+  final String createdAtTime = _formatTimestamp(question.timestamp as int?);
+  final FocusNode commentFocusNode = FocusNode();
+
+  // The send handler uses provider.setSending so provider controls loader state
+  Future<void> _sendComment(CommentProvider provider) async {
+    final String text = provider.commentController.text.trim();
+    if (text.isEmpty) return;
+
+    provider.setSending(true);
+    try {
+      final success = await provider.postComment(
+        context: context,
+        questionId: questionId,
+        content: text,
+        commentedBy: userName ?? "",
+        userRole: userRole ?? "",
+        phone: userPhone ?? "",
+        profileImgUrl: profileImgUrl ?? "",
+      );
+
+      if (success) {
+        // FocusScope.of(context).unfocus();
+
+        commentFocusNode.unfocus();
+
+        provider.commentController.clear();
+        // Optionally scroll the comments list to top if you have a scroll controller
+      }
+    } finally {
+      // always make sure to clear sending flag
+      provider.setSending(false);
+    }
+  }
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (BuildContext context) {
-      return Container(
-        height: screenHeight * 0.95,
-        decoration: BoxDecoration(
-          color: mode == "dark" ? const Color(0xFF252525) : Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(25),
-            topRight: Radius.circular(25),
-          ),
-        ),
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.02,
+    builder: (BuildContext ctx) {
+      // AnimatedPadding makes the sheet move up when keyboard opens.
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            // dismiss keyboard when tapping outside input
+            FocusScope.of(ctx).unfocus();
+          },
+          child: Container(
+            constraints: BoxConstraints(maxHeight: screenHeight * 0.95),
+            decoration: BoxDecoration(
+              color: mode == "dark" ? const Color(0xFF252525) : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
               ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.05,
-                      height: screenWidth * 0.05,
-                      color: mode == "light"
-                          ? const Color(0xFF252525)
-                          : Colors.white,
-                    ),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.04,
+                    vertical: screenHeight * 0.02,
                   ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        "Comments",
-                        style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Image.asset(
+                          AppAssets.backArrowIcon,
+                          width: screenWidth * 0.05,
+                          height: screenWidth * 0.05,
                           color: mode == "light"
                               ? const Color(0xFF252525)
                               : Colors.white,
                         ),
                       ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "Comments",
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.05,
+                              fontWeight: FontWeight.w600,
+                              color: mode == "light"
+                                  ? const Color(0xFF252525)
+                                  : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: screenWidth * 0.05),
+                    ],
+                  ),
+                ),
+
+                // Question card
+                Container(
+                  margin: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color.fromRGBO(210, 159, 42, 0.65),
+                        Color.fromRGBO(255, 255, 255, 0.65),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.add_comment,
-                      color: mode == "light"
-                          ? const Color(0xFF252525)
-                          : Colors.white,
+                  child: Container(
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2D2319),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    onPressed: () {
-                      if (userRole?.toLowerCase() == "guest") {
-                        final isDark = Provider.of<ThemeProvider>(
-                          context,
-                          listen: false,
-                        ).isDarkMode;
-                        showDialog(
-                          context: context,
-                          builder: (_) => LoginRequiredDialog(
-                            isDarkTheme: isDark,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Colors.transparent,
+                              backgroundImage:
+                                  (question.profileImgUrl != null &&
+                                      (question.profileImgUrl as String)
+                                          .isNotEmpty)
+                                  ? NetworkImage(
+                                      "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                    )
+                                  : AssetImage(AppAssets.userIcon)
+                                        as ImageProvider,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    question.userName ?? '',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    "$createdAtTime",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          question.content ?? '',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (question.answer != null)
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(
+                              vertical: screenHeight * 0.010,
+                              horizontal: screenWidth * 0.02,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                0xFFD29F2A,
+                              ), // Background color
+                              borderRadius: BorderRadius.circular(
+                                10,
+                              ), // Rounded corners
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: Image.asset(
+                                        AppAssets.appIcon,
+                                        width:
+                                            screenWidth *
+                                            0.05, // Responsive width
+                                        height:
+                                            screenWidth *
+                                            0.05, // Responsive height
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                          horizontal: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0x33FFFFFF),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "from ${question.answer!.role ?? ''}",
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  question.answer!.content ?? '',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight:
+                                        FontWeight.w400, // 400 = Regular
+                                    fontStyle: FontStyle.normal, // Regular
+                                    fontSize:
+                                        screenWidth * 0.032, // ~13px responsive
+                                    height:
+                                        15 /
+                                        13, // line-height: 15px for 13px font
+                                    letterSpacing: 0, // 0%
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                            onLoginPressed: () {
-                              Navigator.pop(context);
-                              context.goNamed(AppScreenNames.logIn);
-                              // context.pushNamed(AppScreenNames.l);
-                            },
+                const SizedBox(height: 12),
+
+                // Comments list
+                Expanded(
+                  child: Consumer<CommentProvider>(
+                    builder: (context, commentProvider, _) {
+                      if (commentProvider.isLoading &&
+                          commentProvider.comments.isEmpty) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: mode == "light"
+                                ? const Color(0xFF252525)
+                                : Colors.white,
                           ),
                         );
-                        return;
                       }
-                      _showAddCommentDialog(
-                        context,
-                        provider,
-                        mode,
-                        questionId,
-                        userName,
-                        userRole,
-                        userPhone,
-                        profileImgUrl,
+
+                      if (commentProvider.comments.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "No comments yet",
+                            style: TextStyle(
+                              color: mode == "light"
+                                  ? const Color(0xFF252525)
+                                  : Colors.white,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return NotificationListener<ScrollNotification>(
+                        onNotification: (scrollNotification) {
+                          if (scrollNotification.metrics.pixels >=
+                                  scrollNotification.metrics.maxScrollExtent -
+                                      100 &&
+                              !commentProvider.isLoading &&
+                              commentProvider.hasMore) {
+                            commentProvider.fetchComments(questionId);
+                          }
+                          return false;
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.04,
+                          ),
+                          itemCount: commentProvider.hasMore
+                              ? commentProvider.comments.length + 1
+                              : commentProvider.comments.length,
+                          itemBuilder: (context, index) {
+                            if (index == commentProvider.comments.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+
+                            final comment = commentProvider.comments[index];
+
+                            return buildDoubtItem(
+                              mode: mode,
+                              context: context,
+                              screenWidth: screenWidth,
+                              screenHeight: screenHeight,
+                              userName: comment.commentedBy ?? "Unknown",
+                              askedTime: comment.timestamp != null
+                                  ? formatTimestamp(comment.timestamp)
+                                  : "Asked just now",
+                              fromTag:
+                                  "from ${comment.userRole}" ?? "From User",
+                              description: comment.content ?? "",
+                              profileUrl: comment.profileImgUrl,
+                            );
+                          },
+                        ),
                       );
                     },
                   ),
-                  SizedBox(width: screenWidth * 0.05),
-                ],
-              ),
-            ),
+                ),
 
-            Container(
-              margin: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color.fromRGBO(210, 159, 42, 0.65),
-                    Color.fromRGBO(255, 255, 255, 0.65),
-                  ],
-                ),
-              ),
-              child: Container(
-                margin: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2D2319),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: Colors.transparent,
-                          backgroundImage:
-                              (question.profileImgUrl != null &&
-                                  (question.profileImgUrl as String).isNotEmpty)
-                              ? NetworkImage(
-                                  "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                )
-                              : AssetImage(AppAssets.userIcon) as ImageProvider,
+                // Input bar (pinned)
+                Consumer<CommentProvider>(
+                  builder: (context, provider, _) {
+                    if (userRole?.toLowerCase() == "guest") {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: 8,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: SafeArea(
+                          top: false,
+                          child: GestureDetector(
+                            onTap: () {
+                              final isDark = Provider.of<ThemeProvider>(
+                                context,
+                                listen: false,
+                              ).isDarkMode;
+
+                              showDialog(
+                                context: context,
+                                builder: (_) => LoginRequiredDialog(
+                                  isDarkTheme: isDark,
+                                  onLoginPressed: () {
+                                    Navigator.pop(context);
+                                    context.goNamed(AppScreenNames.logIn);
+                                  },
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.03,
+                              ),
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF323232),
+                                borderRadius: BorderRadius.circular(33),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Login to comment",
+                                    style: TextStyle(color: Colors.white54),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        left: screenWidth * 0.03,
+                        right: screenWidth * 0.03,
+                        top: 8,
+                        bottom: 8,
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF323232),
+                            borderRadius: BorderRadius.circular(33),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                question.userName ?? '',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
+                              Expanded(
+                                child: TextField(
+                                  controller: provider.commentController,
+                                  focusNode: commentFocusNode,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: "Your Comment",
+                                    hintStyle: TextStyle(color: Colors.white),
+                                  ),
+                                  textInputAction: TextInputAction.send,
+                                  onSubmitted: (_) async {
+                                    await _sendComment(provider);
+                                  },
                                 ),
                               ),
-                              Text(
-                                "${createdAtTime}",
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  color: Colors.white70,
-                                ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: provider.isSending
+                                    ? null
+                                    : () async {
+                                        FocusScope.of(ctx).unfocus();
+                                        await _sendComment(provider);
+                                      },
+                                child: provider.isSending
+                                    ? SizedBox(
+                                        width: screenWidth * 0.06,
+                                        height: screenWidth * 0.06,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.send,
+                                        color: Colors.white,
+                                        size: screenWidth * 0.06,
+                                      ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      question.content ?? '',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    if (question.answer != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                AppAssets.appIcon,
-                                width: 40,
-                                height: 20,
-                                fit: BoxFit.contain,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
-                                    horizontal: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0x33FFFFFF),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "from ${question.answer!.role ?? ''}",
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w400,
-                                      color: const Color(0xFFD29F2A),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            question.answer!.content ?? '',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFFD29F2A),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 16),
-
-            // Comments body
-            Expanded(
-              child: Consumer<CommentProvider>(
-                builder: (context, commentProvider, _) {
-                  if (commentProvider.isLoading &&
-                      commentProvider.comments.isEmpty) {
-                    // Show loading indicator while fetching first batch
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: mode == "light"
-                            ? const Color(0xFF252525)
-                            : Colors.white,
-                      ),
-                    );
-                  }
-
-                  if (commentProvider.comments.isEmpty) {
-                    return Center(
-                      child: Text(
-                        "No comments yet",
-                        style: TextStyle(
-                          color: mode == "light"
-                              ? const Color(0xFF252525)
-                              : Colors.white,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return NotificationListener<ScrollNotification>(
-                    onNotification: (scrollNotification) {
-                      if (scrollNotification.metrics.pixels >=
-                              scrollNotification.metrics.maxScrollExtent -
-                                  100 &&
-                          !commentProvider.isLoading &&
-                          commentProvider.hasMore) {
-                        // Fetch next page for lazy loading
-                        commentProvider.fetchComments(questionId);
-                      }
-                      return false;
-                    },
-                    child: ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.04,
-                      ),
-                      itemCount: commentProvider.hasMore
-                          ? commentProvider.comments.length + 1
-                          : commentProvider.comments.length,
-                      itemBuilder: (context, index) {
-                        if (index == commentProvider.comments.length) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: mode == "light"
-                                    ? const Color(0xFF252525)
-                                    : Colors.white,
-                              ),
-                            ),
-                          );
-                        }
-
-                        final comment = commentProvider.comments[index];
-
-                        return buildDoubtItem(
-                          mode: mode,
-                          context: context,
-                          screenWidth: screenWidth,
-                          screenHeight: screenHeight,
-                          userName: comment.commentedBy ?? "Unknown",
-                          askedTime: comment.timestamp != null
-                              ? formatTimestamp(comment.timestamp)
-                              : "Asked just now",
-
-                          fromTag: "from ${comment.userRole}" ?? "From User",
-                          description: comment.content ?? "",
-                          profileUrl: comment.profileImgUrl,
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          ),
         ),
       );
     },

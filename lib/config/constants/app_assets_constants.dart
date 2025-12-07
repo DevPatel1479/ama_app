@@ -20,6 +20,8 @@ class AppAssets {
   static const String r4 = "assets/images/r4.png";
   static const String r5 = "assets/images/r5.png";
 
+  static const String commentBtn = "assets/images/comment.png";
+
   static const String locationImg1 = "assets/images/location_img1.png";
   static const String locationImg2 = "assets/images/location_img2.png";
   static const String locationImg3 = "assets/images/location_img3.png";
@@ -122,4 +124,10 @@ class AppAssets {
   static const String answerIcon = "assets/icons/answer_icon.png";
 
   static const String whiteUserIcon = "assets/icons/white_theme_user.png";
+
+  static const String notificationAppIcon = "assets/icons/notification.png";
+
+  static const String darkThemeIcon = "assets/icons/dark_theme_icon.png";
+
+  static const String lightThemeIcon = "assets/icons/light_theme_icon.png";
 }
