@@ -62,7 +62,7 @@ final GoRouter appRouter = GoRouter(
           key: state.pageKey,
           opaque: true,
           transitionDuration: Duration.zero,
-          child: HomeScreenHelper.getScreen(context),
+          child: const HomeScreenHelper(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
             return child;

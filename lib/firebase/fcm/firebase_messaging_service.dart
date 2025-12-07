@@ -1,3 +1,5 @@
+import 'package:ama_legal_solutions/api/api_service.dart';
+import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -23,6 +25,37 @@ class FirebaseMessagingService {
   static FirebaseMessagingService get instance {
     _instance ??= FirebaseMessagingService._();
     return _instance!;
+  }
+
+  /// Update FCM token when refreshed
+  Future<void> updateFcmTokenOnServer(String newToken) async {
+    try {
+      print("🌍 Updating FCM token on server...");
+
+      String? phone = await LocalStorageHelper.getString("userPhone");
+      String? userRole = await LocalStorageHelper.getString("userRole");
+
+      if (phone == null || userRole == null) {
+        print(
+          "⚠️ userPhone or userRole not found in storage. Cannot update token.",
+        );
+        return;
+      }
+
+      final apiService = ApiService();
+
+      final response = await apiService.put(
+        "${Endpoints.baseUrl}/fcm/update-fcm-token",
+        {"user_id": phone, "fcm_token": newToken},
+      );
+
+      print("✅ Token update response: ${response.body}");
+
+      // Save new token locally
+      await LocalStorageHelper.saveString("fcmToken", newToken);
+    } catch (e) {
+      print("❌ Error updating refreshed token: $e");
+    }
   }
 
   /// Initialize Firebase messaging and request permissions
@@ -58,8 +91,10 @@ class FirebaseMessagingService {
       // }
 
       // Listen for token refresh
-      _firebaseMessaging.onTokenRefresh.listen((newToken) {
+      _firebaseMessaging.onTokenRefresh.listen((newToken) async {
         print('🔄 FCM Token refreshed: ${newToken.substring(0, 20)}...');
+        await updateFcmTokenOnServer(newToken);
+
         // _handleTokenRefresh(newToken);
       });
 
@@ -456,4 +491,28 @@ class FirebaseMessagingService {
   //     return false;
   //   }
   // }
+
+  Future<String?> generateFcmToken() async {
+    try {
+      print('🔥 Generating new FCM token...');
+
+      // Get FCM token
+      String? token = await _firebaseMessaging.getToken();
+
+      if (token == null) {
+        print('❌ Failed to generate FCM token.');
+        return null;
+      }
+
+      print('✅ FCM Token generated: ${token.substring(0, 20)}...');
+
+      // Save locally for app use
+      // await LocalStorageHelper.setString("fcmToken", token);
+
+      return token;
+    } catch (e) {
+      print('❌ Error generating FCM token: $e');
+      return null;
+    }
+  }
 }

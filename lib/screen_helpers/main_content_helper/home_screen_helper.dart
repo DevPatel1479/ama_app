@@ -7,18 +7,23 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-class HomeScreenHelper {
-  /// Returns the appropriate Get Started screen based on theme
-  static Widget getScreen(BuildContext context) {
-    final isDarkMode = Provider.of<ThemeProvider>(
-      context,
-      listen: true,
-    ).isDarkMode;
+class HomeScreenHelper extends StatelessWidget {
+  const HomeScreenHelper({super.key});
 
-    if (isDarkMode) {
-      return const DarkHomeScreen();
-    } else {
-      return const LightHomeScreen();
-    }
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDarkMode;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      child: isDark
+          ? const DarkHomeScreen(key: ValueKey('dark'))
+          : const LightHomeScreen(key: ValueKey('light')),
+    );
   }
 }

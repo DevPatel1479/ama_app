@@ -48,6 +48,9 @@ class AppAssets {
   static const String teamMemberImg15 = "assets/images/tm_img15.png";
   static const String teamMemberImg16 = "assets/images/tm_img16.png";
 
+  static const String launchLightImg = "assets/images/launch_light_image.png";
+  static const String launchDarkImg = "assets/images/launch_dark_image.png";
+
   static const String tmInstaImg = "assets/images/tm_inst_img.png";
   static const String tmLinkedInImg = "assets/images/tm_lk_img.png";
 

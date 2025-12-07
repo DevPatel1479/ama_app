@@ -155,6 +155,40 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
+  /// Generate and store FCM token to backend
+  Future<void> generateAndStoreFcmToken(String userId) async {
+    try {
+      print("🔥 Fetching FCM token...");
+
+      String? token = await FirebaseMessagingService.instance
+          .generateFcmToken();
+
+      if (token == null) {
+        print("❌ Failed to generate FCM token");
+        return;
+      }
+
+      // print("✅ FCM Token: $token");
+
+      // Save token locally
+      // await LocalStorageHelper.saveString("fcmToken", token);
+
+      // ---- API CALL ----
+      final apiService = ApiService();
+      final response = await apiService.post(
+        "${Endpoints.baseUrl}/fcm/store-fcm-token",
+        {
+          "user_id": userId, // phone you stored
+          "fcm_token": token,
+        },
+      );
+
+      print("🌍 Store Token Response: ${response.body}");
+    } catch (e) {
+      print("❌ Error generating or storing FCM token: $e");
+    }
+  }
+
   Future<void> verifyOtp(BuildContext context) async {
     if (isLoading) return;
 
@@ -179,6 +213,8 @@ class LoginProvider extends ChangeNotifier {
       if (response.statusCode == 200 && data["success"] == true) {
         await LocalStorageHelper.saveBool("isUserLoggedIn", true);
         await LocalStorageHelper.saveString("userPhone", phone);
+        final userId = "${role}_${phone}";
+        generateAndStoreFcmToken(userId);
         // showCustomMessage(
         //   context,
         //   data["message"] ?? "OTP verified successfully",

@@ -123,13 +123,56 @@ class _SplashScreenState extends State<DarkSplashScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-        child: Image.asset(
-          AppAssets.darkSplashLoader, // ✅ your GIF here
-          width: size.width * 0.85, // slightly smaller than screen width
-          height: size.height * 0.85, // maintain aspect ratio
-          fit: BoxFit.contain,
-        ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Center GIF
+          Center(
+            child: Image.asset(
+              AppAssets.launchDarkImg,
+              width: size.width * 0.65,
+              height: size.height * 0.65,
+              fit: BoxFit.contain,
+            ),
+          ),
+
+          // ⭐ Bottom Text (Responsive)
+          Positioned(
+            bottom: size.height * 0.05, // responsive bottom spacing
+            left: 0,
+            right: 0,
+            child: Center(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    // "Get"
+                    TextSpan(
+                      text: "Get ",
+                      style: TextStyle(
+                        fontFamily: "Cormorant",
+                        fontSize: size.width * 0.055, // responsive font
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFFFFFFFF),
+                      ),
+                    ),
+
+                    // "Legally Insured"
+                    TextSpan(
+                      text: "Legally Insured",
+                      style: TextStyle(
+                        fontFamily: "Cormorant",
+                        fontSize: size.width * 0.055, // responsive font
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                        color: Color(0xFFD29F2A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

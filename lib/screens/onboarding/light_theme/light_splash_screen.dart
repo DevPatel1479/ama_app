@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
@@ -122,12 +123,59 @@ class _SplashScreenState extends State<LightSplashScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
-      body: Center(
-        child: Image.asset(
-          AppAssets.splashLoader, // ✅ your GIF here
-          width: size.width * 0.85, // slightly smaller than screen width
-          height: size.height * 0.85, // maintain aspect ratio
-          fit: BoxFit.contain,
+      body: GradientTopLayout(
+        screenName: "home",
+        keepExpanded: false,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Center GIF
+            Center(
+              child: Image.asset(
+                AppAssets.launchLightImg, // GIF
+                width: size.width * 0.65,
+                height: size.height * 0.65,
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            // ⭐ Bottom Responsive Text
+            Positioned(
+              bottom: size.height * 0.05, // responsive bottom spacing
+              left: 0,
+              right: 0,
+              child: Center(
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      // "Get"
+                      TextSpan(
+                        text: "Get ",
+                        style: TextStyle(
+                          fontFamily: "Cormorant",
+                          fontSize: size.width * 0.055, // responsive
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF000000), // Black for light theme
+                        ),
+                      ),
+
+                      // "Legally Insured"
+                      TextSpan(
+                        text: "Legally Insured",
+                        style: TextStyle(
+                          fontFamily: "Cormorant",
+                          fontSize: size.width * 0.055, // responsive
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                          color: Color(0xFFD29F2A), // Gold
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

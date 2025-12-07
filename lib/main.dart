@@ -7,6 +7,7 @@ import 'package:ama_legal_solutions/firebase/firebase_options.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
+import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_history_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/weekly_client_count_provider.dart';
@@ -14,6 +15,7 @@ import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/resolve_query_provider.dart';
+import 'package:ama_legal_solutions/provider/teams/team_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
@@ -81,6 +83,9 @@ void main() async {
           value: realTimeRoleProvider,
         ),
         ChangeNotifierProvider(
+          create: (_) => TeamProvider(apiService: ApiService()),
+        ), // added profile provider
+        ChangeNotifierProvider(
           create: (_) => ProfileProvider(),
         ), // added profile provider
         ChangeNotifierProvider(
@@ -93,6 +98,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => CommentProvider(apiService: ApiService()),
         ),
+        ChangeNotifierProvider(create: (_) => RemarksProvider()),
         ChangeNotifierProvider(create: (_) => ResolveQueryProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => AnswerProvider()),

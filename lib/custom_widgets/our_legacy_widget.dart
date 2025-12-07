@@ -22,7 +22,8 @@ class OurLegacySection extends StatefulWidget {
 
 class _OurLegacySection extends State<OurLegacySection> {
   bool isFounderView = true;
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -31,15 +32,12 @@ class _OurLegacySection extends State<OurLegacySection> {
     _scrollController.addListener(() {
       double scrollX = _scrollController.offset;
 
-      // Each card roughly takes 0.9 * screenWidth + padding
       double cardWidth = widget.screenWidth * 0.9;
-      double switchPoint = cardWidth * 0.5; // halfway
+      double switchPoint = cardWidth * 0.5;
 
       if (scrollX > switchPoint && isFounderView) {
-        // User swiped to R.C. Malik card
         setState(() => isFounderView = false);
       } else if (scrollX < switchPoint && !isFounderView) {
-        // User swiped back to founder
         setState(() => isFounderView = true);
       }
     });
@@ -51,9 +49,25 @@ class _OurLegacySection extends State<OurLegacySection> {
     super.dispose();
   }
 
+  void _scrollToPrevious() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollToNext() {
+    _scrollController.animateTo(
+      widget.screenWidth * 0.9 +
+          widget.screenWidth * 0.04, // card width + spacing
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // print("isDark $isDark");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -80,34 +94,84 @@ class _OurLegacySection extends State<OurLegacySection> {
         ),
         SizedBox(height: widget.screenHeight * 0.02 * widget.scaleFactor),
 
-        // 🔹 Horizontally scrollable cards
-        SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              _buildLegacyCard(
-                context,
-                imagePath: AppAssets.ourFoundImg,
-                title: "Anuj Anand Malik",
-                subtitle: "Founder & Legal Consultant",
-                description:
-                    "Anuj Anand Malik, advocate and founder of AMA Legal Solutions, leads with a mission to simplify and modernize legal services. His focus on client-centric solutions and financial law continues the legacy of innovation and integrity.",
+        // 🔹 Horizontally scrollable cards with arrows
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  _buildLegacyCard(
+                    context,
+                    imagePath: AppAssets.ourFoundImg,
+                    title: "Anuj Anand Malik",
+                    subtitle: "Founder & Legal Consultant",
+                    description:
+                        "Anuj Anand Malik, advocate and founder of AMA Legal Solutions, leads with a mission to simplify and modernize legal services. His focus on client-centric solutions and financial law continues the legacy of innovation and integrity.",
+                  ),
+                  SizedBox(
+                    width: widget.screenWidth * 0.04 * widget.scaleFactor,
+                  ),
+                  _buildLegacyCard(
+                    context,
+                    imagePath: AppAssets.ourLegacyImg,
+                    title: "Late Adv. R.C. Malik",
+                    subtitle:
+                        "Ex-Comptroller and Auditor General of India\nDirector General of Audit (Central-Receipt)",
+                    description:
+                        "R.C. Malik started his professional journey as a gazetted officer at DGACR, progressing through different roles within the Income Tax Department before taking on administrative duties at the Office of the Comptroller and Auditor General (CAG) of India.",
+                  ),
+                ],
               ),
-
-              SizedBox(width: widget.screenWidth * 0.04 * widget.scaleFactor),
-              _buildLegacyCard(
-                context,
-                imagePath: AppAssets.ourLegacyImg,
-                title: "Late Adv. R.C. Malik",
-                subtitle:
-                    "Ex-Comptroller and Auditor General of India\nDirector General of Audit (Central-Receipt)",
-                description:
-                    "R.C. Malik started his professional journey as a gazetted officer at DGACR, progressing through different roles within the Income Tax Department before taking on administrative duties at the Office of the Comptroller and Auditor General (CAG) of India.",
+            ),
+            // 🔹 Left arrow
+            Positioned(
+              left: 0,
+              child: Visibility(
+                visible: !isFounderView,
+                child: GestureDetector(
+                  onTap: _scrollToPrevious,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+            // 🔹 Right arrow
+            Positioned(
+              right: 0,
+              child: Visibility(
+                visible: isFounderView,
+                child: GestureDetector(
+                  onTap: _scrollToNext,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -132,10 +196,7 @@ class _OurLegacySection extends State<OurLegacySection> {
             // 🟡 Left Image with gradient border
             Container(
               width: (title == "Anuj Anand Malik")
-                  ? widget.screenWidth *
-                        0.45 *
-                        widget
-                            .scaleFactor // 👈 increased width for second image
+                  ? widget.screenWidth * 0.45 * widget.scaleFactor
                   : widget.screenWidth * 0.35 * widget.scaleFactor,
               height: widget.screenHeight * 0.25 * widget.scaleFactor,
               decoration: BoxDecoration(

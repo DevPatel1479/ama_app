@@ -7,8 +7,10 @@ import 'package:ama_legal_solutions/custom_widgets/resolve_query_bottom_sheet.da
 import 'package:ama_legal_solutions/custom_widgets/shimmer_widget.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/models/query_model.dart';
+import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
@@ -20,7 +22,15 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
+
+String formatTimestamp(int ts) {
+  // if ts looks like milliseconds already (> 1e12), use it, otherwise treat as seconds
+  final millis = (ts > 1000000000000) ? ts : ts * 1000;
+  final dt = DateTime.fromMillisecondsSinceEpoch(millis);
+  return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+}
 
 class DarkCasedeskScreen extends StatefulWidget {
   const DarkCasedeskScreen({super.key});
@@ -39,6 +49,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _queriesSubscription;
   String? _role;
   String? _phone;
+  bool isExpanded = false;
   // Example list of bank details
   final List<Map<String, dynamic>> bankDetails = [
     {
@@ -153,6 +164,12 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     setState(() {
       userRole = _role;
     });
+    if (_phone != null) {
+      // Use existing RemarksProvider. Its fetchRemarks signature used Endpoints internally,
+      // it previously accepted a baseUrl param — pass empty string because provider uses Endpoints.
+      final remarksProv = Provider.of<RemarksProvider>(context, listen: false);
+      await remarksProv.fetchRemarks("", _phone!);
+    }
   }
 
   // Attach Firestore realtime listener for document: queries/<role>_<phone>
@@ -328,6 +345,287 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   //     // ).fetchUserInfo(context, true);
   //   });
   // }
+  Widget buildTimelineStep({
+    required String remarks,
+    required String dateTime,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    final double dotSize = 12;
+    final double lineWidth = 2;
+    final double segmentHeight = 6;
+    final double segmentGap = 4;
+    final int segmentCount = 4;
+
+    List<Widget> buildBrokenLine() {
+      return List.generate(segmentCount, (index) {
+        return Container(
+          width: lineWidth,
+          height: segmentHeight,
+          margin: EdgeInsets.only(top: segmentGap),
+          color: Color(0xFF04C527),
+        );
+      });
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // TOP ROW → DOT + REMARKS + DATE/TIME
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // DOT
+            Container(
+              width: dotSize,
+              height: dotSize,
+              decoration: const BoxDecoration(
+                color: Color(0xFFD29F2A),
+                shape: BoxShape.circle,
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            // REMARKS + DATE/TIME TOGETHER
+            Flexible(
+              child: Row(
+                children: [
+                  // REMARKS (flexible)
+                  Flexible(
+                    child: Text(
+                      remarks,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // DATE + TIME (inline next to remarks)
+                  Text(
+                    dateTime,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // BROKEN LINE UNDER DOT — CONNECTED PERFECTLY
+        if (!isLast)
+          Padding(
+            padding: EdgeInsets.only(left: dotSize / 2 - lineWidth / 2),
+            child: Column(children: buildBrokenLine()),
+          ),
+      ],
+    );
+  }
+
+  Future<void> openCaseStatusSheet(BuildContext context) async {
+    final size = MediaQuery.of(context).size;
+    final phone = await LocalStorageHelper.getString("userPhone");
+    if (phone != null) {
+      final remarksProv = Provider.of<RemarksProvider>(context, listen: false);
+      // fetch latest; backend returns reversed list (newest first)
+      await remarksProv.fetchRemarks("", phone);
+    }
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+        final isDark = themeProvider.isDarkMode;
+
+        return SizedBox(
+          height: size.height * 0.80,
+          width: size.width,
+          child: Container(
+            width: size.width,
+            height: size.height * 0.80,
+
+            /// ⭐ BACKGROUND CHANGES BASED ON THEME
+            color: isDark ? const Color(0xFF2D2319) : Colors.white,
+
+            child: Column(
+              children: [
+                /// TOP BAR 40px
+                SizedBox(
+                  height: 40,
+                  width: size.width,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      /// Title
+                      Text(
+                        "Live Status",
+                        style: GoogleFonts.outfit(
+                          fontSize: size.width * 0.045,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFD29F2A),
+                        ),
+                      ),
+
+                      /// Close arrow
+                      Positioned(
+                        right: 16,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: AnimatedRotation(
+                            duration: const Duration(milliseconds: 200),
+                            turns: 0.5,
+                            child: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: isDark ? Colors.white : Colors.black,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Consumer<RemarksProvider>(
+                    builder: (context, remarksProv, _) {
+                      // Loading skeleton: show shimmer-like placeholders while fetching
+                      if (remarksProv.loading && remarksProv.remarks.isEmpty) {
+                        return Column(
+                          children: List.generate(
+                            3,
+                            (_) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Container(
+                                width: double.infinity,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade800.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Error / no data cases
+                      if (remarksProv.errorMessage != null &&
+                          remarksProv.remarks.isEmpty) {
+                        return Column(
+                          children: [
+                            SizedBox(height: 24),
+                            Text(
+                              remarksProv.errorMessage!,
+                              style: GoogleFonts.outfit(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final phone =
+                                    await LocalStorageHelper.getString(
+                                      "userPhone",
+                                    );
+                                if (phone != null) {
+                                  await remarksProv.fetchRemarks("", phone);
+                                }
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text("Retry"),
+                            ),
+                          ],
+                        );
+                      }
+
+                      if (remarksProv.remarks.isEmpty) {
+                        // show no case found
+                        return Column(
+                          children: [
+                            SizedBox(height: 24),
+                            Text(
+                              "No case found",
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final phone =
+                                    await LocalStorageHelper.getString(
+                                      "userPhone",
+                                    );
+                                if (phone != null) {
+                                  await remarksProv.fetchRemarks("", phone);
+                                }
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text("Refresh"),
+                            ),
+                          ],
+                        );
+                      }
+
+                      // If we have data use RefreshIndicator + ListView
+                      return SizedBox(
+                        height:
+                            size.height * 0.60, // allow sheet to scroll inside
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            final phone = await LocalStorageHelper.getString(
+                              "userPhone",
+                            );
+                            if (phone != null) {
+                              await remarksProv.fetchRemarks("", phone);
+                            }
+                          },
+                          child: ListView.separated(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            itemCount: remarksProv.remarks.length,
+                            itemBuilder: (context, idx) {
+                              final remarkItem = remarksProv.remarks[idx];
+                              // provider already has reversed list (newest first)
+                              final isLast =
+                                  idx == remarksProv.remarks.length - 1;
+                              return buildTimelineStep(
+                                remarks: remarkItem.remarks,
+                                dateTime: formatTimestamp(remarkItem.createdAt),
+                                isFirst: idx == 0,
+                                isLast: isLast,
+                              );
+                            },
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 8),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,6 +647,53 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
     final role = context.watch<RealTimeRoleProvider>().role;
     userRole = role;
+    final remarksProv = context.watch<RemarksProvider>();
+    Widget liveStatusContent;
+
+    if (remarksProv.loading) {
+      // small loader while fetching the latest remark
+      liveStatusContent = SizedBox(
+        width: 120,
+        height: 16,
+        child: LinearProgressIndicator(
+          minHeight: 12,
+          color: Color(0xFFD29F2A),
+          backgroundColor: Colors.white24,
+        ),
+      );
+    } else if (remarksProv.errorMessage != null) {
+      liveStatusContent = Text(
+        "Error",
+        style: GoogleFonts.outfit(
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      );
+    } else if (remarksProv.remarks.isEmpty) {
+      liveStatusContent = Text(
+        "No case found",
+        style: GoogleFonts.outfit(
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      );
+    } else {
+      // provider returns reversed list with newest first; use first element's remark
+      final latest = remarksProv.remarks.first;
+      liveStatusContent = Text(
+        latest.remarks,
+        style: GoogleFonts.outfit(
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      );
+    }
+
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -557,7 +902,59 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                             ),
                           ),
                         ),
+                      if (userRole?.toLowerCase() != "admin" &&
+                          userRole?.toLowerCase() != "advocate") ...[
+                        SizedBox(height: screenHeight * 0.025 * scaleFactor),
 
+                        GestureDetector(
+                          onTap: () async {
+                            setState(() => isExpanded = true);
+                            await openCaseStatusSheet(
+                              context,
+                            ); // wait until closed
+                            setState(
+                              () => isExpanded = false,
+                            ); // reset icon when sheet closes
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF2D2319),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Live Status: ",
+                                      style: GoogleFonts.outfit(
+                                        fontSize:
+                                            MediaQuery.of(context).size.width *
+                                            0.045,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFFD29F2A),
+                                      ),
+                                    ),
+                                    liveStatusContent,
+                                  ],
+                                ),
+                                AnimatedRotation(
+                                  duration: const Duration(milliseconds: 250),
+                                  turns: isExpanded ? 0.5 : 0,
+                                  child: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                       SizedBox(height: screenHeight * 0.025 * scaleFactor),
 
                       // Secondary toggle row (Pending / Resolved) only for My Case

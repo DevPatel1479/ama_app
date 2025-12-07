@@ -38,10 +38,11 @@ class Endpoints {
 
   static final String getWeeklyClientsCount = "$baseUrl/clients/week-count";
 
+  static String clientRemarks(String phone) =>
+      "$baseUrl/clients/remarks?phone=$phone";
+
   static final String sendNotificationToAllAdvocates =
       "$baseUrl/notification/advocate/send";
-
-
 
   static final String submitFeedback = "$baseUrl/feedback/submit";
   static final String fileDispute = "$baseUrl/file-dispute";
@@ -49,4 +50,6 @@ class Endpoints {
   static String getLeadByPhone(String? phone) =>
       "$baseUrl/leads/$phone"; // GET /api/leads/:phone
   static final String updateUserData = "$baseUrl/leads/update";
+
+  static final String getTeamMembers = "$baseUrl/team/data";
 }
