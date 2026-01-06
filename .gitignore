@@ -43,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/app/
+/andriod/app/google-services.json
+
+
+.env
+
+
+android/app/ama-release-key.jks
+android/key.properties
