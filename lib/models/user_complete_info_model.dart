@@ -120,6 +120,16 @@ class UserCompleteInfoModel {
   }
 }
 
+bool _parseBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is int) return value == 1;
+  if (value is String) {
+    final v = value.toLowerCase().trim();
+    return v == 'true' || v == '1' || v == 'yes';
+  }
+  return false;
+}
+
 /// Bank Model
 class BankModel {
   final String bankName;
@@ -127,13 +137,14 @@ class BankModel {
   final String id;
   final String accountNumber;
   final String loanType;
-
+  final bool settled;
   BankModel({
     required this.bankName,
     required this.loanAmount,
     required this.id,
     required this.accountNumber,
     required this.loanType,
+    required this.settled,
   });
 
   factory BankModel.fromJson(Map<String, dynamic> json) {
@@ -143,6 +154,7 @@ class BankModel {
       id: json["id"] ?? "",
       accountNumber: json["accountNumber"] ?? "",
       loanType: json["loanType"] ?? "",
+      settled: _parseBool(json["settled"]),
     );
   }
 }

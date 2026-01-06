@@ -1405,6 +1405,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                                                   : Color(0xFF008C38),
                                               amount: bank.loanAmount,
                                               amountColor: Color(0xFFFF5858),
+                                              settled: bank.settled,
                                             ),
                                           );
                                         },
@@ -1440,6 +1441,7 @@ class BankCard extends StatelessWidget {
   final Color typeColor;
   final String amount;
   final Color amountColor;
+  final bool settled;
 
   const BankCard({
     super.key,
@@ -1449,6 +1451,7 @@ class BankCard extends StatelessWidget {
     required this.typeColor,
     required this.amount,
     required this.amountColor,
+    required this.settled,
   });
 
   @override
@@ -1457,89 +1460,118 @@ class BankCard extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     const scaleFactor = 0.85;
 
-    return Container(
-      decoration: ShapeDecoration(
-        color: const Color(0xFF2D2319),
-        shape: GradientBoxBorder(
-          gradient: LinearGradient(
-            colors: [
-              const Color.fromRGBO(210, 159, 42, 0.65),
-              const Color.fromRGBO(255, 255, 255, 0.65),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          width: 2,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      padding: EdgeInsets.symmetric(
-        vertical: screenHeight * 0.025 * scaleFactor,
-        horizontal: screenWidth * 0.05 * scaleFactor,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left Column
-          // Left Column (Labels)
-          Expanded(
-            flex: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _bankText("Bank Name"),
-                _bankText("Account Number"),
-                _bankText("Type"),
-                _bankText("Amount"),
-              ],
+    return Stack(
+      children: [
+        /// 🔶 Main Card
+        Container(
+          decoration: ShapeDecoration(
+            color: const Color(0xFF2D2319),
+            shape: GradientBoxBorder(
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromRGBO(210, 159, 42, 0.65),
+                  Color.fromRGBO(255, 255, 255, 0.65),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              width: 2,
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
 
-          // Right Column (Actual Values)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          /// 🔑 Add extra top padding only when chip is shown
+          padding: EdgeInsets.fromLTRB(
+            screenWidth * 0.05 * scaleFactor,
+            settled
+                ? screenHeight * 0.055 * scaleFactor
+                : screenHeight * 0.025 * scaleFactor,
+            screenWidth * 0.05 * scaleFactor,
+            screenHeight * 0.025 * scaleFactor,
+          ),
+
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _bankText(bankName, maxLines: 1, overflow: TextOverflow.ellipsis),
-              _bankText(
-                accountNumber,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              /// Left Column (Labels)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    _BankLabel(text: "Bank Name"),
+                    _BankLabel(text: "Account Number"),
+                    _BankLabel(text: "Type"),
+                    _BankLabel(text: "Amount"),
+                  ],
+                ),
               ),
-              _bankText(
-                type,
-                color: typeColor,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              _bankText(
-                "₹$amount",
-                color: amountColor,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+
+              /// Right Column (Values)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _bankText(bankName),
+                  _bankText(accountNumber),
+                  _bankText(type, color: typeColor),
+                  _bankText("₹$amount", color: amountColor),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+
+        /// 🟢 Settled Chip (Top Right)
+        if (settled)
+          Positioned(
+            top: 12,
+            right: 12,
+
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Text(
+                'Settled',
+                style: GoogleFonts.outfit(
+                  color: Colors.greenAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
-  Widget _bankText(
-    String text, {
-    int maxLines = 1,
-    TextOverflow overflow = TextOverflow.ellipsis,
-    Color color = Colors.white,
-  }) {
-    const scaleFactor = 0.85;
+  static Widget _bankText(String text, {Color color = Colors.white}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4 * scaleFactor),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Text(
         text,
-        style: GoogleFonts.outfit(
-          fontSize: 16 * scaleFactor,
-          fontWeight: FontWeight.w400,
-          color: color,
-        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.outfit(fontSize: 14, color: color),
+      ),
+    );
+  }
+}
+
+/// 🔹 Separate widget prevents rebuild overhead
+class _BankLabel extends StatelessWidget {
+  final String text;
+  const _BankLabel({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        text,
+        style: GoogleFonts.outfit(fontSize: 14, color: Colors.white70),
       ),
     );
   }
@@ -1671,47 +1703,59 @@ class _QueryCardState extends State<QueryCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// --- Top Row: Avatar + Username + Status ---
+            ///
+            ///
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 20 * scaleFactor,
-                      backgroundColor: Colors.white24,
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 22 * scaleFactor,
-                      ),
-                    ),
-                    SizedBox(width: screenWidth * 0.03 * scaleFactor),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          query.postedBy,
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.04 * scaleFactor,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                const CircleAvatar(
+                  radius: 20 * scaleFactor,
+                  backgroundColor: Colors.white24,
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 22 * scaleFactor,
+                  ),
+                ),
+
+                SizedBox(width: screenWidth * 0.03 * scaleFactor),
+
+                /// 🔹 Name + Phone (Expandable)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        query.postedBy,
+                        maxLines: 1, // ✅ prevents overflow
+                        overflow: TextOverflow.ellipsis, // ✅ graceful cut
+                        style: GoogleFonts.outfit(
+                          fontSize: screenWidth * 0.04 * scaleFactor,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
-                        if (query.phone != null && query.phone!.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.only(top: screenHeight * 0.003),
-                            child: Text(
-                              query.phone!,
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.033 * scaleFactor,
-                                color: Colors.white70,
-                              ),
+                      ),
+
+                      if (query.phone != null && query.phone!.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: screenHeight * 0.003),
+                          child: Text(
+                            query.phone!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.033 * scaleFactor,
+                              color: Colors.white70,
                             ),
                           ),
-                      ],
-                    ),
-                  ],
+                        ),
+                    ],
+                  ),
                 ),
+
+                SizedBox(width: screenWidth * 0.02 * scaleFactor),
+
+                /// 🔹 Status Badge (Fixed, Safe)
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.03 * scaleFactor,
@@ -1734,7 +1778,6 @@ class _QueryCardState extends State<QueryCard> {
                 ),
               ],
             ),
-
             SizedBox(height: screenHeight * 0.015 * scaleFactor),
 
             /// --- Query Content ---

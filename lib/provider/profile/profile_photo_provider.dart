@@ -33,7 +33,7 @@ class ProfileProvider with ChangeNotifier {
 
     try {
       final cachedUrl = await LocalStorageHelper.getString('profile_photo_url');
-
+      
       if (!forceRefresh && cachedUrl != null && cachedUrl.startsWith('https')) {
         _profilePhotoUrl = cachedUrl;
         _hasProfilePhoto = true;

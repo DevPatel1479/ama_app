@@ -5,6 +5,7 @@ import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dar
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -119,8 +120,10 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
                       "Phone number",
                       fieldWidth,
                       fieldHeight,
-                      onChanged: (value) =>
-                          signupProvider.setPhoneNumber(value),
+                      onChanged: (value) {
+                        signupProvider.setPhoneNumber(value);
+                      },
+                      provider: signupProvider,
                       keyboardType: TextInputType.phone,
                       errorText: signupProvider.phoneError,
                     ),
@@ -208,6 +211,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
     TextInputType keyboardType = TextInputType.text,
     required Function(String) onChanged,
     String? errorText, // Add this
+    SignupProvider? provider,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +231,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
                 color: const Color(0xFF2D2319),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: TextField(
                   style: const TextStyle(color: Colors.black),
                   keyboardType: keyboardType,
@@ -235,7 +239,7 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
                   inputFormatters: label.toLowerCase().contains("phone")
                       ? [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(10),
+                          LengthLimitingTextInputFormatter(15),
                         ]
                       : [],
                   decoration: InputDecoration(
@@ -394,6 +398,11 @@ class _LightSignupScreenState extends State<LightSignupScreen> {
           if (isValid) {
             // Form is valid, proceed with submission
             // print("Form Data: ${signupProvider.getFormData()}");
+            // String rawPhone = signupProvider.phoneNumber;
+            // String countryCode = signupProvider.normalizeCountryCode(
+            //   signupProvider.getSelectedCountryCode,
+            // );
+            // signupProvider.setPhoneNumber(countryCode + rawPhone);
             await signupProvider.submitSignup();
             // print(signupProvider.isError);
 

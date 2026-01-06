@@ -21,6 +21,10 @@ class LoginProvider extends ChangeNotifier {
   String? weekTopic;
   bool weekTopicEnabled = false;
 
+  String countryCode = "+91";
+
+  String get getSelectedCountryCode => countryCode;
+
   bool _loginSuccess = false;
   bool get loginSuccess => _loginSuccess;
 
@@ -38,6 +42,15 @@ class LoginProvider extends ChangeNotifier {
 
   // Focus nodes for OTP boxes (required for backward/forward movement)
   final List<FocusNode> otpFocusNodes = List.generate(6, (_) => FocusNode());
+
+  String normalizeCountryCode(String code) {
+    return code.replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  void setCountryCode(String code) {
+    countryCode = code;
+    notifyListeners();
+  }
 
   // Start the countdown timer
   void startResendTimer() {
@@ -71,6 +84,8 @@ class LoginProvider extends ChangeNotifier {
   }
 
   Future<void> login(BuildContext context) async {
+    // final countryC = normalizeCountryCode(countryCode);
+
     final phone = phoneController.text.trim();
     if (phone.isEmpty) {
       showCustomMessage(context, "Phone number cannot be empty", true);
@@ -193,7 +208,11 @@ class LoginProvider extends ChangeNotifier {
     if (isLoading) return;
 
     final otp = otpControllers.map((c) => c.text).join();
+    // final cCode = normalizeCountryCode(countryCode);
+
     final phone = phoneController.text.trim();
+
+    // print(phone);
 
     if (otp.length != 6) {
       showCustomMessage(context, "Enter complete OTP", true);

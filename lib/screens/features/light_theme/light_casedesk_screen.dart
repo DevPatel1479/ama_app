@@ -151,9 +151,17 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
   Future<void> fetchUserRole() async {
     _role = await LocalStorageHelper.getString("userRole");
     _phone = await LocalStorageHelper.getString("userPhone");
+    print("Fetched user role: $_role and phone: $_phone");
+
     setState(() {
       userRole = _role;
     });
+    if (_phone != null) {
+      // Use existing RemarksProvider. Its fetchRemarks signature used Endpoints internally,
+      // it previously accepted a baseUrl param — pass empty string because provider uses Endpoints.
+      final remarksProv = Provider.of<RemarksProvider>(context, listen: false);
+      await remarksProv.fetchRemarks("", _phone!);
+    }
   }
 
   // Attach Firestore realtime listener for document: queries/<role>_<phone>
@@ -1501,6 +1509,7 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
                                               : Color(0xFF008C38),
                                           amount: bank.loanAmount,
                                           amountColor: Color(0xFFFF5858),
+                                          settled: bank.settled,
                                         ),
                                       );
                                     },

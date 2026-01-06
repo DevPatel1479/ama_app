@@ -2,6 +2,7 @@ import 'package:ama_legal_solutions/config/constants/form_data.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/provider/auth/signup_screen_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -108,6 +109,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
                     "Phone number",
                     fieldWidth,
                     fieldHeight,
+                    provider: signupProvider,
                     onChanged: (value) => signupProvider.setPhoneNumber(value),
                     keyboardType: TextInputType.phone,
                     errorText: signupProvider.phoneError,
@@ -195,6 +197,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
     TextInputType keyboardType = TextInputType.text,
     required Function(String) onChanged,
     String? errorText, // Add this
+    SignupProvider? provider,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +227,7 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
                   inputFormatters: label.toLowerCase().contains("phone")
                       ? [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(10),
+                          LengthLimitingTextInputFormatter(15),
                         ]
                       : [],
                   decoration: InputDecoration(
@@ -383,6 +386,11 @@ class _DarkSignupScreenState extends State<DarkSignupScreen> {
           if (isValid) {
             // Form is valid, proceed with submission
             // print("Form Data: ${signupProvider.getFormData()}");
+            // String rawPhone = signupProvider.phoneNumber;
+            // String countryCode = signupProvider.normalizeCountryCode(
+            //   signupProvider.getSelectedCountryCode,
+            // );
+            // signupProvider.setPhoneNumber(countryCode + rawPhone);
             await signupProvider.submitSignup();
             // print(signupProvider.isError);
 

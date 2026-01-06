@@ -7,8 +7,11 @@ import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.d
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart'
+    show GradientBorderPainter;
 import 'package:ama_legal_solutions/utils/global_notifiers.dart'
     show updateGlobalUserName, updateGlobalUserEmail;
+
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -463,28 +466,35 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
           border: Border.all(width: 2, color: Colors.transparent),
         ),
         child: CustomPaint(
-          painter: SolidBorderPainter(
+          painter: GradientBorderPainter(
             radius: 20,
             width: 2,
-            color: const Color(0xFF2D2319), // solid color
+            gradient: const LinearGradient(
+              colors: [Colors.black, Colors.black],
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               maxLength: 10,
-              controller: provider.phoneController,
               enabled: !provider.otpSent,
+              controller: provider.phoneController,
+              style: const TextStyle(color: Colors.black),
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly, // allow only digits
               ],
-              style: const TextStyle(color: Colors.black),
+
               decoration: InputDecoration(
                 counterText: "",
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
+
                 border: InputBorder.none,
                 hintText: label,
-                hintStyle: TextStyle(color: Colors.black, fontFamily: "Outfit"),
+                hintStyle: const TextStyle(
+                  color: Colors.black,
+                  fontFamily: "Outfit",
+                ),
               ),
             ),
           ),

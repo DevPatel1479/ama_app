@@ -29,6 +29,19 @@ class SignupProvider extends ChangeNotifier {
 
   bool isError = false;
 
+  String countryCode = "+91";
+
+  String get getSelectedCountryCode => countryCode;
+
+  String normalizeCountryCode(String code) {
+    return code.replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  void setCountryCode(String code) {
+    countryCode = code;
+    notifyListeners();
+  }
+
   void setMessage(String message, bool error) {
     resultMessage = message;
     isError = error;

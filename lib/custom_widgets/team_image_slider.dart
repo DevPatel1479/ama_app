@@ -14,32 +14,31 @@ class TeamSlider extends StatefulWidget {
 
 class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  final Set<int> _selectedIndices = <int>{};
+  final ValueNotifier<Set<int>> _selectedNotifier = ValueNotifier({});
   bool _isUserDragging = false;
 
   static const double _imageSize = 150.0;
   static const double _expandedWidth = 240.0;
   static const double _expandedHeightRaw = 356.0;
   static const double _minFooterHeight = 60.0;
-  final Duration _animDur = const Duration(milliseconds: 350);
   static const double _estimatedFooterContent = 150.0;
   static const double topPaddingWhenSelected = 12.0;
+  final Duration _animDur = const Duration(milliseconds: 350);
 
   @override
   void initState() {
     super.initState();
 
-    // Fetch initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<TeamProvider>(context, listen: false);
       provider.fetchTeam();
     });
 
-    // Pagination on scroll
     _scrollController.addListener(() {
+      if (!mounted) return;
       final provider = Provider.of<TeamProvider>(context, listen: false);
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 300 &&
+      final pos = _scrollController.position;
+      if (pos.pixels >= pos.maxScrollExtent - 300 &&
           !provider.isLoading &&
           provider.hasMore) {
         provider.fetchTeam();
@@ -50,6 +49,7 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
   @override
   void dispose() {
     _scrollController.dispose();
+    _selectedNotifier.dispose();
     super.dispose();
   }
 
@@ -57,34 +57,29 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
     required int index,
     required double screenWidth,
     required double itemSpacing,
-    required bool expandTappedAsTrue,
+    required Set<int> selectedIndices,
   }) {
     final leftPadding = screenWidth * 0.02;
     double offset = leftPadding;
     for (int i = 0; i < index; i++) {
-      final bool isExpanded = _selectedIndices.contains(i);
-      offset += (isExpanded ? _expandedWidth : _imageSize);
-      offset += itemSpacing;
+      final bool isExpanded = selectedIndices.contains(i);
+      offset += (isExpanded ? _expandedWidth : _imageSize) + itemSpacing;
     }
-    final double tappedWidth =
-        (expandTappedAsTrue || _selectedIndices.contains(index))
+    final double tappedWidth = selectedIndices.contains(index)
         ? _expandedWidth
         : _imageSize;
     return offset - (screenWidth - tappedWidth) / 2;
   }
 
-  void _scrollToCenterAccurate(
-    int index,
-    double screenWidth,
-    double itemSpacing,
-  ) {
-    if (!_scrollController.hasClients || _isUserDragging) return;
+  void _scrollToCenter(int index, double screenWidth, double itemSpacing) {
+    final selectedIndices = _selectedNotifier.value;
+    if (!_scrollController.hasClients || _isUserDragging || !mounted) return;
 
     final rawTarget = _computeScrollTargetForIndex(
       index: index,
       screenWidth: screenWidth,
       itemSpacing: itemSpacing,
-      expandTappedAsTrue: true,
+      selectedIndices: selectedIndices,
     );
 
     final maxScroll = _scrollController.position.maxScrollExtent;
@@ -93,11 +88,11 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
     final double current = _scrollController.position.pixels;
     if ((current - target).abs() < 6.0) return;
 
-    _scrollController.animateTo(
-      target,
-      duration: _animDur,
-      curve: Curves.easeInOut,
-    );
+    try {
+      _scrollController
+          .animateTo(target, duration: _animDur, curve: Curves.easeInOut)
+          .catchError((_) {});
+    } catch (_) {}
   }
 
   @override
@@ -122,18 +117,19 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
       maxAllowedExpanded,
       desiredExpandedHeight,
     );
-    final bool anySelected = _selectedIndices.isNotEmpty;
-    final double sliderHeight = anySelected ? finalExpandedHeight : _imageSize;
 
     return Consumer<TeamProvider>(
       builder: (context, provider, _) {
         final members = provider.members;
+        final hasMore = provider.hasMore;
 
-        return RepaintBoundary(
-          child: AnimatedSize(
-            duration: _animDur,
-            curve: Curves.easeInOut,
-            child: SizedBox(
+        return ValueListenableBuilder<Set<int>>(
+          valueListenable: _selectedNotifier,
+          builder: (_, selectedIndices, __) {
+            final anySelected = selectedIndices.isNotEmpty;
+            final sliderHeight = anySelected ? finalExpandedHeight : _imageSize;
+
+            return SizedBox(
               height: sliderHeight + 12,
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
@@ -150,14 +146,14 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
+                  physics: const ClampingScrollPhysics(),
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: leftPadding),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: List.generate(
-                        provider.hasMore ? members.length + 1 : members.length,
+                        hasMore ? members.length + 1 : members.length,
                         (index) {
-                          // Pagination loading indicator
                           if (index >= members.length) {
                             return Padding(
                               padding: EdgeInsets.only(
@@ -178,23 +174,21 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                           }
 
                           final member = members[index];
-                          final bool isSelected = _selectedIndices.contains(
-                            index,
-                          );
-                          final double containerHeight = anySelected
+                          final isSelected = selectedIndices.contains(index);
+                          final containerHeight = anySelected
                               ? sliderHeight
                               : _imageSize;
-                          final double containerWidth = isSelected
+                          final containerWidth = isSelected
                               ? _expandedWidth
                               : _imageSize;
-                          final double nonSelectedTopPadding =
+                          final nonSelectedTopPadding =
                               (anySelected && !isSelected)
                               ? (containerHeight - _imageSize) / 2
                               : 0.0;
-                          final double actualTopPadding = isSelected
+                          final actualTopPadding = isSelected
                               ? topPaddingWhenSelected
                               : nonSelectedTopPadding;
-                          final double footerHeight = isSelected
+                          final footerHeight = isSelected
                               ? max(
                                   _minFooterHeight,
                                   containerHeight -
@@ -202,7 +196,7 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                                       _imageSize,
                                 )
                               : 0.0;
-                          final double scale = !anySelected
+                          final scale = !anySelected
                               ? 1.0
                               : (isSelected ? 1.0 : 0.86);
 
@@ -212,154 +206,157 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                                   ? 0
                                   : itemSpacing,
                             ),
-                            child: GestureDetector(
-                              onTap: () {
-                                if (isSelected) {
-                                  setState(() {
-                                    _selectedIndices.remove(index);
-                                  });
-                                  return;
-                                }
-                                _scrollToCenterAccurate(
-                                  index,
-                                  screenWidth,
-                                  itemSpacing,
-                                );
-                                Future.delayed(
-                                  const Duration(milliseconds: 120),
-                                  () {
-                                    if (mounted) {
-                                      setState(() {
-                                        _selectedIndices.add(index);
-                                      });
-                                    }
-                                  },
-                                );
-                              },
-                              child: ClipRect(
-                                child: AnimatedScale(
-                                  scale: scale,
-                                  duration: _animDur,
-                                  curve: Curves.easeInOut,
-                                  child: AnimatedContainer(
+                            child: RepaintBoundary(
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (isSelected) {
+                                    _selectedNotifier.value = Set.from(
+                                      selectedIndices,
+                                    )..remove(index);
+                                    return;
+                                  }
+                                  _scrollToCenter(
+                                    index,
+                                    screenWidth,
+                                    itemSpacing,
+                                  );
+                                  Future.delayed(
+                                    const Duration(milliseconds: 120),
+                                    () {
+                                      if (mounted) {
+                                        _selectedNotifier.value = Set.from(
+                                          selectedIndices,
+                                        )..add(index);
+                                      }
+                                    },
+                                  );
+                                },
+                                child: ClipRect(
+                                  child: AnimatedScale(
+                                    scale: scale,
                                     duration: _animDur,
-                                    width: containerWidth,
-                                    height: containerHeight,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        isSelected ? 20 : 12,
+                                    curve: Curves.easeInOut,
+                                    child: AnimatedContainer(
+                                      duration: _animDur,
+                                      width: containerWidth,
+                                      height: containerHeight,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          isSelected ? 20 : 12,
+                                        ),
+                                        color: isSelected ? Colors.white : null,
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black26,
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 6),
+                                                ),
+                                              ]
+                                            : null,
                                       ),
-                                      color: isSelected ? Colors.white : null,
-                                      boxShadow: isSelected
-                                          ? [
-                                              BoxShadow(
-                                                color: Colors.black26,
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 6),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          top: actualTopPadding,
-                                          left:
-                                              (containerWidth - _imageSize) / 2,
-                                          child: SizedBox(
-                                            width: _imageSize,
-                                            height: _imageSize,
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    isSelected ? 20 : 25,
-                                                  ),
-                                              child: member.image.isNotEmpty
-                                                  ? CachedNetworkImage(
-                                                      imageUrl: member.image,
-                                                      fit: BoxFit.cover,
-                                                      placeholder:
-                                                          (
-                                                            context,
-                                                            url,
-                                                          ) => const Center(
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  color: Colors
-                                                                      .green,
-                                                                ),
-                                                          ),
-                                                      errorWidget:
-                                                          (
-                                                            context,
-                                                            url,
-                                                            error,
-                                                          ) => Container(
-                                                            color: Colors
-                                                                .grey[300],
-                                                            child: const Icon(
-                                                              Icons.error,
-                                                              color: Colors.red,
-                                                            ),
-                                                          ),
-                                                    )
-                                                  : Container(
-                                                      color: Colors.grey[300],
+                                      child: Stack(
+                                        children: [
+                                          Positioned(
+                                            top: actualTopPadding,
+                                            left:
+                                                (containerWidth - _imageSize) /
+                                                2,
+                                            child: SizedBox(
+                                              width: _imageSize,
+                                              height: _imageSize,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      isSelected ? 20 : 25,
                                                     ),
+                                                child: member.image.isNotEmpty
+                                                    ? CachedNetworkImage(
+                                                        imageUrl: member.image,
+                                                        fit: BoxFit.cover,
+                                                        placeholder: (_, __) =>
+                                                            const Center(
+                                                              child:
+                                                                  CircularProgressIndicator(
+                                                                    color: Colors
+                                                                        .green,
+                                                                  ),
+                                                            ),
+                                                        errorWidget:
+                                                            (
+                                                              _,
+                                                              __,
+                                                              ___,
+                                                            ) => Container(
+                                                              color: Colors
+                                                                  .grey[300],
+                                                              child: const Icon(
+                                                                Icons.error,
+                                                                color:
+                                                                    Colors.red,
+                                                              ),
+                                                            ),
+                                                      )
+                                                    : Container(
+                                                        color: Colors.grey[300],
+                                                      ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        if (isSelected)
-                                          Positioned(
-                                            left: 0,
-                                            right: 0,
-                                            bottom: 0,
-                                            height: footerHeight,
-                                            child: Container(
-                                              decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                      bottom: Radius.circular(
-                                                        20,
+                                          if (isSelected)
+                                            Positioned(
+                                              left: 0,
+                                              right: 0,
+                                              bottom: 0,
+                                              height: footerHeight,
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.vertical(
+                                                        bottom: Radius.circular(
+                                                          20,
+                                                        ),
+                                                      ),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                      horizontal: 12,
+                                                    ),
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      member.name,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        color: Colors.black,
                                                       ),
                                                     ),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 8,
-                                                    horizontal: 12,
-                                                  ),
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    member.name,
-                                                    textAlign: TextAlign.center,
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: Colors.black,
+                                                    const SizedBox(height: 6),
+                                                    Text(
+                                                      member.position,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Text(
-                                                    member.position,
-                                                    textAlign: TextAlign.center,
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -372,8 +369,8 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

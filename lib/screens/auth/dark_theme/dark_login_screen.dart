@@ -6,6 +6,7 @@ import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
+
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
@@ -110,6 +111,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                 fieldHeight,
                 loginProvider,
               ),
+
               const SizedBox(height: 16),
 
               // OTP Input Boxes

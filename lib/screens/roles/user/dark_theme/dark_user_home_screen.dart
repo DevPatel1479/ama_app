@@ -781,11 +781,13 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                             ),
 
                             // Below the Padding containing "Our Team" and "See all"
-                            OurLegacySection(
-                              screenWidth: screenWidth,
-                              screenHeight: screenHeight,
-                              scaleFactor: scaleFactor,
-                              isDark: true,
+                            RepaintBoundary(
+                              child: OurLegacySection(
+                                screenWidth: screenWidth,
+                                screenHeight: screenHeight,
+                                scaleFactor: scaleFactor,
+                                isDark: true,
+                              ),
                             ),
 
                             // Padding(
@@ -976,7 +978,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                             SizedBox(
                               height: screenHeight * 0.02,
                             ), // spacing between sections
-                            const TeamSlider(),
+                            RepaintBoundary(child: const TeamSlider()),
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
                             Padding(
                               padding: EdgeInsets.only(

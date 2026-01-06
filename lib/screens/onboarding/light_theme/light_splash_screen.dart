@@ -141,7 +141,7 @@ class _SplashScreenState extends State<LightSplashScreen>
 
             // ⭐ Bottom Responsive Text
             Positioned(
-              bottom: size.height * 0.05, // responsive bottom spacing
+              bottom: size.height * 0.07, // responsive bottom spacing
               left: 0,
               right: 0,
               child: Center(
