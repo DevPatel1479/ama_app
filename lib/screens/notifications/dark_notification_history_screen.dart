@@ -1,5 +1,7 @@
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
+    show LocalStorageHelper;
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
@@ -22,11 +24,23 @@ class NotificationHistoryScreen extends StatefulWidget {
 class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   final ScrollController _scrollController = ScrollController();
   String? userId;
+  late NotificationHistoryProvider _provider;
 
   @override
   void initState() {
     super.initState();
-    _loadUserAndFetch();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _provider = Provider.of<NotificationHistoryProvider>(
+        context,
+        listen: false,
+      );
+      // _provider.reset();
+      final phone = await LocalStorageHelper.getString("userPhone");
+      await _provider.adminFetchLastOpenedNotificationTime(phone: phone ?? "");
+      _loadUserAndFetch(_provider);
+      _scrollController.addListener(_onScroll);
+    });
+
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     //   final isDarkMode = themeProvider.isDarkMode;
@@ -39,11 +53,25 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     //     ),
     //   );
     // });
-
-    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _loadUserAndFetch() async {
+  Future<void> _markNotificationsSeen() async {
+    final phone = await LocalStorageHelper.getString("userPhone");
+    if (phone != null) {
+      await _provider.adminUpdateLastOpenedNotificationTime(phone: phone);
+    }
+  }
+
+  @override
+  void dispose() {
+    _markNotificationsSeen();
+
+    _scrollController.dispose();
+
+    super.dispose();
+  }
+
+  Future<void> _loadUserAndFetch(NotificationHistoryProvider provider) async {
     final role = await getUserRole();
     final phone = await getUserPhone();
 
@@ -52,35 +80,67 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         userId = "${role}_$phone";
       });
 
-      final provider = Provider.of<NotificationHistoryProvider>(
+      // Use listen: false here
+      provider = Provider.of<NotificationHistoryProvider>(
         context,
         listen: false,
       );
       await provider.fetchUserNotificationHistory(userId!);
+
+      // Rebuild after fetch
+      if (mounted) setState(() {});
     }
   }
 
+  bool shouldShowDot(
+    NotificationHistoryProvider provider,
+    int notificationTimestamp,
+  ) {
+    final lastOpened = provider.adminLastOpenedNotificationTime;
+    print("$lastOpened : $notificationTimestamp");
+    // First-time user → all unread
+    if (lastOpened == null) return true;
+    print(lastOpened > notificationTimestamp);
+    return notificationTimestamp > lastOpened;
+  }
+
   void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
     final provider = Provider.of<NotificationHistoryProvider>(
       context,
       listen: false,
     );
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 100 &&
+
+    final position = _scrollController.position;
+
+    if (position.pixels > 0 &&
+        position.pixels >= position.maxScrollExtent - 200 &&
         provider.hasMore &&
-        !provider.isPaginating) {
+        !provider.isPaginating &&
+        !provider.isLoading) {
       provider.fetchUserNotificationHistory(userId!, loadMore: true);
     }
   }
 
   Future<void> _onRefresh() async {
+    if (userId == null) return;
+
     final provider = Provider.of<NotificationHistoryProvider>(
       context,
       listen: false,
     );
-    provider.reset();
-    await provider.fetchUserNotificationHistory(userId!);
-    // _scrollController.jumpTo(0);
+
+    // Reset only the notifications, don't touch isLoading
+    provider.notifications.clear();
+    provider.hasMore = true;
+    // provider._lastTimestamp = null;
+
+    try {
+      await provider.fetchUserNotificationHistory(userId!);
+    } catch (e) {
+      debugPrint("Refresh failed: $e");
+    }
   }
 
   String _formatTimestamp(int timestamp) {
@@ -179,7 +239,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<NotificationHistoryProvider>(context);
+    // final provider = Provider.of<NotificationHistoryProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -195,8 +255,16 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
           : _buildLightAppBar(screenWidth),
 
       body: isDark
-          ? buildForDarkTheme(provider, screenWidth, screenHeight)
-          : buildForLightTheme(provider, screenWidth, screenHeight),
+          ? Consumer<NotificationHistoryProvider>(
+              builder: (contex, provider, _) {
+                return buildForDarkTheme(provider, screenWidth, screenHeight);
+              },
+            )
+          : Consumer<NotificationHistoryProvider>(
+              builder: (contex, provider, _) {
+                return buildForLightTheme(provider, screenWidth, screenHeight);
+              },
+            ),
     );
   }
 
@@ -387,19 +455,23 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                                         SizedBox(height: screenHeight * 0.010),
 
                                         /// SEEN INDICATOR (bottom-right)
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Container(
-                                            width: screenWidth * 0.03,
-                                            height: screenWidth * 0.03,
-                                            decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Color(
-                                                0xFFD29F2A,
-                                              ), // golden circle
+                                        if (shouldShowDot(
+                                          provider,
+                                          notif.timestamp,
+                                        ))
+                                          Align(
+                                            alignment: Alignment.bottomRight,
+                                            child: Container(
+                                              width: screenWidth * 0.03,
+                                              height: screenWidth * 0.03,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Color(
+                                                  0xFFD29F2A,
+                                                ), // golden circle
+                                              ),
                                             ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -573,19 +645,23 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                                     SizedBox(height: screenHeight * 0.010),
 
                                     /// SEEN INDICATOR (bottom-right)
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        width: screenWidth * 0.03,
-                                        height: screenWidth * 0.03,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(
-                                            0xFFD29F2A,
-                                          ), // golden circle
+                                    if (shouldShowDot(
+                                      provider,
+                                      notif.timestamp,
+                                    ))
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Container(
+                                          width: screenWidth * 0.03,
+                                          height: screenWidth * 0.03,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Color(
+                                              0xFFD29F2A,
+                                            ), // golden circle
+                                          ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),

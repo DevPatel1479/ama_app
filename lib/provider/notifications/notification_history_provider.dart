@@ -1,26 +1,86 @@
 import 'dart:convert';
 import 'package:ama_legal_solutions/api/endpoints.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
+    show LocalStorageHelper;
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/models/notifcation_history_model.dart';
 
 class NotificationHistoryProvider extends ChangeNotifier {
+  final ApiService _apiService = ApiService();
+
   /// ===== 🔹 State Management =====
   bool isLoading = false; // for initial loading
   bool isPaginating = false; // for "load more"
   bool hasMore = true; // whether more pages exist
-
+  bool _adminHasFetchedLastSeen = false;
   List<NotificationHistoryModel> notifications = [];
+  int? _adminLastOpenedNotificationTime;
+
+  int? get adminLastOpenedNotificationTime => _adminLastOpenedNotificationTime;
 
   /// Cursor-based pagination
   String? _lastTimestamp;
 
   /// Reset before fresh fetch
-  void reset() {
+  void reset({bool keepLastOpened = true}) {
     notifications.clear();
     hasMore = true;
     _lastTimestamp = null;
+    _adminHasFetchedLastSeen = false;
+    isLoading = true;
+    if (!keepLastOpened) {
+      _adminLastOpenedNotificationTime = null;
+    }
+
     notifyListeners();
+  }
+
+  Future<void> adminFetchLastOpenedNotificationTime({
+    required String phone,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        Endpoints.adminLastSeenNotification,
+        {"phone": phone},
+      );
+      print(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true) {
+          final lastOpened = data['adminLastOpenedNotificationTime'];
+          _adminLastOpenedNotificationTime = lastOpened is int
+              ? lastOpened
+              : int.tryParse(lastOpened.toString());
+          print(
+            'adminLastOpenedNotificationTime: $_adminLastOpenedNotificationTime',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch last opened time: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> adminUpdateLastOpenedNotificationTime({
+    required String phone,
+  }) async {
+    try {
+      final response = await _apiService.post(Endpoints.adminMarkNotification, {
+        "phone": phone,
+      });
+      print(response.body);
+
+      // Locally update to avoid refetch
+      _adminLastOpenedNotificationTime =
+          DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    } catch (e) {
+      debugPrint("Failed to update last opened time: $e");
+    }
   }
 
   /// ===== 🔹 Fetch User Notification History =====
@@ -29,12 +89,13 @@ class NotificationHistoryProvider extends ChangeNotifier {
     bool loadMore = false,
   }) async {
     if (isLoading || (loadMore && !hasMore)) return;
+    final phone = await LocalStorageHelper.getString("userPhone");
 
     if (loadMore) {
       isPaginating = true;
     } else {
       isLoading = true;
-      reset();
+      reset(keepLastOpened: true);
     }
     notifyListeners();
 

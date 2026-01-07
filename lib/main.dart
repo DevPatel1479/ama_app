@@ -70,7 +70,7 @@ void main() async {
   }
   // ✅ If user already logged in → Start real-time role listener immediately
   else if (isLoggedIn && savedPhone != null && savedPhone.isNotEmpty) {
-    realTimeRoleProvider.startRoleListener("${savedPhone}");
+    realTimeRoleProvider.startRoleListener("91${savedPhone}");
   }
 
   runApp(

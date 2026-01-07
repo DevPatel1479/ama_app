@@ -2,6 +2,8 @@ import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
     show LocalStorageHelper;
+import 'package:ama_legal_solutions/models/notification_model.dart'
+    show NotificationModel;
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
@@ -27,8 +29,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _provider = Provider.of<NotificationProvider>(context, listen: false);
+      _provider.clearNotifications();
+      final phone = await LocalStorageHelper.getString("userPhone");
+      await _provider.fetchLastOpenedNotificationTime(phone: phone ?? "");
       _loadRoleAndFetch();
 
       /// Listen for scroll to bottom for lazy loading
@@ -176,6 +181,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ? buildDarkThemeLayout(screenWidth, screenHeight)
           : buildLightThemeLayout(screenWidth, screenHeight),
     );
+  }
+
+  bool shouldShowDot(NotificationProvider provider, int notificationTimestamp) {
+    final lastOpened = provider.lastOpenedNotificationTime;
+
+    // First-time user → all unread
+    if (lastOpened == null) return true;
+
+    return notificationTimestamp > lastOpened;
   }
 
   Widget buildLightThemeLayout(double screenWidth, double screenHeight) {
@@ -334,19 +348,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     SizedBox(height: screenHeight * 0.010),
 
                                     /// SEEN INDICATOR (bottom-right)
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        width: screenWidth * 0.03,
-                                        height: screenWidth * 0.03,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(
-                                            0xFFD29F2A,
-                                          ), // golden circle
+                                    if (shouldShowDot(
+                                      provider,
+                                      notif.timestamp,
+                                    ))
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Container(
+                                          width: screenWidth * 0.03,
+                                          height: screenWidth * 0.03,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Color(0xFFD29F2A),
+                                          ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -518,19 +534,35 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     SizedBox(height: screenHeight * 0.010),
 
                                     /// SEEN INDICATOR (bottom-right)
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        width: screenWidth * 0.03,
-                                        height: screenWidth * 0.03,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(
-                                            0xFFD29F2A,
-                                          ), // golden circle
+
+                                    // Align(
+                                    //   alignment: Alignment.bottomRight,
+                                    //   child: Container(
+                                    //     width: screenWidth * 0.03,
+                                    //     height: screenWidth * 0.03,
+                                    //     decoration: const BoxDecoration(
+                                    //       shape: BoxShape.circle,
+                                    //       color: Color(
+                                    //         0xFFD29F2A,
+                                    //       ), // golden circle
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    if (shouldShowDot(
+                                      provider,
+                                      notif.timestamp,
+                                    ))
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Container(
+                                          width: screenWidth * 0.03,
+                                          height: screenWidth * 0.03,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Color(0xFFD29F2A),
+                                          ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -561,9 +593,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
   }
 
+  Future<void> _markNotificationsSeen() async {
+    final phone = await LocalStorageHelper.getString("userPhone");
+    if (phone != null) {
+      await _provider.updateLastOpenedNotificationTime(phone: phone);
+    }
+  }
+
   @override
   void dispose() {
+    _markNotificationsSeen();
+
     _scrollController.dispose();
+
     super.dispose();
   }
 }
