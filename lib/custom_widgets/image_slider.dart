@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 
 class AutoScrollSlider extends StatefulWidget {
   const AutoScrollSlider({super.key});
@@ -11,9 +12,9 @@ class AutoScrollSlider extends StatefulWidget {
 class _AutoScrollSliderState extends State<AutoScrollSlider>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  late AnimationController _animationController;
+  late final Ticker _ticker;
 
-  final List<String> assets = [
+  final List<String> assets = const [
     AppAssets.r1,
     AppAssets.r2,
     AppAssets.r3,
@@ -21,31 +22,44 @@ class _AutoScrollSliderState extends State<AutoScrollSlider>
     AppAssets.r5,
   ];
 
-  // duplicated list for seamless looping
   late final List<String> loopedAssets = [...assets, ...assets];
+
+  double _offset = 0.0;
+  Duration _lastTick = Duration.zero;
+
+  static const double speed = 30; // px per second (same intent)
 
   @override
   void initState() {
     super.initState();
 
-    _animationController =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(seconds: 15), // scroll speed
-        )..addListener(() {
-          if (_scrollController.hasClients) {
-            final maxScroll = _scrollController.position.maxScrollExtent;
-            final offset = _animationController.value * maxScroll;
-            _scrollController.jumpTo(offset);
-          }
-        });
+    _ticker = createTicker((elapsed) {
+      if (!_scrollController.hasClients) return;
 
-    _animationController.repeat(); // continuous infinite animation
+      if (_lastTick == Duration.zero) {
+        _lastTick = elapsed;
+        return;
+      }
+
+      final dt = (elapsed - _lastTick).inMilliseconds / 1000;
+      _lastTick = elapsed;
+
+      _offset += speed * dt;
+
+      final max = _scrollController.position.maxScrollExtent;
+      if (_offset >= max) {
+        _offset -= max;
+      }
+
+      _scrollController.jumpTo(_offset);
+    });
+
+    _ticker.start();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _ticker.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -54,68 +68,49 @@ class _AutoScrollSliderState extends State<AutoScrollSlider>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final imageSize = screenWidth * 0.20;
-    final containerHeight = imageSize;
 
     return RepaintBoundary(
       child: SizedBox(
-        height: containerHeight,
-        child: Stack(
-          children: [
-            ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              itemCount: loopedAssets.length,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: index == 0 ? screenWidth * 0.04 : 8,
-                    right: 8,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: Image.asset(
-                      loopedAssets[index],
-                      width: imageSize,
-                      height: imageSize,
-                      fit: BoxFit.cover,
-                      cacheWidth: 300, // helps memory usage
-                      cacheHeight: 300,
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            // Optional subtle fade overlays (performance-friendly)
-            // Align(
-            //   alignment: Alignment.centerLeft,
-            //   child: Container(
-            //     width: screenWidth * 0.10,
-            //     decoration: const BoxDecoration(
-            //       gradient: LinearGradient(
-            //         begin: Alignment.centerLeft,
-            //         end: Alignment.centerRight,
-            //         colors: [Colors.transparent],
-            //       ),
-            //     ),
-            //   ),
-            // ),
-            // Align(
-            //   alignment: Alignment.centerRight,
-            //   child: Container(
-            //     width: screenWidth * 0.10,
-            //     decoration: const BoxDecoration(
-            //       gradient: LinearGradient(
-            //         begin: Alignment.centerRight,
-            //         end: Alignment.centerLeft,
-            //         colors: [Colors.transparent],
-            //       ),
-            //     ),
-            //   ),
-            // ),
-          ],
+        height: imageSize,
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: loopedAssets.length,
+          itemExtent: imageSize + 16, // 🔥 BIG win
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: index == 0 ? screenWidth * 0.04 : 8,
+                right: 8,
+              ),
+              child: _ImageTile(asset: loopedAssets[index], size: imageSize),
+            );
+          },
         ),
+      ),
+    );
+  }
+}
+
+class _ImageTile extends StatelessWidget {
+  final String asset;
+  final double size;
+
+  const _ImageTile({required this.asset, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: Image.asset(
+        asset,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        cacheWidth: 300,
+        cacheHeight: 300,
+        filterQuality: FilterQuality.low,
       ),
     );
   }

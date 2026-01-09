@@ -162,123 +162,123 @@ String formatTimestamp(int timestamp) {
   return DateFormat("MMM d, yyyy • h:mm a").format(dateTime);
 }
 
-void _showAddCommentDialog(
-  BuildContext context,
-  CommentProvider provider,
-  String mode,
-  String questionId,
-  String? userName,
-  String? userRole,
-  String? userPhone,
-  String? profileImgUrl,
-) {
-  final TextEditingController _controller = TextEditingController();
-  bool isLoading = false;
+// void _showAddCommentDialog(
+//   BuildContext context,
+//   CommentProvider provider,
+//   String mode,
+//   String questionId,
+//   String? userName,
+//   String? userRole,
+//   String? userPhone,
+//   String? profileImgUrl,
+// ) {
+//   final TextEditingController _controller = TextEditingController();
+//   bool isLoading = false;
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
-      final isSmallScreen = screenWidth < 360;
+//   showDialog(
+//     context: context,
+//     builder: (context) {
+//       final screenWidth = MediaQuery.of(context).size.width;
+//       final screenHeight = MediaQuery.of(context).size.height;
+//       final isSmallScreen = screenWidth < 360;
 
-      return StatefulBuilder(
-        builder: (context, setState) {
-          bool isSending = false;
-          Future<void> _sendComment() async {
-            final text = provider.commentController.text.trim();
-            if (text.isEmpty) return;
+//       return StatefulBuilder(
+//         builder: (context, setState) {
+//           bool isSending = false;
+//           Future<void> _sendComment() async {
+//             final text = provider.commentController.text.trim();
+//             if (text.isEmpty) return;
 
-            setState(() => isSending = true);
+//             setState(() => isSending = true);
 
-            final success = await provider.postComment(
-              context: context,
-              questionId: questionId,
-              content: text,
-              commentedBy: userName ?? "",
-              userRole: userRole ?? "",
-              phone: userPhone ?? "",
-              profileImgUrl: profileImgUrl ?? "",
-            );
+//             final success = await provider.postComment(
+//               context: context,
+//               questionId: questionId,
+//               content: text,
+//               commentedBy: userName ?? "",
+//               userRole: userRole ?? "",
+//               phone: userPhone ?? "",
+//               profileImgUrl: profileImgUrl ?? "",
+//             );
 
-            if (success) {
-              provider.commentController.clear();
-            }
+//             if (success) {
+//               provider.commentController.clear();
+//             }
 
-            setState(() => isSending = false);
-          }
+//             setState(() => isSending = false);
+//           }
 
-          return Container(
-            padding: EdgeInsets.only(
-              left: screenWidth * 0.03,
-              right: screenWidth * 0.03,
-              top: screenHeight * 0.01,
-              bottom:
-                  MediaQuery.of(context).viewInsets.bottom +
-                  screenHeight * 0.01,
-            ),
-            decoration: BoxDecoration(
-              color: Color(0xFF323232),
-              borderRadius: BorderRadius.circular(33),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 22.8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            margin: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05,
-              vertical: screenHeight * 0.01,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: provider.commentController,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: screenWidth * 0.04,
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Your Comment",
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                        fontSize: screenWidth * 0.04,
-                      ),
-                    ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendComment(),
-                  ),
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                GestureDetector(
-                  onTap: isSending ? null : _sendComment,
-                  child: isSending
-                      ? SizedBox(
-                          width: screenWidth * 0.06,
-                          height: screenWidth * 0.06,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          Icons.send,
-                          color: Colors.white,
-                          size: screenWidth * 0.06,
-                        ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+//           return Container(
+//             padding: EdgeInsets.only(
+//               left: screenWidth * 0.03,
+//               right: screenWidth * 0.03,
+//               top: screenHeight * 0.01,
+//               bottom:
+//                   MediaQuery.of(context).viewInsets.bottom +
+//                   screenHeight * 0.01,
+//             ),
+//             decoration: BoxDecoration(
+//               color: Color(0xFF323232),
+//               borderRadius: BorderRadius.circular(33),
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Colors.black.withOpacity(0.25),
+//                   blurRadius: 22.8,
+//                   offset: Offset(0, 4),
+//                 ),
+//               ],
+//             ),
+//             margin: EdgeInsets.symmetric(
+//               horizontal: screenWidth * 0.05,
+//               vertical: screenHeight * 0.01,
+//             ),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: TextField(
+//                     controller: provider.commentController,
+//                     style: TextStyle(
+//                       color: Colors.white,
+//                       fontSize: screenWidth * 0.04,
+//                     ),
+//                     decoration: InputDecoration(
+//                       border: InputBorder.none,
+//                       hintText: "Your Comment",
+//                       hintStyle: TextStyle(
+//                         color: Colors.white,
+//                         fontSize: screenWidth * 0.04,
+//                       ),
+//                     ),
+//                     textInputAction: TextInputAction.send,
+//                     onSubmitted: (_) => _sendComment(),
+//                   ),
+//                 ),
+//                 SizedBox(width: screenWidth * 0.02),
+//                 GestureDetector(
+//                   onTap: isSending ? null : _sendComment,
+//                   child: isSending
+//                       ? SizedBox(
+//                           width: screenWidth * 0.06,
+//                           height: screenWidth * 0.06,
+//                           child: CircularProgressIndicator(
+//                             strokeWidth: 2,
+//                             color: Colors.white,
+//                           ),
+//                         )
+//                       : Icon(
+//                           Icons.send,
+//                           color: Colors.white,
+//                           size: screenWidth * 0.06,
+//                         ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         },
+//       );
+//     },
+//   );
+// }
 
 String _formatTimestamp(int? timestampMs) {
   if (timestampMs == null) return '';

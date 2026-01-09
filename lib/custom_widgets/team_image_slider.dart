@@ -142,231 +142,194 @@ class _TeamSliderState extends State<TeamSlider> with TickerProviderStateMixin {
                   }
                   return false;
                 },
-                child: SingleChildScrollView(
+                child: ListView.builder(
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
                   physics: const ClampingScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: leftPadding),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(
-                        hasMore ? members.length + 1 : members.length,
-                        (index) {
-                          if (index >= members.length) {
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                right: index == members.length
-                                    ? 0
-                                    : itemSpacing,
-                              ),
-                              child: SizedBox(
-                                width: _imageSize,
-                                height: sliderHeight,
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-
-                          final member = members[index];
-                          final isSelected = selectedIndices.contains(index);
-                          final containerHeight = anySelected
-                              ? sliderHeight
-                              : _imageSize;
-                          final containerWidth = isSelected
-                              ? _expandedWidth
-                              : _imageSize;
-                          final nonSelectedTopPadding =
-                              (anySelected && !isSelected)
-                              ? (containerHeight - _imageSize) / 2
-                              : 0.0;
-                          final actualTopPadding = isSelected
-                              ? topPaddingWhenSelected
-                              : nonSelectedTopPadding;
-                          final footerHeight = isSelected
-                              ? max(
-                                  _minFooterHeight,
-                                  containerHeight -
-                                      actualTopPadding -
-                                      _imageSize,
-                                )
-                              : 0.0;
-                          final scale = !anySelected
-                              ? 1.0
-                              : (isSelected ? 1.0 : 0.86);
-
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              right: index == members.length - 1
-                                  ? 0
-                                  : itemSpacing,
+                  itemCount: hasMore ? members.length + 1 : members.length,
+                  itemBuilder: (context, index) {
+                    if (index >= members.length) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index == members.length ? 0 : itemSpacing,
+                        ),
+                        child: SizedBox(
+                          width: _imageSize,
+                          height: sliderHeight,
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.green,
                             ),
-                            child: RepaintBoundary(
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (isSelected) {
-                                    _selectedNotifier.value = Set.from(
-                                      selectedIndices,
-                                    )..remove(index);
-                                    return;
-                                  }
-                                  _scrollToCenter(
-                                    index,
-                                    screenWidth,
-                                    itemSpacing,
-                                  );
-                                  Future.delayed(
-                                    const Duration(milliseconds: 120),
-                                    () {
-                                      if (mounted) {
-                                        _selectedNotifier.value = Set.from(
-                                          selectedIndices,
-                                        )..add(index);
-                                      }
-                                    },
-                                  );
-                                },
-                                child: ClipRect(
-                                  child: AnimatedScale(
-                                    scale: scale,
-                                    duration: _animDur,
-                                    curve: Curves.easeInOut,
-                                    child: AnimatedContainer(
-                                      duration: _animDur,
-                                      width: containerWidth,
-                                      height: containerHeight,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          isSelected ? 20 : 12,
-                                        ),
-                                        color: isSelected ? Colors.white : null,
-                                        boxShadow: isSelected
-                                            ? [
-                                                BoxShadow(
-                                                  color: Colors.black26,
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 6),
-                                                ),
-                                              ]
-                                            : null,
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          Positioned(
-                                            top: actualTopPadding,
-                                            left:
-                                                (containerWidth - _imageSize) /
-                                                2,
-                                            child: SizedBox(
-                                              width: _imageSize,
-                                              height: _imageSize,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      isSelected ? 20 : 25,
-                                                    ),
-                                                child: member.image.isNotEmpty
-                                                    ? CachedNetworkImage(
-                                                        imageUrl: member.image,
-                                                        fit: BoxFit.cover,
-                                                        placeholder: (_, __) =>
-                                                            const Center(
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                    color: Colors
-                                                                        .green,
-                                                                  ),
-                                                            ),
-                                                        errorWidget:
-                                                            (
-                                                              _,
-                                                              __,
-                                                              ___,
-                                                            ) => Container(
-                                                              color: Colors
-                                                                  .grey[300],
-                                                              child: const Icon(
-                                                                Icons.error,
-                                                                color:
-                                                                    Colors.red,
-                                                              ),
-                                                            ),
-                                                      )
-                                                    : Container(
-                                                        color: Colors.grey[300],
-                                                      ),
-                                              ),
-                                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final member = members[index];
+                    final isSelected = selectedIndices.contains(index);
+                    final containerHeight = anySelected
+                        ? sliderHeight
+                        : _imageSize;
+                    final containerWidth = isSelected
+                        ? _expandedWidth
+                        : _imageSize;
+                    final nonSelectedTopPadding = (anySelected && !isSelected)
+                        ? (containerHeight - _imageSize) / 2
+                        : 0.0;
+                    final actualTopPadding = isSelected
+                        ? topPaddingWhenSelected
+                        : nonSelectedTopPadding;
+                    final footerHeight = isSelected
+                        ? max(
+                            _minFooterHeight,
+                            containerHeight - actualTopPadding - _imageSize,
+                          )
+                        : 0.0;
+                    final scale = !anySelected
+                        ? 1.0
+                        : (isSelected ? 1.0 : 0.86);
+
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        right: index == members.length - 1 ? 0 : itemSpacing,
+                      ),
+                      child: RepaintBoundary(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (isSelected) {
+                              _selectedNotifier.value = Set.from(
+                                selectedIndices,
+                              )..remove(index);
+                              return;
+                            }
+                            _scrollToCenter(index, screenWidth, itemSpacing);
+                            Future.delayed(
+                              const Duration(milliseconds: 120),
+                              () {
+                                if (mounted) {
+                                  _selectedNotifier.value = Set.from(
+                                    selectedIndices,
+                                  )..add(index);
+                                }
+                              },
+                            );
+                          },
+                          child: ClipRect(
+                            child: AnimatedScale(
+                              scale: scale,
+                              duration: _animDur,
+                              curve: Curves.easeInOut,
+                              child: AnimatedContainer(
+                                duration: _animDur,
+                                width: containerWidth,
+                                height: containerHeight,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                    isSelected ? 20 : 12,
+                                  ),
+                                  color: isSelected ? Colors.white : null,
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black26,
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 6),
                                           ),
-                                          if (isSelected)
-                                            Positioned(
-                                              left: 0,
-                                              right: 0,
-                                              bottom: 0,
-                                              height: footerHeight,
-                                              child: Container(
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.vertical(
-                                                        bottom: Radius.circular(
-                                                          20,
+                                        ]
+                                      : null,
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Positioned(
+                                      top: actualTopPadding,
+                                      left: (containerWidth - _imageSize) / 2,
+                                      child: SizedBox(
+                                        width: _imageSize,
+                                        height: _imageSize,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            isSelected ? 20 : 25,
+                                          ),
+                                          child: member.image.isNotEmpty
+                                              ? CachedNetworkImage(
+                                                  imageUrl: member.image,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (_, __) =>
+                                                      const Center(
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              color:
+                                                                  Colors.green,
+                                                            ),
+                                                      ),
+                                                  errorWidget: (_, __, ___) =>
+                                                      Container(
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons.error,
+                                                          color: Colors.red,
                                                         ),
                                                       ),
+                                                )
+                                              : Container(
+                                                  color: Colors.grey[300],
                                                 ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 8,
-                                                      horizontal: 12,
-                                                    ),
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Text(
-                                                      member.name,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: Colors.black,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 6),
-                                                    Text(
-                                                      member.position,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    if (isSelected)
+                                      Positioned(
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        height: footerHeight,
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.vertical(
+                                              bottom: Radius.circular(20),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 12,
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                member.name,
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                member.position,
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             );

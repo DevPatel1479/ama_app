@@ -277,6 +277,15 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
     );
   }
 
+  Widget _img(String asset) {
+    return Image.asset(
+      asset,
+      fit: BoxFit.cover,
+      cacheWidth: 600, // decode smaller bitmap
+      filterQuality: FilterQuality.low,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // SystemChrome.setSystemUIOverlayStyle(
@@ -679,102 +688,80 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                   final columnWidth =
                                       (totalWidth - 2 * columnSpacing) / 3;
 
-                                  return Stack(
-                                    children: [
-                                      // The main row with images
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // First column
-                                          SizedBox(
-                                            width: columnWidth,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Image.asset(
-                                                  AppAssets.locationImg1,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                SizedBox(
-                                                  height:
-                                                      screenHeight *
-                                                      0.025 *
-                                                      scaleFactor,
-                                                ), // reduced space
-                                                Image.asset(
-                                                  AppAssets.locationImg4,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                // Removed extra space here; locationImg5 will overlap
-                                              ],
+                                  return RepaintBoundary(
+                                    child: Stack(
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // First column
+                                            SizedBox(
+                                              width: columnWidth,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  _img(AppAssets.locationImg1),
+                                                  SizedBox(
+                                                    height:
+                                                        screenHeight *
+                                                        0.025 *
+                                                        scaleFactor,
+                                                  ),
+                                                  _img(AppAssets.locationImg4),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          SizedBox(width: columnSpacing),
+                                            SizedBox(width: columnSpacing),
 
-                                          // Second column
-                                          SizedBox(
-                                            width: columnWidth,
-                                            child: Image.asset(
-                                              AppAssets.locationImg2,
-                                              fit: BoxFit.cover,
+                                            // Second column
+                                            SizedBox(
+                                              width: columnWidth,
+                                              child: _img(
+                                                AppAssets.locationImg2,
+                                              ),
                                             ),
-                                          ),
-                                          SizedBox(width: columnSpacing),
+                                            SizedBox(width: columnSpacing),
 
-                                          // Third column
-                                          SizedBox(
-                                            width: columnWidth,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Image.asset(
-                                                  AppAssets.locationImg3,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                SizedBox(
-                                                  height:
-                                                      screenHeight *
-                                                      0.025 *
-                                                      scaleFactor,
-                                                ),
-                                                Image.asset(
-                                                  AppAssets.locationImg6,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ],
+                                            // Third column
+                                            SizedBox(
+                                              width: columnWidth,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  _img(AppAssets.locationImg3),
+                                                  SizedBox(
+                                                    height:
+                                                        screenHeight *
+                                                        0.025 *
+                                                        scaleFactor,
+                                                  ),
+                                                  _img(AppAssets.locationImg6),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        ),
 
-                                      // Positioned locationImg5 stretched as required
-                                      Positioned(
-                                        left: 0,
-                                        top: null,
-                                        bottom: 0,
-                                        child: Container(
-                                          width:
-                                              columnWidth * 2 + columnSpacing,
-                                          // Position it just below locationImg4
-                                          margin: EdgeInsets.only(
-                                            top:
-                                                screenHeight *
-                                                    0.015 + // space below locationImg1
-                                                // assume locationImg1 height + spacing
-                                                // plus locationImg4 height (approximated or static if possible)
-                                                150, // adjust this based on actual image heights
-                                          ),
-                                          height: null, // stretch to the bottom
-                                          child: Image.asset(
-                                            AppAssets.locationImg5,
-                                            fit: BoxFit.cover,
+                                        // Overlapping image — EXACT SAME POSITIONING
+                                        Positioned(
+                                          left: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            width:
+                                                columnWidth * 2 + columnSpacing,
+                                            margin: EdgeInsets.only(
+                                              top:
+                                                  screenHeight * 0.015 +
+                                                  150, // unchanged
+                                            ),
+                                            child: _img(AppAssets.locationImg5),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   );
                                 },
                               ),
