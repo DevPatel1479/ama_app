@@ -94,4 +94,24 @@ class ApiService {
       throw Exception("Unexpected error: $e");
     }
   }
+
+  Future<http.Response> delete(String url, Map<String, dynamic>? data) async {
+    print("calling this api ...");
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      // print("API RESPONSE FROM ${url} ===> ${response.body}");
+      //_handleResponse(response);
+      return response;
+    } on SocketException {
+      throw Exception("No Internet connection");
+    } on FormatException {
+      throw Exception("Bad response format");
+    } catch (e) {
+      throw Exception("Unexpected error: $e");
+    }
+  }
 }

@@ -116,7 +116,7 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: screenWidth * 0.050 * scaleFactor,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w300,
                           color: Colors.white,
                           height: 1.0,
                         ),
@@ -130,81 +130,68 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                         children: [
                           Padding(
                             padding: EdgeInsets.only(
-                              // left: screenWidth * 0.10 * scaleFactor,
+                              left: screenWidth * 0.01 * scaleFactor,
                               bottom: screenHeight * 0.015 * scaleFactor,
                             ),
                             child: Text(
                               "Select Service",
                               style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.045 * scaleFactor,
+                                fontSize: screenWidth * 0.055 * scaleFactor,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
                             ),
                           ),
+
                           Container(
-                            width: screenWidth * 0.92 * scaleFactor,
-                            padding: const EdgeInsets.all(3),
+                            width: double.infinity,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
-                              gradient: const LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  Color.fromRGBO(210, 159, 42, 0.65),
-                                  Color.fromRGBO(255, 255, 255, 0.65),
-                                ],
-                              ),
+                              color: const Color.fromRGBO(210, 159, 42, 0.04),
                             ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2D2319),
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.04 * scaleFactor,
-                                vertical: screenHeight * 0.005 * scaleFactor,
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedService,
-                                  dropdownColor: const Color(0xFF2D2319),
-                                  icon: const Icon(
-                                    Icons.arrow_drop_down,
-                                    color: Colors.white,
-                                  ),
-                                  isExpanded: true,
-                                  borderRadius: BorderRadius.circular(15),
-                                  hint: Text(
-                                    "Select a Service",
-                                    style: GoogleFonts.outfit(
-                                      fontSize:
-                                          screenWidth * 0.04 * scaleFactor,
-                                      fontWeight: FontWeight.w300,
-                                      color: const Color(0xBFFFFFFF),
-                                    ),
-                                  ),
-                                  style: GoogleFonts.outfit(
-                                    fontSize: screenWidth * 0.04 * scaleFactor,
-                                    color: Colors.white,
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedService = value;
-                                    });
-                                  },
-                                  items: services
-                                      .map(
-                                        (service) => DropdownMenuItem(
-                                          value: service,
-                                          child: Text(service),
-                                        ),
-                                      )
-                                      .toList(),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.05,
+                              vertical: screenHeight * 0.004,
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedService,
+                                dropdownColor: const Color(0xFF2D2319),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
                                 ),
+                                isExpanded: true,
+                                borderRadius: BorderRadius.circular(15),
+                                hint: Text(
+                                  "Select a Service",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.04,
+                                    fontWeight: FontWeight.w300,
+                                    color: Colors.white.withOpacity(0.6),
+                                  ),
+                                ),
+                                style: GoogleFonts.outfit(
+                                  fontSize: screenWidth * 0.04,
+                                  color: Colors.white,
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedService = value;
+                                  });
+                                },
+                                items: services
+                                    .map(
+                                      (service) => DropdownMenuItem(
+                                        value: service,
+                                        child: Text(service),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
                             ),
                           ),
+
                           SizedBox(height: screenHeight * 0.03 * scaleFactor),
                         ],
                       ),
@@ -214,13 +201,13 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                       alignment: Alignment.centerLeft,
                       child: Padding(
                         padding: EdgeInsets.only(
-                          left: screenWidth * 0.10 * scaleFactor,
+                          left: screenWidth * 0.01 * scaleFactor,
                         ),
                         child: Text(
                           "Query",
                           style: GoogleFonts.outfit(
                             fontSize:
-                                screenWidth * 0.045 * scaleFactor, // ~22px
+                                screenWidth * 0.055 * scaleFactor, // ~22px
                             fontWeight: FontWeight.w500,
                             color: Colors.white,
                           ),
@@ -231,48 +218,33 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
 
                     /// Query Card
                     Container(
-                      width: screenWidth * 0.92 * scaleFactor,
-                      height: screenHeight * 0.28 * scaleFactor,
-                      padding: EdgeInsets.all(3),
+                      width: double.infinity,
+                      height: screenHeight * 0.28,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.05,
+                        vertical: screenHeight * 0.02,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color.fromRGBO(210, 159, 42, 0.65),
-                            Color.fromRGBO(255, 255, 255, 0.65),
-                          ],
-                        ),
+                        color: const Color.fromRGBO(210, 159, 42, 0.04),
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2D2319),
-                          borderRadius: BorderRadius.circular(22),
+                      child: TextField(
+                        controller: _queryController,
+                        expands: true,
+                        maxLines: null,
+                        textAlignVertical: TextAlignVertical.top,
+                        style: GoogleFonts.outfit(
+                          fontSize: screenWidth * 0.04,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w300,
                         ),
-                        child: TextField(
-                          controller: _queryController,
-                          textInputAction: TextInputAction.done,
-                          maxLines: null,
-                          expands: true,
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.04 * scaleFactor,
-                            fontWeight: FontWeight.w300,
-                            color: const Color(0xBFFFFFFF),
+                        decoration: InputDecoration(
+                          hintText: "Raise your Query...",
+                          hintStyle: GoogleFonts.outfit(
+                            fontSize: screenWidth * 0.04,
+                            color: Colors.white.withOpacity(0.5),
                           ),
-                          decoration: InputDecoration(
-                            hintText: "Raise your Query...",
-                            hintStyle: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.04 * scaleFactor,
-                              fontWeight: FontWeight.w300,
-                              color: const Color(0xBFFFFFFF),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.04 * scaleFactor,
-                              vertical: screenHeight * 0.015 * scaleFactor,
-                            ),
-                          ),
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
@@ -285,8 +257,10 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                       Consumer<QueryProvider>(
                         builder: (context, provider, _) {
                           return SizedBox(
-                            width: screenWidth * 0.8 * scaleFactor,
-                            height: screenHeight * 0.06 * scaleFactor,
+                            // width: double.infinity,
+                            width: screenWidth * 0.95 * scaleFactor,
+
+                            height: screenHeight * 0.07 * scaleFactor,
                             child: ElevatedButton(
                               onPressed: provider.isLoading
                                   ? null
@@ -354,30 +328,28 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                                       _queryController.clear();
                                     },
                               style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.zero,
+                                padding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.018,
+                                ),
+                                backgroundColor: const Color(0xFFD29F2A),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.black.withOpacity(0.3),
                                 elevation: 6,
                               ),
                               child: Ink(
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment(-1.0, 0.0),
-                                    end: Alignment(1.0, 0.0),
-                                    colors: [
-                                      Color(0xFFD29F2A),
-                                      Color(0xFFFFFFFF),
-                                    ],
-                                  ),
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                                 child: Center(
                                   child: provider.isLoading
-                                      ? const CircularProgressIndicator(
-                                          color: Colors.black,
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.black,
+                                          ),
                                         )
                                       : Text(
                                           "Submit",
@@ -400,8 +372,9 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                       Consumer<QuestionProvider>(
                         builder: (context, provider, _) {
                           return SizedBox(
-                            width: screenWidth * 0.8 * scaleFactor,
-                            height: screenHeight * 0.06 * scaleFactor,
+                            width: screenWidth * 0.95 * scaleFactor,
+
+                            height: screenHeight * 0.07 * scaleFactor,
                             child: ElevatedButton(
                               onPressed: provider.isLoading
                                   ? null
@@ -450,30 +423,28 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                                       Navigator.pop(context);
                                     },
                               style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.zero,
+                                padding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.018,
+                                ),
+                                backgroundColor: const Color(0xFFD29F2A),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.black.withOpacity(0.3),
                                 elevation: 6,
                               ),
                               child: Ink(
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment(-1.0, 0.0),
-                                    end: Alignment(1.0, 0.0),
-                                    colors: [
-                                      Color(0xFFD29F2A),
-                                      Color(0xFFFFFFFF),
-                                    ],
-                                  ),
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                                 child: Center(
                                   child: provider.isLoading
-                                      ? const CircularProgressIndicator(
-                                          color: Colors.black,
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.black,
+                                          ),
                                         )
                                       : Text(
                                           "Submit",

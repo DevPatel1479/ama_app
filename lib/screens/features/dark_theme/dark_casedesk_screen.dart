@@ -106,7 +106,23 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
     final newRole = context.watch<RealTimeRoleProvider>().role;
+    _lastRole ??= newRole;
+
+    // role changed → navigate
+    if (_lastRole != newRole) {
+      _lastRole = newRole;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        if (newRole == "admin" || newRole == "advocate") {
+          context.go(AppPathsForScreen.caseDeskPath);
+        } else if (newRole == "client") {
+          context.go(AppPathsForScreen.overviewCaseDeskPath);
+        }
+      });
+    }
 
     // Only refetch if role has actually changed
     if (newRole != null && newRole != _lastRole) {
@@ -1442,6 +1458,7 @@ class BankCard extends StatelessWidget {
   final String amount;
   final Color amountColor;
   final bool settled;
+  final bool isLight;
 
   const BankCard({
     super.key,
@@ -1452,6 +1469,7 @@ class BankCard extends StatelessWidget {
     required this.amount,
     required this.amountColor,
     required this.settled,
+    this.isLight = false,
   });
 
   @override
@@ -1460,27 +1478,22 @@ class BankCard extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     const scaleFactor = 0.85;
 
+    // Fixed width for left labels so right values start at same position
+    final leftColumnWidth = screenWidth * 0.45;
+
     return Stack(
       children: [
         /// 🔶 Main Card
         Container(
-          decoration: ShapeDecoration(
-            color: const Color(0xFF2D2319),
-            shape: GradientBoxBorder(
-              gradient: const LinearGradient(
-                colors: [
-                  Color.fromRGBO(210, 159, 42, 0.65),
-                  Color.fromRGBO(255, 255, 255, 0.65),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              width: 2,
-              borderRadius: BorderRadius.circular(20),
-            ),
+          decoration: BoxDecoration(
+            color: isLight
+                ? const Color.fromARGB(255, 217, 188, 121)
+                : const Color.fromRGBO(45, 35, 25, 0.8),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.33), blurRadius: 12.5),
+            ],
           ),
-
-          /// 🔑 Add extra top padding only when chip is shown
           padding: EdgeInsets.fromLTRB(
             screenWidth * 0.05 * scaleFactor,
             settled
@@ -1489,32 +1502,27 @@ class BankCard extends StatelessWidget {
             screenWidth * 0.05 * scaleFactor,
             screenHeight * 0.025 * scaleFactor,
           ),
-
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Left Column (Labels)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _BankLabel(text: "Bank Name"),
-                    _BankLabel(text: "Account Number"),
-                    _BankLabel(text: "Type"),
-                    _BankLabel(text: "Amount"),
-                  ],
-                ),
+              _bankRow(
+                "Bank Name",
+                bankName,
+                leftColumnWidth,
+                isLight ? Color(0xff000000) : Colors.white,
               ),
-
-              /// Right Column (Values)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _bankText(bankName),
-                  _bankText(accountNumber),
-                  _bankText(type, color: typeColor),
-                  _bankText("₹$amount", color: amountColor),
-                ],
+              _bankRow(
+                "Account Number",
+                accountNumber,
+                leftColumnWidth,
+                isLight ? Color(0xff000000) : Colors.white,
+              ),
+              _bankRow("Type", type, leftColumnWidth, typeColor),
+              _bankRow(
+                "Amount",
+                "₹$amount",
+                leftColumnWidth,
+                isLight ? Color(0xffFF5858) : amountColor,
               ),
             ],
           ),
@@ -1523,27 +1531,68 @@ class BankCard extends StatelessWidget {
         /// 🟢 Settled Chip (Top Right)
         if (settled)
           Positioned(
-            top: 12,
-            right: 12,
-
+            top: screenHeight * 0.015,
+            right: screenWidth * 0.04,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.03,
+                vertical: screenHeight * 0.005,
+              ),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.green),
+                color: Colors.white.withOpacity(0.20),
+                borderRadius: BorderRadius.circular(screenWidth * 0.035),
+                border: Border.all(color: const Color(0xFF04C527), width: 1),
               ),
               child: Text(
                 'Settled',
                 style: GoogleFonts.outfit(
-                  color: Colors.greenAccent,
-                  fontSize: 12,
+                  color: const Color(0xFF04C527),
+                  fontSize: screenWidth * 0.032,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  /// Row with fixed left width so right value always starts at same position
+  Widget _bankRow(
+    String label,
+    String value,
+    double leftWidth,
+    Color valueColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: leftWidth,
+            child: Text(
+              label,
+              style: GoogleFonts.outfit(
+                color: isLight ? Color.fromRGBO(0, 0, 0, 0.7) : Colors.white70,
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign:
+                  TextAlign.left, // value starts immediately after left column
+              style: GoogleFonts.outfit(
+                color: valueColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1635,12 +1684,14 @@ class QueryCard extends StatefulWidget {
   final QueryModel query;
   final String? userRole;
   final VoidCallback? onSolve;
+  final bool isDark;
 
   const QueryCard({
     super.key,
     required this.query,
     this.onSolve,
     this.userRole,
+    this.isDark = false,
   });
 
   @override
@@ -1659,9 +1710,48 @@ class _QueryCardState extends State<QueryCard> {
     final submittedDate = DateTime.fromMillisecondsSinceEpoch(
       query.submittedAt * 1000,
     );
-    final formattedDate =
-        "${submittedDate.day.toString().padLeft(2, '0')}-${submittedDate.month.toString().padLeft(2, '0')}-${submittedDate.year} ${submittedDate.hour.toString().padLeft(2, '0')}:${submittedDate.minute.toString().padLeft(2, '0')}";
+    final formattedTime = TimeOfDay.fromDateTime(submittedDate).format(context);
+    final formattedDate = "Submitted · Today, $formattedTime";
+    final isClient = widget.userRole?.toLowerCase() == "client";
 
+    // Determine timestamp
+    DateTime timestamp;
+    if (isClient &&
+        query.status.toLowerCase() == "resolved" &&
+        query.resolvedAt != null) {
+      timestamp = DateTime.fromMillisecondsSinceEpoch(query.resolvedAt! * 1000);
+    } else {
+      timestamp = DateTime.fromMillisecondsSinceEpoch(query.submittedAt * 1000);
+    }
+
+    // Calculate day label
+    final now = DateTime.now();
+    String dayLabel;
+    if (timestamp.year == now.year &&
+        timestamp.month == now.month &&
+        timestamp.day == now.day) {
+      dayLabel = "Today";
+    } else if (timestamp.year == now.year &&
+        timestamp.month == now.month &&
+        timestamp.day == now.day - 1) {
+      dayLabel = "Yesterday";
+    } else {
+      dayLabel =
+          "${timestamp.day.toString().padLeft(2, '0')}-"
+          "${timestamp.month.toString().padLeft(2, '0')}-"
+          "${timestamp.year}";
+    }
+
+    // Format 12-hour time with AM/PM
+    final hour12 = timestamp.hour % 12 == 0 ? 12 : timestamp.hour % 12;
+    final minute = timestamp.minute.toString().padLeft(2, '0');
+    final amPm = timestamp.hour >= 12 ? "PM" : "AM";
+    final timeText = "$hour12:$minute $amPm";
+
+    // Combine into final timestamp text
+    final timestampText = isClient && query.status.toLowerCase() == "resolved"
+        ? "Last Update · $dayLabel, $timeText"
+        : "Submitted · $dayLabel, $timeText";
     const int previewLimit = 80;
     final isLongText = query.query.length > previewLimit;
     final displayedText = _isExpanded || !isLongText
@@ -1673,31 +1763,50 @@ class _QueryCardState extends State<QueryCard> {
       margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01 * scaleFactor),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
+
         // Outer thin gradient border
-        gradient: const LinearGradient(
-          colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isClient
+            ? null
+            : const LinearGradient(
+                colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
       ),
       child: Container(
         // ↓ This controls border thickness — make it 0.8 or 1 for a thin border
         margin: const EdgeInsets.all(1 * scaleFactor),
-        decoration: ShapeDecoration(
-          color: const Color(0xFF2D2319),
-          shape: GradientBoxBorder(
-            gradient: LinearGradient(
-              colors: [
-                const Color.fromRGBO(210, 159, 42, 0.65),
-                const Color.fromRGBO(255, 255, 255, 0.65),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            width: 2,
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
+
+        decoration: isClient
+            ? BoxDecoration(
+                color: (widget.isDark == false)
+                    ? const Color.fromARGB(255, 217, 188, 121)
+                    : const Color.fromRGBO(45, 35, 25, 0.8),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.33), // rgba(0,0,0,0.33)
+                    offset: const Offset(0, 0), // x, y
+                    blurRadius: 12.5, // blur radius
+                    spreadRadius: 0, // spread radius
+                  ),
+                ],
+              )
+            : ShapeDecoration(
+                color: const Color(0xFF2D2319),
+                shape: GradientBoxBorder(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color.fromRGBO(210, 159, 42, 0.65),
+                      const Color.fromRGBO(255, 255, 255, 0.65),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  width: 2,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
         padding: EdgeInsets.all(screenWidth * 0.04 * scaleFactor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1708,74 +1817,118 @@ class _QueryCardState extends State<QueryCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const CircleAvatar(
-                  radius: 20 * scaleFactor,
-                  backgroundColor: Colors.white24,
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 22 * scaleFactor,
-                  ),
-                ),
-
-                SizedBox(width: screenWidth * 0.03 * scaleFactor),
-
-                /// 🔹 Name + Phone (Expandable)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        query.postedBy,
-                        maxLines: 1, // ✅ prevents overflow
-                        overflow: TextOverflow.ellipsis, // ✅ graceful cut
-                        style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.04 * scaleFactor,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      if (query.phone != null && query.phone!.isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: screenHeight * 0.003),
-                          child: Text(
-                            query.phone!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.033 * scaleFactor,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(width: screenWidth * 0.02 * scaleFactor),
-
-                /// 🔹 Status Badge (Fixed, Safe)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.03 * scaleFactor,
-                    vertical: screenHeight * 0.005 * scaleFactor,
-                  ),
-                  decoration: BoxDecoration(
-                    color: query.status == "pending"
-                        ? Colors.orange
-                        : Colors.green,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    query.status.toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontSize: screenWidth * 0.032 * scaleFactor,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                if (isClient) ...[
+                  // Dot
+                  Container(
+                    width: screenWidth * 0.03,
+                    height: screenWidth * 0.03,
+                    decoration: BoxDecoration(
+                      color: query.status == "resolved"
+                          ? Color(0xFF04C527)
+                          : Color(0xFFFF0000),
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ),
+                  SizedBox(width: screenWidth * 0.03 * scaleFactor),
+                  // Active Query Text
+                  Expanded(
+                    child: Text(
+                      query.status == "resolved"
+                          ? "Query Resolved"
+                          : "Active Query",
+                      style: GoogleFonts.outfit(
+                        color: widget.isDark == false
+                            ? const Color(0xFF2D2319)
+                            : Colors.white,
+                        fontSize: 20 * scaleFactor,
+                        fontWeight: FontWeight.w300,
+                        height: 1.0, // line-height 20px
+                      ),
+                    ),
+                  ),
+                  // Timestamp Top-Right
+                  Text(
+                    timestampText,
+                    style: GoogleFonts.outfit(
+                      color: widget.isDark == false
+                          ? const Color(0xFF2D2319)
+                          : Colors.white,
+                      fontSize: 12 * scaleFactor,
+                      fontWeight: FontWeight.w400,
+                      height: 1.0,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ] else ...[
+                  const CircleAvatar(
+                    radius: 20 * scaleFactor,
+                    backgroundColor: Colors.white24,
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 22 * scaleFactor,
+                    ),
+                  ),
+
+                  SizedBox(width: screenWidth * 0.03 * scaleFactor),
+
+                  /// 🔹 Name + Phone (Expandable)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          query.postedBy,
+                          maxLines: 1, // ✅ prevents overflow
+                          overflow: TextOverflow.ellipsis, // ✅ graceful cut
+                          style: GoogleFonts.outfit(
+                            fontSize: screenWidth * 0.04 * scaleFactor,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        if (query.phone != null && query.phone!.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(top: screenHeight * 0.003),
+                            child: Text(
+                              query.phone!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.033 * scaleFactor,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(width: screenWidth * 0.02 * scaleFactor),
+
+                  /// 🔹 Status Badge (Fixed, Safe)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.03 * scaleFactor,
+                      vertical: screenHeight * 0.005 * scaleFactor,
+                    ),
+                    decoration: BoxDecoration(
+                      color: query.status == "pending"
+                          ? Colors.orange
+                          : Colors.green,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      query.status.toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontSize: screenWidth * 0.032 * scaleFactor,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             SizedBox(height: screenHeight * 0.015 * scaleFactor),
@@ -1784,8 +1937,10 @@ class _QueryCardState extends State<QueryCard> {
             Text(
               displayedText,
               style: GoogleFonts.outfit(
-                fontSize: screenWidth * 0.038 * scaleFactor,
-                color: Colors.white,
+                fontSize: screenWidth * 0.050 * scaleFactor,
+                color: (isClient && widget.isDark == false)
+                    ? const Color(0xFF2D2319)
+                    : Colors.white,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -1809,8 +1964,123 @@ class _QueryCardState extends State<QueryCard> {
               ),
 
             SizedBox(height: screenHeight * 0.02 * scaleFactor),
+            if (isClient) ...[
+              if (isClient && query.status.toLowerCase() == "resolved")
+                Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.only(
+                    top: screenHeight * 0.012 * scaleFactor,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.isDark == false
+                        ? const Color.fromARGB(255, 217, 188, 121)
+                        : const Color(0xFF2D2319),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: widget.isDark == false
+                          ? const Color(0xFF2D2319)
+                          : const Color(0xFFD29F2A),
+                      width: 1,
+                    ),
+                  ),
+                  padding: EdgeInsets.all(screenWidth * 0.035 * scaleFactor),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ✅ Expert Remark Badge (only if remarks exist)
+                      if (query.remarks != null && query.remarks!.isNotEmpty)
+                        Align(
+                          alignment: Alignment
+                              .centerLeft, // you can use .center if you like
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8 * scaleFactor,
+                              vertical: 4 * scaleFactor,
+                            ),
+                            margin: EdgeInsets.only(
+                              bottom: screenHeight * 0.008 * scaleFactor,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.20),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white, width: 1),
+                            ),
+                            child: Text(
+                              "Expert Remark",
+                              style: GoogleFonts.outfit(
+                                color: const Color.fromARGB(255, 9, 168, 38),
+                                fontSize: 14 * scaleFactor,
+                                fontWeight: FontWeight.w400,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Remarks first (if exists)
+                      if (query.remarks != null && query.remarks!.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: screenHeight * 0.008 * scaleFactor,
+                          ),
+                          child: Text(
+                            query.remarks!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16 * scaleFactor,
+                              fontWeight: FontWeight.w400,
+                              color: widget.isDark == false
+                                  ? const Color(0xFF2D2319)
+                                  : const Color(0xFFD29F2A),
+                              height: 1.25, // 125%
+                            ),
+                          ),
+                        ),
 
-            ...[
+                      // Resolved By Label
+                      Text(
+                        "Resolved By",
+                        style: GoogleFonts.outfit(
+                          fontSize: 17 * scaleFactor,
+                          fontWeight: FontWeight.w400,
+                          color: widget.isDark == false
+                              ? const Color(0xFF2D2319)
+                              : Colors.white,
+                          height: 1.0,
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.007 * scaleFactor),
+
+                      // Resolved By Name
+                      Text(
+                        query.resolvedBy?.name ?? "Unknown",
+                        style: GoogleFonts.outfit(
+                          fontSize: 15 * scaleFactor,
+                          fontWeight: FontWeight.w400,
+                          color: widget.isDark == false
+                              ? const Color(0xFF2D2319)
+                              : Colors.white,
+                          height: 1.0,
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.003 * scaleFactor),
+
+                      // Resolved By Phone
+                      if (query.resolvedBy?.phone != null &&
+                          query.resolvedBy!.phone!.isNotEmpty)
+                        Text(
+                          "+91 ${query.resolvedBy!.phone!.replaceAll(RegExp(r'^91'), '')}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 15 * scaleFactor,
+                            fontWeight: FontWeight.w400,
+                            color: widget.isDark == false
+                                ? const Color(0xFF2D2319)
+                                : Colors.white,
+                            height: 1.0,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ] else ...[
               // 🟡 --- Resolved By Card ---
               if (query.resolvedBy != null)
                 Container(
@@ -1964,49 +2234,53 @@ class _QueryCardState extends State<QueryCard> {
             SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
             /// --- Bottom Row: Date + Solve Button ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  formattedDate,
-                  style: GoogleFonts.outfit(
-                    fontSize: screenWidth * 0.032 * scaleFactor,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w400,
+            ///
+            if (!isClient) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    formattedDate,
+                    style: GoogleFonts.outfit(
+                      fontSize: screenWidth * 0.032 * scaleFactor,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
-                if (query.status == "pending" && widget.userRole != null)
-                  if (widget.userRole?.toLowerCase() == "admin" ||
-                      widget.userRole?.toLowerCase() == "advocate")
-                    GestureDetector(
-                      onTap: () {
-                        openResolveQueryBottomSheet(context, query);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.05 * scaleFactor,
-                          vertical: screenHeight * 0.01 * scaleFactor,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment(-1.0, 0.0),
-                            end: Alignment(1.0, 0.0),
-                            colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
+
+                  if (query.status == "pending" && widget.userRole != null)
+                    if (widget.userRole?.toLowerCase() == "admin" ||
+                        widget.userRole?.toLowerCase() == "advocate")
+                      GestureDetector(
+                        onTap: () {
+                          openResolveQueryBottomSheet(context, query);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.05 * scaleFactor,
+                            vertical: screenHeight * 0.01 * scaleFactor,
                           ),
-                          borderRadius: BorderRadius.circular(41),
-                        ),
-                        child: Text(
-                          "Solve Query",
-                          style: GoogleFonts.outfit(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                            fontSize: screenWidth * 0.035 * scaleFactor,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment(-1.0, 0.0),
+                              end: Alignment(1.0, 0.0),
+                              colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
+                            ),
+                            borderRadius: BorderRadius.circular(41),
+                          ),
+                          child: Text(
+                            "Solve Query",
+                            style: GoogleFonts.outfit(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700,
+                              fontSize: screenWidth * 0.035 * scaleFactor,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

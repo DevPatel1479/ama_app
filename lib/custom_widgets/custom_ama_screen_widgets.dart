@@ -118,40 +118,6 @@ Widget buildDoubtItem({
           ),
         ),
         SizedBox(height: screenHeight * 0.015),
-        // Like and Answer row
-        // Row(
-        //   children: [
-        //     Image.asset(
-        //       AppAssets.likeHeartIcon,
-        //       width: screenWidth * 0.04,
-        //       height: screenWidth * 0.04,
-        //     ),
-        //     SizedBox(width: screenWidth * 0.02),
-        //     Text(
-        //       "Like",
-        //       style: GoogleFonts.outfit(
-        //         fontSize: screenWidth * 0.025,
-        //         fontWeight: FontWeight.w400,
-        //         color: Colors.white,
-        //       ),
-        //     ),
-        //     SizedBox(width: screenWidth * 0.05),
-        //     Image.asset(
-        //       AppAssets.answerIcon,
-        //       width: screenWidth * 0.04,
-        //       height: screenWidth * 0.04,
-        //     ),
-        //     SizedBox(width: screenWidth * 0.02),
-        //     Text(
-        //       "Answer",
-        //       style: GoogleFonts.outfit(
-        //         fontSize: screenWidth * 0.025,
-        //         fontWeight: FontWeight.w400,
-        //         color: Colors.white,
-        //       ),
-        //     ),
-        //   ],
-        // ),
       ],
     ),
   );
@@ -316,7 +282,7 @@ void showAskDoubtBottomSheet(
     final String text = provider.commentController.text.trim();
     if (text.isEmpty) return;
 
-    provider.setSending(true);
+    // provider.setSending(true);
     try {
       final success = await provider.postComment(
         context: context,
@@ -338,7 +304,7 @@ void showAskDoubtBottomSheet(
       }
     } finally {
       // always make sure to clear sending flag
-      provider.setSending(false);
+      // provider.setSending(false);
     }
   }
 

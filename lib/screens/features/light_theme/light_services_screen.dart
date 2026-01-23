@@ -9,6 +9,8 @@ import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/features/dark_theme/dark_services_screen.dart'
     show showRaiseQueryBottomSheet;
+import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart'
+    show RealtimeImageCarousel;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -529,6 +531,8 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
+                    RealtimeImageCarousel(type: "services"),
+
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {

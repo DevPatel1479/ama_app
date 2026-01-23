@@ -8,7 +8,7 @@
 
 
     <application
-        android:label="Ama Legal Solutions"
+        android:label="AMA Connect"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
          <meta-data

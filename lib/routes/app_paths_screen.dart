@@ -18,4 +18,14 @@ class AppPathsForScreen {
   static const String acceptPolicyPath = "/acceptPolicyScreen";
   static const String deleteAccountRequestPath = "/deleteAccountRequestScreen";
   static const String notificationHistoryPath = "/notificationHistoryScreen";
+  static const String overviewCaseDeskPath = "/overviewCaseDeskScreen";
+
+  static const String paymentViewPath = "/paymentViewScreen";
+
+  static const String liveCaseStatusPath = "/liveCaseStatusScreen";
+
+  static const String bankDetailsPath = "/bankDetailsScreen";
+
+  static const String askLawyerPath = "/askLawyerScreen";
+  static const String meetTeamPath = "/meetTeamScreen";
 }

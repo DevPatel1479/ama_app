@@ -8,6 +8,7 @@ import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -341,6 +342,7 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
 
     final mq = MediaQuery.of(context);
     final screenWidth = mq.size.width;
+    final screenHeight = mq.size.height;
     final topInset = mq.padding.top;
     final bottomInset = mq.padding.bottom;
 
@@ -367,6 +369,17 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
           color: Colors.transparent,
           child: Stack(
             children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF171717), Color(0xFF171717)],
+                    ),
+                  ),
+                ),
+              ),
               // -------------- Fixed header (topInset + appBarHeight) --------------
               Positioned(
                 top: 0,
@@ -429,6 +442,9 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    RealtimeImageCarousel(type: "services"),
+                    // SizedBox(height: screenHeight * 0.2),
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {

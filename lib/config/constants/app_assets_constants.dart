@@ -133,4 +133,63 @@ class AppAssets {
   static const String darkThemeIcon = "assets/icons/dark_theme_icon.png";
 
   static const String lightThemeIcon = "assets/icons/light_theme_icon.png";
+
+  static const String notifSvgIcon = "assets/icons/notif.svg";
+
+  static const String overviewImg = "assets/images/overview_img.png";
+
+  static const String amaNotificationIcon =
+      "assets/icons/ama_notification_icon.png";
+
+  static const String grid1Img = "assets/images/grid_1.png";
+  static const String grid2Img = "assets/images/grid_2.png";
+
+  static const String whatshapSupportIcon = "assets/icons/whatshap_icon.png";
+
+  static const String blogTextImg = "assets/images/blog_text.png";
+
+  static const String law1Img = "assets/images/law1.png";
+  static const String law2Img = "assets/images/law2.png";
+  static const String law3Img = "assets/images/law3.png";
+  static const String law4Img = "assets/images/law4.png";
+  static const String law5Img = "assets/images/law5.png";
+  static const String law6Img = "assets/images/law6.png";
+
+  static const String qrImg = "assets/images/qr_img.png";
+
+  static const String doneIcon = "assets/icons/done_icon.png";
+  static const String lightDoneIcon = "assets/icons/light_done_icon.png";
+
+  static const String askLawyerImg = "assets/images/ask_lawer.png";
+
+  static const String connectL = "assets/images/connectL.png";
+  static const String connectC = "assets/images/connectC.png";
+
+  static const String s1Icon = "assets/icons/s1.png";
+  static const String s2Icon = "assets/icons/s2.png";
+  static const String s3Icon = "assets/icons/s3.png";
+  static const String s4Icon = "assets/icons/s4.png";
+  static const String s5Icon = "assets/icons/s5.png";
+  static const String s6Icon = "assets/icons/s6.png";
+  static const String s7Icon = "assets/icons/s7.png";
+  static const String s8Icon = "assets/icons/s8.png";
+  static const String s9Icon = "assets/icons/s9.png";
+  static const String s10Icon = "assets/icons/s10.png";
+  static const String s11Icon = "assets/icons/s11.png";
+  static const String s12Icon = "assets/icons/s12.png";
+  static const String s13Icon = "assets/icons/s13.png";
+  static const String s14Icon = "assets/icons/s14.png";
+  static const String s15Icon = "assets/icons/s15.png";
+  static const String s16Icon = "assets/icons/s16.png";
+  static const String s17Icon = "assets/icons/s17.png";
+  static const String s18Icon = "assets/icons/s18.png";
+  static const String s19Icon = "assets/icons/s19.png";
+  static const String s20Icon = "assets/icons/s20.png";
+
+  static const String tmL1 = "assets/images/tml_1.png";
+  static const String tmL2 = "assets/images/tml_2.png";
+
+  static const String cmmIcon = "assets/icons/cmm.png";
+
+  static const String closeButton = "assets/icons/close_button.png";
 }

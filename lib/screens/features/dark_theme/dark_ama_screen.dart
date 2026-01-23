@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' show min, max;
+import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
@@ -9,12 +11,15 @@ import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/models/question_model.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
+import 'package:ama_legal_solutions/provider/ama/delete_comment_provider.dart';
+import 'package:ama_legal_solutions/provider/ama/delete_question_provider.dart';
 
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +43,121 @@ List<Map<String, dynamic>> filterQuestionsCompute(Map<String, dynamic> params) {
   return results;
 }
 
+String timeAgo(int timestamp) {
+  final now = DateTime.now();
+  final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+  final difference = now.difference(date);
+
+  if (difference.inSeconds < 60) {
+    final seconds = difference.inSeconds == 0 ? 1 : difference.inSeconds;
+
+    return "$seconds second${seconds == 1 ? '' : 's'} ago";
+  } else if (difference.inMinutes < 60) {
+    return "${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago";
+  } else if (difference.inHours < 24) {
+    return "${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago";
+  } else if (difference.inDays < 30) {
+    return "${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago";
+  } else if (difference.inDays < 365) {
+    final months = (difference.inDays / 30).floor();
+    return "$months month${months == 1 ? '' : 's'} ago";
+  } else {
+    final years = (difference.inDays / 365).floor();
+    return "$years year${years == 1 ? '' : 's'} ago";
+  }
+}
+
+class _AskQuestionButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final double scaleFactor;
+
+  const _AskQuestionButton({
+    required this.onPressed,
+    required this.scaleFactor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: onPressed,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 24 * scaleFactor,
+            vertical: 12 * scaleFactor,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD29F2A),
+            borderRadius: BorderRadius.circular(17),
+            boxShadow: const [
+              BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.6), blurRadius: 8.4),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Ask AMA",
+                style: GoogleFonts.outfit(
+                  fontSize: 14 * scaleFactor,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<bool> showDeleteConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) async {
+  return await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2D2319),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            title: Text(title, style: const TextStyle(color: Colors.white)),
+            content: Text(
+              message,
+              style: const TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      ) ??
+      false;
+}
+
 class DarkAmaScreen extends StatefulWidget {
   const DarkAmaScreen({super.key});
   @override
@@ -47,6 +167,9 @@ class DarkAmaScreen extends StatefulWidget {
 class _DarkAmaScreenState extends State<DarkAmaScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  String? _activeFilter;
+  String? _openedCommentQuestionId;
+  final Map<String, GlobalKey> _questionKeys = {};
 
   /// track which question ids are COLLAPSED. Default: expanded (not present in set)
   final Set<String> _collapsedIds = {};
@@ -98,6 +221,16 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
       }
     });
     _searchController.addListener(_onSearchChanged);
+  }
+
+  void toggleComments(String questionId) {
+    setState(() {
+      if (_openedCommentQuestionId == questionId) {
+        _openedCommentQuestionId = null;
+      } else {
+        _openedCommentQuestionId = questionId;
+      }
+    });
   }
 
   // Separate method for initial load that sets the initial loading state
@@ -503,6 +636,72 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
     );
   }
 
+  Widget _buildFilterButton(
+    String label,
+    String filterKey,
+    double screenWidth,
+    double screenHeight,
+  ) {
+    final bool isActive = _activeFilter == filterKey;
+
+    // Responsive font & padding with min/max caps
+    final double fontSize = min(16, max(12, screenWidth * 0.04)); // 12-16px
+    final double horizontalPadding = min(20, max(12, screenWidth * 0.04));
+    final double verticalPadding = min(10, max(6, screenHeight * 0.012));
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _activeFilter = isActive ? null : filterKey;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: verticalPadding,
+          horizontal: horizontalPadding,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.33), blurRadius: 12.5),
+          ],
+          border: isActive
+              ? Border.all(color: const Color(0xFFD29F2A), width: 2)
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF2D2319),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void scrollToQuestion(String questionId) {
+    final key = _questionKeys[questionId];
+    if (key == null) return;
+
+    final context = key.currentContext;
+    if (context == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+        alignment: 0.25, // keeps input above keyboard
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -516,13 +715,14 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     const scaleFactor = 0.85;
-    const searchFieldScaleFactor = 0.75;
+
     final navHeight = (screenWidth * 0.18).clamp(56.0, 84.0);
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final contentBottomPadding =
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
     final role = context.watch<RealTimeRoleProvider>().role;
     userRole = role;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBody: true,
@@ -531,242 +731,20 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
       body: Stack(
         children: [
           Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF171717), Color(0xFF171717)],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
             child: SafeArea(
               bottom: false,
+
               child: Column(
                 children: [
-                  // header + search (unchanged)
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.04 * scaleFactor,
-                      vertical: screenHeight * 0.015 * scaleFactor,
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () =>
-                                  context.go(AppPathsForScreen.userHomePath),
-                              child: Image.asset(
-                                AppAssets.backArrowIcon,
-                                width: screenWidth * 0.06 * scaleFactor,
-                                height: screenWidth * 0.06 * scaleFactor,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            SizedBox(width: screenWidth * 0.02 * scaleFactor),
-                            Text(
-                              "Ask Me Anything",
-                              style: GoogleFonts.outfit(
-                                fontSize:
-                                    (screenWidth / 100) *
-                                    6.5 *
-                                    scaleFactor, // proportional but safe scaling
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                height: 1.2, // keeps it compact for AppBar
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            const Spacer(),
-                            SizedBox(
-                              width: screenWidth * 0.35 * scaleFactor,
-                              height: screenHeight * 0.05 * scaleFactor,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (userRole?.toLowerCase() == "guest") {
-                                    final isDark = Provider.of<ThemeProvider>(
-                                      context,
-                                      listen: false,
-                                    ).isDarkMode;
-                                    showDialog(
-                                      context: context,
-                                      builder: (_) => LoginRequiredDialog(
-                                        isDarkTheme: isDark,
-
-                                        onLoginPressed: () {
-                                          Navigator.pop(context);
-                                          context.goNamed(AppScreenNames.logIn);
-                                          // context.pushNamed(AppScreenNames.l);
-                                        },
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  context.pushNamed(
-                                    AppScreenNames.raiseQuery,
-                                    queryParameters: {
-                                      "isQuestionPosting": "true",
-                                    },
-                                  );
-                                },
-                                style:
-                                    ElevatedButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(41),
-                                      ),
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.black.withOpacity(
-                                        0.3,
-                                      ),
-                                      elevation: 6,
-                                    ).copyWith(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                            Colors.transparent,
-                                          ),
-                                    ),
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      begin: Alignment(-1.0, 0.0),
-                                      end: Alignment(1.0, 0.0),
-                                      colors: [
-                                        Color(0xFFD29F2A),
-                                        Color(0xFFFFFFFF),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(41),
-                                  ),
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Ask Question",
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 14 * scaleFactor,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: screenHeight * 0.03 * scaleFactor),
-
-                        // <-- NEW LINE ADDED: short description above the search bar
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            "A quick, reliable space to ask any legal question and get clear, expert-backed answers instantly.",
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: screenWidth * 0.040 * scaleFactor,
-                              fontWeight: FontWeight.w300,
-                              height: 1.25,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
-                        // search bar
-                        Container(
-                          height:
-                              MediaQuery.of(context).size.height *
-                              0.08 *
-                              searchFieldScaleFactor,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                              color: const Color(0xCCFFFFFF),
-                              width: 2,
-                            ),
-                            color: Colors.transparent,
-                          ),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 18 * searchFieldScaleFactor,
-                                height: 10,
-                              ),
-                              const Icon(
-                                Icons.search,
-                                color: Colors.white70,
-                                size: 20 * searchFieldScaleFactor,
-                              ),
-                              SizedBox(width: 10 * searchFieldScaleFactor),
-                              Expanded(
-                                child: TextField(
-                                  textInputAction: TextInputAction.done,
-                                  controller: _searchController,
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: "Search any question...",
-                                    hintStyle: GoogleFonts.outfit(
-                                      color: Colors.white70,
-                                      fontWeight: FontWeight.w300,
-                                    ),
-                                    border: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-
-                              // Right-side: if searching show small circular loader; otherwise show Search button
-                              Container(
-                                height:
-                                    MediaQuery.of(context).size.height *
-                                    0.08 *
-                                    searchFieldScaleFactor,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 30 * searchFieldScaleFactor,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    topRight: Radius.circular(25),
-                                    bottomRight: Radius.circular(25),
-                                  ),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment(-1.0, -0.0),
-                                    end: Alignment(1.0, 0.0),
-                                    colors: [
-                                      Color(0xFFD29F2A),
-                                      Color(0xFFFFFFFF),
-                                    ],
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: _isSearching
-                                    ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.0,
-                                          color: Colors.black,
-                                        ),
-                                      )
-                                    : GestureDetector(
-                                        onTap: () {
-                                          // manual search trigger if user presses button
-                                          _doSearch(
-                                            _searchController.text.trim(),
-                                          );
-                                        },
-                                        child: Text(
-                                          "Search",
-                                          style: GoogleFonts.outfit(
-                                            fontSize:
-                                                14 * searchFieldScaleFactor,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   // questions grid - FIXED: LOADER ONLY WHEN LOADING MORE
                   Expanded(
                     child: Consumer<QuestionProvider>(
@@ -828,6 +806,28 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                             ),
                           );
                         }
+
+                        // Show message if filtered list is empty
+                        List __filteredQuestions = uniqueQuestions;
+                        if (_activeFilter == "latest") {
+                          final todayStart = DateTime.now();
+                          final startOfDay = DateTime(
+                            todayStart.year,
+                            todayStart.month,
+                            todayStart.day,
+                          ).millisecondsSinceEpoch;
+                          __filteredQuestions = uniqueQuestions
+                              .where((q) => (q.timestamp ?? 0) >= startOfDay)
+                              .toList();
+                          __filteredQuestions.sort(
+                            (a, b) =>
+                                (b.timestamp ?? 0).compareTo(a.timestamp ?? 0),
+                          );
+                        } else if (_activeFilter == "unanswered") {
+                          __filteredQuestions = uniqueQuestions
+                              .where((q) => q.answer == null)
+                              .toList();
+                        }
                         // Use filtered pagination only when not searching
                         final bool usePagination = _searchQuery.isEmpty;
 
@@ -837,11 +837,17 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                             provider.hasMore &&
                             provider.isLoading;
 
-                        final int itemCount = shouldShowLoader
-                            ? uniqueQuestions.length + 1
-                            : uniqueQuestions.length;
+                        final int itemCount =
+                            2 +
+                            uniqueQuestions.length +
+                            (shouldShowLoader ? 1 : 0);
 
                         return RefreshIndicator(
+                          edgeOffset:
+                              MediaQuery.of(context).padding.top +
+                              screenHeight *
+                                  0.10 + // same as ListView top padding
+                              8,
                           onRefresh: () async {
                             // reset data and re-fetch from first page
                             await provider.fetchQuestionsSilently(
@@ -862,38 +868,119 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                             padding: EdgeInsets.only(
                               left: screenWidth * 0.04,
                               right: screenWidth * 0.04,
-                              top: screenHeight * 0.015,
-                              bottom: contentBottomPadding,
+                              top: screenHeight * 0.15,
+                              bottom:
+                                  contentBottomPadding +
+                                  keyboardHeight +
+                                  screenHeight * 0.10,
                             ),
-                            itemCount: itemCount,
+                            itemCount:
+                                2 + // carousel
+                                uniqueQuestions.length +
+                                (shouldShowLoader ? 1 : 0),
                             itemBuilder: (context, index) {
                               // loader row (pagination)
-                              if (shouldShowLoader &&
-                                  index == uniqueQuestions.length) {
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
+                              if (index == 0) {
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: screenHeight * 0.02,
                                   ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: Colors.transparent,
+                                  child: RealtimeImageCarousel(
+                                    type: "ama",
+                                    height: screenHeight * 0.22,
                                   ),
-                                  child: Container(
-                                    margin: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: const Center(
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
+                                );
+                              }
+
+                              /// map index → question index
+                              if (index == 1) {
+                                return Padding(
+                                  padding: EdgeInsetsGeometry.only(
+                                    bottom: screenHeight * 0.02,
+                                  ),
+                                  child: SizedBox(
+                                    height: screenHeight * 0.05, // row height
+
+                                    child: ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: screenWidth * 0.01,
                                       ),
+
+                                      children: [
+                                        _buildFilterButton(
+                                          "Latest",
+                                          "latest",
+                                          screenWidth,
+                                          screenHeight,
+                                        ),
+                                        SizedBox(width: screenWidth * 0.03),
+                                        _buildFilterButton(
+                                          "Unanswered",
+                                          "unanswered",
+                                          screenWidth,
+                                          screenHeight,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
                               }
 
-                              final question = uniqueQuestions[index];
+                              // Adjust actual index for carousel + filter row
+                              final int actualIndex = index - 2;
+
+                              // If filtered list is empty → show message
+                              if (__filteredQuestions.isEmpty) {
+                                // Only show message at the first "card index"
+                                if (actualIndex == 0) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      top: screenHeight * 0.1,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _activeFilter == "latest"
+                                            ? "No latest questions found"
+                                            : _activeFilter == "unanswered"
+                                            ? "No unanswered questions found"
+                                            : "No questions found",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  return const SizedBox.shrink(); // prevent duplicate messages
+                                }
+                              }
+
+                              // 🟡 Pagination loader
+                              if (shouldShowLoader &&
+                                  actualIndex == uniqueQuestions.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              // 🛡️ Safety
+                              if (actualIndex < 0 ||
+                                  actualIndex >= uniqueQuestions.length) {
+                                return const SizedBox.shrink();
+                              }
+
+                              // Ensure actualIndex is safe for filtered list
+                              if (actualIndex >= __filteredQuestions.length) {
+                                return const SizedBox.shrink();
+                              }
+
+                              final question = __filteredQuestions[actualIndex];
                               final questionId = question.id as String;
                               final isExpanded = !_collapsedIds.contains(
                                 questionId,
@@ -904,7 +991,10 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               final showAddAnswerButton =
                                   _canUserAddAnswer() &&
                                   _questionHasNoAnswer(question);
-
+                              _questionKeys.putIfAbsent(
+                                questionId,
+                                () => GlobalKey(),
+                              );
                               // determine answer preview limit (adjust as needed)
                               final answerText = question.answer?.content ?? '';
                               final int charLimit = screenWidth < 600
@@ -918,357 +1008,459 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                         .trimRight()
                                   : answerText;
 
+                              // Inside your ListView.builder, replace the old card Container with this:
+
                               return Container(
-                                key: ValueKey(questionId),
+                                key: _questionKeys[questionId],
                                 margin: const EdgeInsets.symmetric(vertical: 6),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color.fromRGBO(210, 159, 42, 0.65),
-                                      Color.fromRGBO(255, 255, 255, 0.65),
-                                    ],
+                                  color: const Color.fromRGBO(
+                                    210,
+                                    159,
+                                    42,
+                                    0.07,
                                   ),
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.33),
+                                      blurRadius: 12.5,
+                                    ),
+                                  ],
                                 ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(14),
-                                    // Entire card tap uses same logic as previous "View Replies" button
-                                    onTap: () {
-                                      if (question.commentsCount >= 0 &&
-                                          isExpanded == true) {
-                                        final commentProvider = context
-                                            .read<CommentProvider>();
-                                        showAskDoubtBottomSheet(
-                                          context,
-                                          commentProvider,
-                                          "dark",
-                                          questionId,
-                                          userName,
-                                          userRole,
-                                          userPhone,
-                                          profilImgUrl,
-                                          question,
-                                        );
-                                      } else {
-                                        if (_collapsedIds.contains(
-                                          questionId,
-                                        )) {
-                                          _expand(questionId);
-                                        } else {
-                                          _collapse(questionId);
-                                        }
-                                      }
-                                    },
-
-                                    child: Container(
-                                      margin: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2D2319),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize
-                                            .min, // <- fixes the unbounded-height + Spacer issue
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // top row - identical to original
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 16,
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                backgroundImage:
-                                                    (question.profileImgUrl !=
-                                                            null &&
-                                                        (question.profileImgUrl
-                                                                as String)
-                                                            .isNotEmpty)
-                                                    ? NetworkImage(
-                                                        "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                                      )
-                                                    : AssetImage(
-                                                            AppAssets.userIcon,
-                                                          )
-                                                          as ImageProvider,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      question.userName ?? '',
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: Colors.white,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                    Text(
-                                                      formattedDate,
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: Colors.white70,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              if (showAddAnswerButton)
-                                                Container(
-                                                  height: 28,
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      _showAddAnswerDialog(
-                                                        context,
-                                                        questionId,
-                                                        userName!,
-                                                        userRole!,
-                                                      );
-                                                    },
-                                                    style:
-                                                        ElevatedButton.styleFrom(
-                                                          padding:
-                                                              EdgeInsets.zero,
-                                                          backgroundColor:
-                                                              Colors
-                                                                  .transparent,
-                                                          elevation: 0,
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  6,
-                                                                ),
-                                                          ),
-                                                        ).copyWith(
-                                                          backgroundColor:
-                                                              MaterialStateProperty.all(
-                                                                Colors
-                                                                    .transparent,
-                                                              ),
-                                                        ),
-                                                    child: Ink(
-                                                      decoration: BoxDecoration(
-                                                        gradient:
-                                                            const LinearGradient(
-                                                              begin: Alignment
-                                                                  .centerLeft,
-                                                              end: Alignment
-                                                                  .centerRight,
-                                                              colors: [
-                                                                Color(
-                                                                  0xFFD29F2A,
-                                                                ),
-                                                                Color(
-                                                                  0xFFFFFFFF,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              6,
-                                                            ),
-                                                      ),
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              horizontal: 8,
-                                                              vertical: 4,
-                                                            ),
-                                                        child: Text(
-                                                          "Answer",
-                                                          style:
-                                                              GoogleFonts.outfit(
-                                                                color: Colors
-                                                                    .black,
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-
-                                          const SizedBox(height: 8),
-
-                                          // QUESTION TEXT - remains 1 line ellipsis (no view more)
-                                          Text(
-                                            question.content ?? '',
+                                padding: EdgeInsets.all(screenWidth * 0.03),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    /// TOP ROW: AVATAR + NAME + TIMESTAMP + ADD ANSWER BUTTON
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: screenWidth * 0.04,
+                                          backgroundColor: Colors.transparent,
+                                          backgroundImage:
+                                              (question.profileImgUrl != null &&
+                                                  (question.profileImgUrl
+                                                          as String)
+                                                      .isNotEmpty)
+                                              ? NetworkImage(
+                                                  "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                                )
+                                              : AssetImage(AppAssets.userIcon)
+                                                    as ImageProvider,
+                                        ),
+                                        SizedBox(width: screenWidth * 0.03),
+                                        Expanded(
+                                          child: Text(
+                                            question.userName ?? '',
                                             style: GoogleFonts.outfit(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w400,
                                               color: Colors.white,
+                                              fontSize: screenWidth * 0.036,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.0,
                                             ),
-                                            // maxLines: 1,
-                                            // overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              timeAgo(question.timestamp),
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontSize: screenWidth * 0.035,
+                                              ),
+                                            ),
 
-                                          const SizedBox(height: 10),
+                                            if (userRole?.toLowerCase() ==
+                                                "admin") ...[
+                                              SizedBox(
+                                                width: screenWidth * 0.02,
+                                              ),
 
-                                          // ANSWER SECTION - ONLY IF ANSWER EXISTS
-                                          if (question.answer != null)
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              Consumer<DeleteQuestionProvider>(
+                                                builder: (_, deleteProvider, __) {
+                                                  final isDeleting =
+                                                      deleteProvider
+                                                          .isDeleting &&
+                                                      deleteProvider
+                                                              .response
+                                                              ?.questionId ==
+                                                          question.id;
 
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    ClipRRect(
+                                                  return GestureDetector(
+                                                    onTap: isDeleting
+                                                        ? null
+                                                        : () async {
+                                                            final confirm =
+                                                                await showDeleteConfirmDialog(
+                                                                  context,
+                                                                  title:
+                                                                      "Delete Question?",
+                                                                  message:
+                                                                      "This action cannot be undone.",
+                                                                );
+
+                                                            if (!confirm)
+                                                              return;
+
+                                                            final success = await deleteProvider
+                                                                .deleteQuestion(
+                                                                  questionId:
+                                                                      question
+                                                                          .id,
+                                                                  role:
+                                                                      userRole!,
+                                                                );
+
+                                                            if (success) {
+                                                              context
+                                                                  .read<
+                                                                    QuestionProvider
+                                                                  >()
+                                                                  .removeQuestionById(
+                                                                    questionId,
+                                                                  );
+                                                            }
+                                                          },
+                                                    child: isDeleting
+                                                        ? const SizedBox(
+                                                            width: 18,
+                                                            height: 18,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                          )
+                                                        : const Icon(
+                                                            Icons
+                                                                .delete_outline,
+                                                            color: Colors
+                                                                .redAccent,
+                                                            size: 20,
+                                                          ),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        if (showAddAnswerButton)
+                                          SizedBox(width: screenWidth * 0.03),
+                                        if (showAddAnswerButton)
+                                          Container(
+                                            height: screenHeight * 0.035,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                _showAddAnswerDialog(
+                                                  context,
+                                                  questionId,
+                                                  userName!,
+                                                  userRole!,
+                                                );
+                                              },
+                                              style:
+                                                  ElevatedButton.styleFrom(
+                                                    padding: EdgeInsets.zero,
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    elevation: 0,
+                                                    shape: RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             6,
-                                                          ), // your desired radius
-                                                      child: Image.asset(
-                                                        AppAssets.appIcon,
-                                                        width: 20,
-                                                        height: 20,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 10),
-                                                    Flexible(
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 4,
-                                                              horizontal: 8,
-                                                            ),
-                                                        decoration: BoxDecoration(
-                                                          color: const Color(
-                                                            0x33FFFFFF,
                                                           ),
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                          border: Border.all(
-                                                            color: Colors.white,
-                                                            width: 1,
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          "from ${question.answer!.role ?? ''}",
-                                                          style:
-                                                              GoogleFonts.outfit(
-                                                                fontSize: 9,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                color:
-                                                                    const Color(
-                                                                      0xFFD29F2A,
-                                                                    ),
-                                                              ),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                      ),
                                                     ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 6),
-
-                                                // ANSWER TEXT: truncated + "... view more" when long
-                                                // (the whole card tap still opens replies)
-                                                if (answerText.isNotEmpty)
-                                                  Text.rich(
-                                                    TextSpan(
-                                                      children: [
-                                                        TextSpan(
-                                                          text: answerTooLong
-                                                              ? "$answerPreview..." // truncated part + ellipsis
-                                                              : answerPreview,
-                                                          style:
-                                                              GoogleFonts.outfit(
-                                                                fontSize: 11,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                color:
-                                                                    const Color(
-                                                                      0xFFD29F2A,
-                                                                    ),
-                                                              ),
+                                                  ).copyWith(
+                                                    backgroundColor:
+                                                        MaterialStateProperty.all(
+                                                          Colors.transparent,
                                                         ),
-                                                        if (answerTooLong)
-                                                          TextSpan(
-                                                            text: " view more",
-                                                            style: GoogleFonts.outfit(
-                                                              fontSize: 11,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              // keep the same accent color or change if desired
-                                                              color:
-                                                                  const Color(
-                                                                    0xFFFFFFFF,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                    maxLines: 2,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
                                                   ),
-
-                                                const SizedBox(height: 8),
-                                              ],
-                                            ),
-                                          Row(
-                                            children: [
-                                              Image.asset(
-                                                AppAssets.commentBtn,
-                                                width: 20,
-                                                height: 20,
-                                                fit: BoxFit.contain,
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Text(
-                                                "Comments",
-                                                style: GoogleFonts.outfit(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
+                                              child: Ink(
+                                                decoration: BoxDecoration(
+                                                  gradient:
+                                                      const LinearGradient(
+                                                        begin: Alignment
+                                                            .centerLeft,
+                                                        end: Alignment
+                                                            .centerRight,
+                                                        colors: [
+                                                          Color(0xFFD29F2A),
+                                                          Color(0xFFFFFFFF),
+                                                        ],
+                                                      ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                  child: Text(
+                                                    "Answer",
+                                                    style: GoogleFonts.outfit(
+                                                      color: Colors.black,
+                                                      fontSize:
+                                                          screenWidth * 0.035,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ],
+                                            ),
                                           ),
-                                          // const Spacer(),
+                                      ],
+                                    ),
 
-                                          // Removed the bottom "View Replies/View More" button entirely
-                                          // to fulfill the requirement (card itself handles taps).
-                                          // To keep visual spacing consistent, keep a small bottom padding:
-                                          // SizedBox(height: 8),
-                                        ],
+                                    SizedBox(height: screenHeight * 0.015),
+
+                                    /// QUESTION TEXT
+                                    Text(
+                                      question.content ?? '',
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontSize: screenWidth * 0.050,
+                                        fontWeight: FontWeight.w300,
+                                        height: 1.0,
                                       ),
                                     ),
-                                  ),
+
+                                    SizedBox(height: screenHeight * 0.02),
+
+                                    /// ANSWER LAYOUT (IF ANSWER EXISTS)
+                                    if (question.answer != null)
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: const Color(0xFFC1A460),
+                                          ),
+                                        ),
+                                        padding: EdgeInsets.all(
+                                          screenWidth * 0.035,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Expert Remark + Green Dot
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical:
+                                                        screenHeight * 0.005,
+                                                    horizontal:
+                                                        screenWidth * 0.025,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color.fromRGBO(
+                                                      243,
+                                                      186,
+                                                      54,
+                                                      0.4,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    "Expert Remark",
+                                                    style: GoogleFonts.outfit(
+                                                      color: const Color(
+                                                        0xFF2D2319,
+                                                      ),
+                                                      fontSize:
+                                                          screenWidth * 0.035,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      height: 1.0,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: screenWidth * 0.03,
+                                                  height: screenWidth * 0.03,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: Color(
+                                                          0xFF04C527,
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+
+                                            SizedBox(
+                                              height: screenHeight * 0.015,
+                                            ),
+
+                                            // Answer Content
+                                            Text(
+                                              question.answer!.content ?? '',
+                                              style: GoogleFonts.outfit(
+                                                color: const Color(0xFF2D2319),
+                                                fontSize: screenWidth * 0.035,
+                                                fontWeight: FontWeight.w600,
+                                                height: 1.25,
+                                              ),
+                                            ),
+
+                                            SizedBox(
+                                              height: screenHeight * 0.015,
+                                            ),
+
+                                            // Answer by Icon + Text
+                                            Row(
+                                              children: [
+                                                Image.asset(
+                                                  AppAssets.appIcon,
+                                                  width: screenWidth * 0.08,
+                                                  height: screenWidth * 0.08,
+                                                ),
+                                                SizedBox(
+                                                  width: screenWidth * 0.025,
+                                                ),
+                                                Text(
+                                                  question?.answer?.answeredBy,
+                                                  style: GoogleFonts.outfit(
+                                                    color: const Color(
+                                                      0xFF2D2319,
+                                                    ),
+                                                    fontSize:
+                                                        screenWidth * 0.035,
+                                                    fontWeight: FontWeight.w400,
+                                                    height: 1.0,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                    SizedBox(height: screenHeight * 0.015),
+
+                                    /// COMMENT LAYOUT (Tappable)
+                                    GestureDetector(
+                                      onTap: () {
+                                        // final commentProvider = context
+                                        //     .read<CommentProvider>();
+                                        // showAskDoubtBottomSheet(
+                                        //   context,
+                                        //   commentProvider,
+                                        //   "dark",
+                                        //   questionId,
+                                        //   userName,
+                                        //   userRole,
+                                        //   userPhone,
+                                        //   profilImgUrl,
+                                        //   question,
+                                        // );
+
+                                        final commentProvider = context
+                                            .read<CommentProvider>();
+
+                                        if (_openedCommentQuestionId !=
+                                            questionId) {
+                                          commentProvider
+                                              .clearExistingComments();
+                                          commentProvider.fetchComments(
+                                            questionId,
+                                            reset: true,
+                                          );
+                                        }
+
+                                        toggleComments(questionId);
+
+                                        scrollToQuestion(questionId);
+                                      },
+                                      child: Container(
+                                        height: screenHeight * 0.045,
+
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.04,
+                                          vertical: screenHeight * 0.01,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromRGBO(
+                                            210,
+                                            159,
+                                            42,
+                                            0.08,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            22,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(
+                                                0.33,
+                                              ),
+                                              blurRadius: 12.5,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Image.asset(
+                                              AppAssets.cmmIcon,
+                                              width: screenWidth * 0.05,
+                                              height: screenWidth * 0.05,
+                                            ),
+                                            SizedBox(
+                                              width: screenWidth * 0.025,
+                                            ),
+                                            Text(
+                                              "${question.commentsCount ?? 0}",
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontSize: screenWidth * 0.037,
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+
+                                    if (_openedCommentQuestionId == questionId)
+                                      InlineCommentsSection(
+                                        questionId: questionId,
+                                        userName: userName,
+                                        userRole: userRole,
+                                        userPhone: userPhone,
+                                        profileImgUrl: profilImgUrl,
+                                        onClose: () {
+                                          setState(() {
+                                            _openedCommentQuestionId = null;
+                                          });
+                                        },
+                                      ),
+                                  ],
                                 ),
                               );
                             },
@@ -1278,6 +1470,123 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: RepaintBoundary(
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 8,
+                      left: screenWidth * 0.04,
+                      right: screenWidth * 0.04,
+                      bottom: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF171717).withOpacity(0.45),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // BACK BUTTON
+                            GestureDetector(
+                              onTap: () =>
+                                  context.go(AppPathsForScreen.userHomePath),
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Image.asset(
+                                  AppAssets.backArrowIcon,
+                                  width: screenWidth * 0.030,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: screenWidth * 0.05),
+                            // TITLE (NOT CENTERED BY EXPANDED)
+                            Text(
+                              "AMA",
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.052,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            // ASK QUESTION BUTTON
+                            _AskQuestionButton(
+                              scaleFactor: scaleFactor,
+                              onPressed: () {
+                                if (userRole?.toLowerCase() == "guest") {
+                                  final isDark = Provider.of<ThemeProvider>(
+                                    context,
+                                    listen: false,
+                                  ).isDarkMode;
+
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => LoginRequiredDialog(
+                                      isDarkTheme: isDark,
+                                      onLoginPressed: () {
+                                        Navigator.pop(context);
+                                        context.goNamed(AppScreenNames.logIn);
+                                      },
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                context.pushNamed(
+                                  AppScreenNames.raiseQuery,
+                                  queryParameters: {
+                                    "isQuestionPosting": "true",
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // SUBTITLE
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "A Pro Bono Initiative by ",
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  height: 1,
+                                ),
+                              ),
+                              TextSpan(
+                                text: "AMA Legal Solutions",
+                                style: GoogleFonts.outfit(
+                                  color: Color(0xFFD29F2A),
+                                  fontSize: 14,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -1292,6 +1601,362 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class InlineCommentsSection extends StatefulWidget {
+  final String questionId;
+  final String? userName;
+  final String? userRole;
+  final String? userPhone;
+  final String? profileImgUrl;
+  final VoidCallback onClose;
+  final bool isLight;
+
+  const InlineCommentsSection({
+    Key? key,
+    required this.questionId,
+    required this.onClose,
+    this.userName,
+    this.userRole,
+    this.userPhone,
+    this.profileImgUrl,
+    this.isLight = false,
+  }) : super(key: key);
+
+  @override
+  State<InlineCommentsSection> createState() => _InlineCommentsSectionState();
+}
+
+class _InlineCommentsSectionState extends State<InlineCommentsSection> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        if (!mounted) return;
+
+        final renderBox = context.findRenderObject() as RenderBox?;
+        if (renderBox == null) return;
+
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.3,
+        );
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Consumer<CommentProvider>(
+      builder: (context, provider, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: screenHeight * 0.02),
+
+            /// Divider
+            Container(
+              width: double.infinity,
+              height: 1,
+              color: const Color(0xFF595959),
+            ),
+
+            SizedBox(height: screenHeight * 0.015),
+
+            /// HEADER
+            Row(
+              children: [
+                Text(
+                  "Comments",
+                  style: GoogleFonts.outfit(
+                    color: widget.isLight ? Colors.black : Colors.white,
+                    fontSize: screenWidth * 0.05,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                const Spacer(),
+
+                /// CLOSE BUTTON
+                GestureDetector(
+                  onTap: () {
+                    // provider.clearExistingComments();
+
+                    widget.onClose();
+                  },
+                  child: Image.asset(
+                    AppAssets.closeButton,
+                    width: screenWidth * 0.04,
+                    color: widget.isLight ? Colors.black : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            /// COMMENTS LIST
+            if (provider.isLoading && provider.comments.isEmpty)
+              const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            else if (provider.comments.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text(
+                  "No comments yet",
+                  style: TextStyle(
+                    color: widget.isLight ? Colors.black : Colors.white,
+                  ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: provider.comments.length,
+                separatorBuilder: (_, __) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Container(height: 1, color: const Color(0xFF595959)),
+                ),
+                itemBuilder: (context, index) {
+                  final c = provider.comments[index];
+                  final bool isExpert =
+                      (c.userRole?.toLowerCase() != "user" &&
+                      c.userRole?.toLowerCase() != "client");
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: screenWidth * 0.035,
+                            backgroundImage:
+                                c.profileImgUrl != null &&
+                                    c.profileImgUrl!.isNotEmpty
+                                ? NetworkImage(
+                                    "${c.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                  )
+                                : AssetImage(AppAssets.userIcon)
+                                      as ImageProvider,
+                          ),
+
+                          SizedBox(width: screenWidth * 0.03),
+
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    c.commentedBy ?? "",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.outfit(
+                                      color: widget.isLight
+                                          ? Colors.black
+                                          : Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+
+                                if (isExpert) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: widget.isLight
+                                          ? const Color(0xFF2D2319)
+                                          : const Color.fromRGBO(
+                                              255,
+                                              219,
+                                              137,
+                                              0.64,
+                                            ),
+                                    ),
+                                    child: Text(
+                                      "Expert",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10,
+                                        color: widget.isLight
+                                            ? Colors.white
+                                            : const Color(0xFF2D2319),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          Text(
+                            timeAgo(c.timestamp ?? 1),
+                            style: GoogleFonts.outfit(
+                              color: widget.isLight
+                                  ? Colors.black87
+                                  : Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (widget.userRole?.toLowerCase() == "admin")
+                            Consumer<DeleteCommentProvider>(
+                              builder: (_, deleteProvider, __) {
+                                final isDeleting =
+                                    deleteProvider.isDeleting &&
+                                    deleteProvider.response?.commentId == c.id;
+
+                                return GestureDetector(
+                                  onTap: isDeleting
+                                      ? null
+                                      : () async {
+                                          final confirm =
+                                              await showDeleteConfirmDialog(
+                                                context,
+                                                title: "Delete Comment?",
+                                                message:
+                                                    "This comment will be permanently removed.",
+                                              );
+
+                                          if (!confirm) return;
+
+                                          final success = await deleteProvider
+                                              .deleteComment(
+                                                questionId: widget.questionId,
+                                                commentId: c.id!,
+                                                role: widget.userRole!,
+                                              );
+
+                                          if (success) {
+                                            /// ✅ deletes ONLY selected comment
+                                            provider.removeCommentLocally(
+                                              c.id!,
+                                            );
+                                          }
+                                        },
+                                  child: isDeleting
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.delete_outline,
+                                          color: widget.isLight
+                                              ? Colors.black
+                                              : Colors.redAccent,
+                                          size: 18,
+                                        ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+
+                      SizedBox(height: screenHeight * 0.01),
+
+                      Text(
+                        c.content ?? "",
+                        style: GoogleFonts.outfit(
+                          color: widget.isLight ? Colors.black : Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w300,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+            SizedBox(height: screenHeight * 0.015),
+
+            /// INPUT BAR
+            if (widget.userRole?.toLowerCase() != "guest")
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF323232),
+                  borderRadius: BorderRadius.circular(33),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: provider.commentController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Write a comment...",
+                          hintStyle: TextStyle(color: Colors.white54),
+                        ),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) async {
+                          final success = await provider.postComment(
+                            context: context,
+                            questionId: widget.questionId,
+                            content: provider.commentController.text.trim(),
+                            commentedBy: widget.userName ?? "",
+                            userRole: widget.userRole ?? "",
+                            phone: widget.userPhone ?? "",
+                            profileImgUrl: widget.profileImgUrl ?? "",
+                          );
+                          if (success) {
+                            provider.commentController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: provider.isSending
+                          ? null
+                          : () {
+                              provider.postComment(
+                                context: context,
+                                questionId: widget.questionId,
+                                content: provider.commentController.text.trim(),
+                                commentedBy: widget.userName ?? "",
+                                userRole: widget.userRole ?? "",
+                                phone: widget.userPhone ?? "",
+                                profileImgUrl: widget.profileImgUrl ?? "",
+                              );
+                            },
+                      icon: provider.isSending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+
+            SizedBox(height: screenHeight * 0.02),
+          ],
+        );
+      },
     );
   }
 }

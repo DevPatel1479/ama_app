@@ -11,8 +11,17 @@ import 'package:ama_legal_solutions/custom_widgets/video_lazy_loading_widget.dar
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
-import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart'
+    show
+        TeamCard,
+        connectLawyerGrid,
+        first10,
+        next10,
+        statOverviewCard,
+        CityGrid,
+        RealtimeImageCarousel;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 // import 'package:chewie/chewie.dart';
@@ -124,82 +133,6 @@ class _LightHomeScreen extends State<LightHomeScreen> {
     );
 
     // Responsive button
-    Widget fileDisputeButton(BuildContext context) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
-
-      final buttonWidth = screenWidth; // responsive width
-      final buttonHeight =
-          screenHeight * 0.06 * scaleFactor; // responsive height ~50px
-      final horizontalPadding = buttonWidth * 0.05 * scaleFactor;
-      final verticalPadding = buttonHeight * 0.25 * scaleFactor;
-
-      return GestureDetector(
-        onTap: () {
-          if (userRole?.toLowerCase() == "guest") {
-            final isDark = Provider.of<ThemeProvider>(
-              context,
-              listen: false,
-            ).isDarkMode;
-            showDialog(
-              context: context,
-              builder: (_) => LoginRequiredDialog(
-                isDarkTheme: isDark,
-
-                onLoginPressed: () {
-                  Navigator.pop(context);
-                  context.goNamed(AppScreenNames.logIn);
-                  // context.pushNamed(AppScreenNames.l);
-                },
-              ),
-            );
-            return;
-          }
-          context.pushNamed(
-            AppScreenNames.raiseQuery,
-            queryParameters: {"isFilingDispute": "true"},
-          );
-        },
-        child: Container(
-          width: buttonWidth,
-          height: buttonHeight,
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: verticalPadding,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            color: const Color(0xFF2D2319),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center, // center everything
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset(
-                AppAssets.fileDispute,
-                width: buttonHeight * 0.6,
-                height: buttonHeight * 0.6,
-                color: Colors.white,
-              ),
-              SizedBox(
-                width: screenWidth * 0.02 * scaleFactor,
-              ), // very close to text
-              Text(
-                "Raise a Query",
-                style: GoogleFonts.outfit(
-                  fontSize:
-                      screenWidth * 0.05 * scaleFactor, // responsive ~20px
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  height: 1,
-                  letterSpacing: 0,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     // Single stat widget
     Widget statItem(String number, String label) {
@@ -660,90 +593,16 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(
-                            vertical: statCardHeight * 0.15,
-                            horizontal: screenWidth * 0.05,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0xFFFFFFFF),
-                                Color.fromRGBO(210, 159, 42, 0.7),
-                              ],
-                              stops: [0.001, 1.0],
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color.fromARGB(64, 16, 16, 16),
-                                offset: Offset(0, 4),
-                                blurRadius: 1,
-                                spreadRadius: 0,
-                              ),
-                            ],
-                            border: Border.all(
-                              color: const Color(0x26FFFFFF),
-                              width: 2,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              statItem("10k+", "Case\nhandled"),
-                              verticalLine(statCardHeight * 0.6),
-                              statItem("40+", "Year\nExperience"),
-                              verticalLine(statCardHeight * 0.6),
-                              statItem("5k+", "Client\nServed"),
-                            ],
-                          ),
-                        ),
-
+                        SizedBox(height: screenHeight * 0.05 * scaleFactor),
+                        RealtimeImageCarousel(type: "home"),
                         SizedBox(height: screenHeight * 0.04 * scaleFactor),
+                        if (userRole?.toLowerCase() == "client")
+                          connectLawyerGrid(context, isLight: true),
 
-                        /// Video card
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF262626),
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final isTablet = constraints.maxWidth > 600;
-                              final aspectRatio = isTablet
-                                  ? 21 / 9
-                                  : 16 / 9; // adaptive
+                        statOverviewCard(context, isLight: true),
 
-                              return AspectRatio(
-                                aspectRatio: aspectRatio,
-                                child: const LazyVideoPlayer(),
-                              );
-                            },
-                          ),
-                        ),
+                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
-                        SizedBox(
-                          height: screenHeight * 0.03 * scaleFactor,
-                        ), // spacing
-                        if (userRole?.toLowerCase() != "admin" &&
-                            userRole?.toLowerCase() != "advocate")
-                          fileDisputeButton(context),
                         Padding(
                           padding: EdgeInsets.only(
                             top:
@@ -756,7 +615,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           child: Align(
                             alignment: Alignment.centerLeft, // ⬅ left align
                             child: Text(
-                              "Providing Solutions To",
+                              "Trusted by Leading Organizations",
                               style: GoogleFonts.outfit(
                                 fontSize: screenWidth * 0.04 * scaleFactor,
                                 fontWeight: FontWeight.w500,
@@ -770,118 +629,77 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         SizedBox(
                           height: screenHeight * 0.02 * scaleFactor,
                         ), // spacing
-                        const AutoScrollSlider(),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top:
-                                screenHeight *
-                                0.03 *
-                                scaleFactor, // space below button
-                            left: screenWidth * 0.01 * scaleFactor,
-                            right: screenWidth * 0.04 * scaleFactor,
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft, // ⬅ left align
-                            child: Text(
-                              "Our Locations",
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.04 * scaleFactor,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                                height: 1,
-                                letterSpacing: 0,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.01 * scaleFactor,
-                            vertical: screenHeight * 0.02 * scaleFactor,
-                          ),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final totalWidth = constraints.maxWidth;
-                              final columnSpacing =
-                                  screenWidth * 0.04 * scaleFactor;
-                              final columnWidth =
-                                  (totalWidth - 2 * columnSpacing) / 3;
-
-                              return RepaintBoundary(
-                                child: Stack(
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // First column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              _img(AppAssets.locationImg1),
-                                              SizedBox(
-                                                height:
-                                                    screenHeight *
-                                                    0.025 *
-                                                    scaleFactor,
-                                              ),
-                                              _img(AppAssets.locationImg4),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(width: columnSpacing),
-
-                                        // Second column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: _img(AppAssets.locationImg2),
-                                        ),
-                                        SizedBox(width: columnSpacing),
-
-                                        // Third column
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              _img(AppAssets.locationImg3),
-                                              SizedBox(
-                                                height:
-                                                    screenHeight *
-                                                    0.025 *
-                                                    scaleFactor,
-                                              ),
-                                              _img(AppAssets.locationImg6),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // Overlapping image — EXACT SAME POSITIONING
-                                    Positioned(
-                                      left: 0,
-                                      bottom: 0,
-                                      child: Container(
-                                        width: columnWidth * 2 + columnSpacing,
-                                        margin: EdgeInsets.only(
-                                          top:
-                                              screenHeight * 0.015 +
-                                              150, // unchanged
-                                        ),
-                                        child: _img(AppAssets.locationImg5),
-                                      ),
-                                    ),
-                                  ],
+                        SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.20,
+                          child: Stack(
+                            children: [
+                              RepaintBoundary(
+                                child: AutoScrollSlider(
+                                  assets: first10,
+                                  reverse: false,
                                 ),
-                              );
-                            },
+                              ),
+                              // Left fade (opaque)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.02,
+                                ),
+                              ),
+
+                              // Right fade (opaque)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.02,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+
+                        SizedBox(
+                          height: screenHeight * 0.03 * scaleFactor,
+                        ), // spacing
+
+                        SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.20,
+                          child: Stack(
+                            children: [
+                              RepaintBoundary(
+                                child: AutoScrollSlider(
+                                  assets: next10,
+                                  reverse: true,
+                                ),
+                              ),
+
+                              // Left fade (opaque)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.02,
+                                ),
+                              ),
+
+                              // Right fade (opaque)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.02,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(
+                          height: screenHeight * 0.02 * scaleFactor,
+                        ), // spacing
+                        // const AutoScrollSlider(),
 
                         // Below the Padding containing "Our Team" and "See all"
                         OurLegacySection(
@@ -889,6 +707,18 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           screenHeight: screenHeight,
                           scaleFactor: scaleFactor,
                           isDark: false,
+                        ),
+                        SizedBox(
+                          height: screenHeight * 0.02,
+                        ), // spacing between sections
+                        // RepaintBoundary(child: const TeamSlider()),
+                        TeamCard(
+                          topImage: AppAssets.tmL1,
+                          bottomImage: AppAssets.tmL2,
+                          onTap: () {
+                            context.pushNamed(AppScreenNames.meetTeamScreen);
+                          },
+                          isLight: true,
                         ),
 
                         // Padding(
@@ -1025,46 +855,6 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         SizedBox(
                           height: screenHeight * 0.02,
                         ), // spacing between sections
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: screenHeight * 0.0001, // space below button
-                            left: screenWidth * 0.01,
-                            right: screenWidth * 0.000015,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Our Team",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                  height: 1,
-                                  letterSpacing: 0,
-                                ),
-                              ),
-                              // TextButton(
-                              //   onPressed: () {
-                              //     // Handle "See all" tap here
-                              //   },
-                              //   child: Text(
-                              //     "See all",
-                              //     style: GoogleFonts.outfit(
-                              //       fontSize: screenWidth * 0.035 * scaleFactor,
-                              //       fontWeight: FontWeight.w500,
-                              //       color: const Color(0xFFD29F2A),
-                              //     ),
-                              //   ),
-                              // ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          height: screenHeight * 0.02,
-                        ), // spacing between sections
-                        const TeamSlider(),
 
                         SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         Padding(
@@ -1081,7 +871,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                "Client Testimonials",
+                                "What Our Clients Say",
                                 style: GoogleFonts.outfit(
                                   fontSize: screenWidth * 0.04 * scaleFactor,
                                   fontWeight: FontWeight.w500,
@@ -1113,6 +903,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           testimonial:
                               "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price.",
                           clientImage: AppAssets.clientImage1,
+                          isLight: true,
                         ),
                         SizedBox(height: screenHeight * 0.001 * scaleFactor),
                         TestimonialCard(
@@ -1120,7 +911,36 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           testimonial:
                               "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
                           clientImage: AppAssets.clientImage2,
+                          isLight: true,
                         ),
+
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top:
+                                screenHeight *
+                                0.03 *
+                                scaleFactor, // space below button
+                            left: screenWidth * 0.01 * scaleFactor,
+                            right: screenWidth * 0.04 * scaleFactor,
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft, // ⬅ left align
+                            child: Text(
+                              "Our Locations",
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.04 * scaleFactor,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                                height: 1,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: screenHeight * 0.02 * scaleFactor,
+                        ), // spacing
+                        CityGrid(isLight: true),
                       ],
                     ),
                   ),

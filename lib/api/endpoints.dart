@@ -60,4 +60,10 @@ class Endpoints {
   static final String updateUserData = "$baseUrl/leads/update";
 
   static final String getTeamMembers = "$baseUrl/team/data";
+
+  static final String deleteQuestion = "$baseUrl/question/delete-question";
+  static final String deleteComment =
+      "$baseUrl/question/comment/delete-comment";
+
+  static String imagesByType(String type) => "$baseUrl/images/get/$type";
 }
