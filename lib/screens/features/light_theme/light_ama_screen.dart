@@ -13,6 +13,7 @@ import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/delete_question_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
+import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
@@ -131,7 +132,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
     //   parent: _animationController,
     //   curve: Curves.easeInOut,
     // );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _providerRef = context.read<QuestionProvider>();
       if (!_initialFetchDone) {
         final provider = context.read<QuestionProvider>();
@@ -140,6 +141,16 @@ class _LightAmaScreenState extends State<LightAmaScreen>
         _initialFetchDone = true;
       }
       _attachQuestionsListener();
+      final phone = await LocalStorageHelper.getString("userPhone");
+      final role = await LocalStorageHelper.getString("userRole");
+      if (!mounted) return;
+      if (phone != null && role != null) {
+        final profileProv = context.read<ProfileProvider>();
+
+        if (!profileProv.hasProfilePhoto) {
+          profileProv.fetchProfilePhoto(context, phone: phone, role: role);
+        }
+      }
     });
 
     _scrollController.addListener(() {
@@ -420,7 +431,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
   bool _canUserAddAnswer() {
     final r = userRole?.toLowerCase() ?? '';
     // print("user role $r");
-    return r == 'admin' || r == 'advocate';
+    return r == 'admin' || r == 'advocate' || r == "legal_expert";
   }
 
   bool _questionHasNoAnswer(Question question) {
@@ -1566,9 +1577,9 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                           question.content ?? '',
                                           style: GoogleFonts.outfit(
                                             color: Colors.black,
-                                            fontSize: screenWidth * 0.050,
+                                            fontSize: screenWidth * 0.040,
                                             fontWeight: FontWeight.w400,
-                                            height: 1.0,
+                                            height: 1.25,
                                           ),
                                         ),
 
@@ -1684,12 +1695,48 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                                 // Answer by Icon + Text
                                                 Row(
                                                   children: [
-                                                    Image.asset(
-                                                      AppAssets.appIcon,
-                                                      width: screenWidth * 0.08,
-                                                      height:
-                                                          screenWidth * 0.08,
-                                                    ),
+                                                    question?.answer?.role ==
+                                                            "legal_expert"
+                                                        ? Consumer<
+                                                            ProfileProvider
+                                                          >(
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                  profileProv,
+                                                                  _,
+                                                                ) {
+                                                                  return CircleAvatar(
+                                                                    radius:
+                                                                        screenWidth *
+                                                                        0.035,
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .grey
+                                                                            .shade300,
+                                                                    backgroundImage:
+                                                                        profileProv.hasProfilePhoto &&
+                                                                            profileProv.profilePhotoUrl !=
+                                                                                null
+                                                                        ? NetworkImage(
+                                                                            "${profileProv.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                                                          )
+                                                                        : const AssetImage(
+                                                                                AppAssets.userIcon,
+                                                                              )
+                                                                              as ImageProvider,
+                                                                  );
+                                                                },
+                                                          )
+                                                        : Image.asset(
+                                                            AppAssets.appIcon,
+                                                            width:
+                                                                screenWidth *
+                                                                0.08,
+                                                            height:
+                                                                screenWidth *
+                                                                0.08,
+                                                          ),
                                                     SizedBox(
                                                       width:
                                                           screenWidth * 0.025,

@@ -233,7 +233,7 @@ class _DarkOverViewCaseDeskScreenState
           children: [
             /// Main Title
             Text(
-              "My Banking Details",
+              "My Details",
               style: GoogleFonts.outfit(
                 fontSize: screenWidth * 0.05, // responsive ~20px
                 fontWeight: FontWeight.w400,
@@ -246,7 +246,7 @@ class _DarkOverViewCaseDeskScreenState
 
             /// Subtitle
             Text(
-              "Your verified financial details, safely stored",
+              "Your details safely stored here",
               style: GoogleFonts.outfit(
                 fontSize: screenWidth * 0.035, // responsive ~16px
                 fontWeight: FontWeight.w300,
@@ -619,10 +619,12 @@ class _DarkOverViewCaseDeskScreenState
                     context.pushNamed(AppScreenNames.bankDetailsScreen);
                   },
                 ),
+                SizedBox(height: screenHeight * 0.02),
                 // SizedBox(height: screenHeight * 0.02),
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
+                  padding: EdgeInsets.zero,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisSpacing: screenWidth * 0.04,
                   mainAxisSpacing: screenHeight * 0.025,
@@ -654,13 +656,13 @@ class _DarkOverViewCaseDeskScreenState
                   ],
                 ),
 
-                SizedBox(height: screenHeight * 0.03),
+                SizedBox(height: screenHeight * 0.02),
 
                 supportHelpCard(
                   screenWidth: screenWidth,
                   screenHeight: screenHeight,
                 ),
-                SizedBox(height: screenHeight * 0.03),
+                SizedBox(height: screenHeight * 0.02),
                 GestureDetector(
                   onTap: () async {
                     await openBlog();

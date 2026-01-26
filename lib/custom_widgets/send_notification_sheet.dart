@@ -22,6 +22,7 @@ class _SendNotificationSheetState extends State<SendNotificationSheet> {
   bool allClients = false;
   bool allAdvocates = false;
   bool allUsers = false;
+  bool allLegalExperts = false;
 
   // Weekly switch and selection
   bool weeklyNotification = false;
@@ -35,7 +36,10 @@ class _SendNotificationSheetState extends State<SendNotificationSheet> {
   bool get isFormValid =>
       _titleController.text.trim().isNotEmpty &&
       _bodyController.text.trim().isNotEmpty &&
-      ((allClients || allAdvocates || allUsers) || // regular roles
+      ((allClients ||
+              allAdvocates ||
+              allUsers ||
+              allLegalExperts) || // regular roles
           (weeklyNotification && selectedWeeks.containsValue(true))); // weekly
 
   @override
@@ -300,6 +304,19 @@ class _SendNotificationSheetState extends State<SendNotificationSheet> {
                             onChanged: (val) =>
                                 setState(() => allUsers = val ?? false),
                           ),
+                          CheckboxListTile(
+                            activeColor: const Color(0xFFD29F2A),
+                            title: Text(
+                              "All Legal Experts",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.04 * 0.85,
+                              ),
+                            ),
+                            value: allLegalExperts,
+                            onChanged: (val) =>
+                                setState(() => allLegalExperts = val ?? false),
+                          ),
                         ],
 
                         SizedBox(height: screenHeight * 0.02),
@@ -345,6 +362,10 @@ class _SendNotificationSheetState extends State<SendNotificationSheet> {
                                           selectedTopics.add("all_advocates");
                                         if (allUsers)
                                           selectedTopics.add("all_users");
+                                        if (allLegalExperts)
+                                          selectedTopics.add(
+                                            "all_legal_experts",
+                                          );
 
                                         await notificationProvider
                                             .sendNotification(

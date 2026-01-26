@@ -74,7 +74,7 @@ class _OurLegacySection extends State<OurLegacySection> {
         // 🔹 Title
         Padding(
           padding: EdgeInsets.only(
-            top: widget.screenHeight * 0.03,
+            top: widget.screenHeight * 0.02,
             left: widget.screenWidth * 0.01,
             right: widget.screenWidth * 0.04,
           ),
@@ -83,7 +83,7 @@ class _OurLegacySection extends State<OurLegacySection> {
             child: Text(
               isFounderView ? "Our Founder" : "Our Legacy",
               style: GoogleFonts.outfit(
-                fontSize: widget.screenWidth * 0.04 * widget.scaleFactor,
+                fontSize: widget.screenWidth * 0.045 * widget.scaleFactor,
                 fontWeight: FontWeight.w500,
                 color: widget.isDark ? Colors.white : Colors.black,
                 height: 1,
@@ -108,7 +108,7 @@ class _OurLegacySection extends State<OurLegacySection> {
                     context,
                     imagePath: AppAssets.ourFoundImg,
                     title: "Anuj Anand Malik",
-                    subtitle: "Founder & Legal Consultant",
+                    subtitle: "Founder",
                     description:
                         "Anuj Anand Malik, advocate and founder of AMA Legal Solutions, leads with a mission to simplify and modernize legal services. His focus on client-centric solutions and financial law continues the legacy of innovation and integrity.",
                   ),

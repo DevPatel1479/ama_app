@@ -416,6 +416,9 @@ class FirebaseMessagingService {
         case 'user':
           topic = 'all_users';
           break;
+        case 'legal_expert':
+          topic = 'all_legal_experts';
+          break;
 
         default:
           print('⚠️ Unknown user role for topic subscription: $userRole');
@@ -452,6 +455,9 @@ class FirebaseMessagingService {
           break;
         case 'user':
           topic = 'all_users';
+          break;
+        case 'legal_expert':
+          topic = 'all_legal_experts';
           break;
         default:
           print('⚠️ Unknown user role for topic unsubscription: $userRole');

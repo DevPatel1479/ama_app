@@ -33,74 +33,75 @@ Widget buildTimelineStep({
   final day = DateFormat('EEE').format(date); // Mon
   final formattedDate = DateFormat('d MMM yyyy').format(date);
 
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
+  return Stack(
+    clipBehavior: Clip.none,
     children: [
-      /// ICON + LINE
-      Column(
-        children: [
-          Image.asset(
-            isLight ? AppAssets.lightDoneIcon : AppAssets.doneIcon,
-            width: 22,
-            height: 22,
-          ),
-
-          if (!isLast)
-            Container(
-              width: 2,
-              height: 90,
-              margin: const EdgeInsets.only(top: 2),
-              color: const Color(0xFFD29F2A),
-            ),
-        ],
-      ),
-
-      const SizedBox(width: 14),
-
-      /// CONTENT CARD
-      Expanded(
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: isLight
-                ? const Color.fromARGB(255, 217, 188, 121)
-                : const Color.fromRGBO(45, 35, 25, 0.8),
-
-            boxShadow: const [
-              BoxShadow(color: Colors.black54, blurRadius: 5.5),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// REMARK TEXT
-              Text(
-                remarks,
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: isLight ? Colors.black : Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              /// DATE BOTTOM RIGHT
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Text(
-                  "$day, $formattedDate",
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w300,
-                    color: isLight ? Colors.black : Colors.white70,
-                  ),
-                ),
-              ),
-            ],
-          ),
+      /// CONNECTOR LINE
+      if (!isLast)
+        Positioned(
+          left: 11, // half of icon size (22 / 2)
+          top: 22,
+          bottom: -26,
+          child: Container(width: 2, color: const Color(0xFFD29F2A)),
         ),
+
+      /// CONTENT ROW
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// ICON
+          SizedBox(
+            width: 22,
+            child: Image.asset(
+              isLight ? AppAssets.lightDoneIcon : AppAssets.doneIcon,
+              width: 22,
+              height: 22,
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          /// CONTENT CARD
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: isLight
+                    ? const Color.fromARGB(255, 217, 188, 121)
+                    : const Color.fromRGBO(45, 35, 25, 0.8),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black54, blurRadius: 5.5),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    remarks,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: isLight ? Colors.black : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Text(
+                      "$day, $formattedDate",
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        color: isLight ? Colors.black : Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     ],
   );

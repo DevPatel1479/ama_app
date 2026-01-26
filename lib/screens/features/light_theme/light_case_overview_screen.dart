@@ -212,7 +212,7 @@ class _LightOverViewCaseDeskScreenState
           children: [
             /// Main Title
             Text(
-              "My Banking Details",
+              "My Details",
               style: GoogleFonts.outfit(
                 fontSize: screenWidth * 0.05, // responsive ~20px
                 fontWeight: FontWeight.w400,
@@ -225,7 +225,7 @@ class _LightOverViewCaseDeskScreenState
 
             /// Subtitle
             Text(
-              "Your verified financial details, safely stored",
+              "Your details safely stored here",
               style: GoogleFonts.outfit(
                 fontSize: screenWidth * 0.035, // responsive ~16px
                 fontWeight: FontWeight.w300,
@@ -382,53 +382,52 @@ class _LightOverViewCaseDeskScreenState
                           height: 1.0,
                         ),
                         children: [
-                          const TextSpan(
-                            text: "One ",
-                            style: TextStyle(color: Color(0xffD29F2A)),
-                          ),
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.baseline,
-                            baseline: TextBaseline.alphabetic,
-                            child: ShaderMask(
-                              shaderCallback: (bounds) {
-                                return const LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Color(0xFFC79624),
-                                    Color(0xFF2D2319),
-                                  ],
-                                  stops: [0.0, 0.4712],
-                                ).createShader(
-                                  Rect.fromLTWH(
-                                    0,
-                                    0,
-                                    bounds.width,
-                                    bounds.height,
-                                  ),
-                                );
-                              },
-                              blendMode: BlendMode.srcIn,
-                              child: Text(
-                                "se",
-                                style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.11,
-                                  fontWeight: FontWeight.w300,
-                                  height: 1.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
+                          // const TextSpan(
+                          //   text: "One ",
+                          //   style: TextStyle(color: Color(0xffD29F2A)),
+                          // ),
+                          // WidgetSpan(
+                          //   alignment: PlaceholderAlignment.baseline,
+                          //   baseline: TextBaseline.alphabetic,
+                          //   child: ShaderMask(
+                          //     shaderCallback: (bounds) {
+                          //       return const LinearGradient(
+                          //         begin: Alignment.centerLeft,
+                          //         end: Alignment.centerRight,
+                          //         colors: [
+                          //           Color(0xFFC79624),
+                          //           Color(0xFF2D2319),
+                          //         ],
+                          //         stops: [0.0, 0.4712],
+                          //       ).createShader(
+                          //         Rect.fromLTWH(
+                          //           0,
+                          //           0,
+                          //           bounds.width,
+                          //           bounds.height,
+                          //         ),
+                          //       );
+                          //     },
+                          //     blendMode: BlendMode.srcIn,
+                          //     child: Text(
+                          //       "se",
+                          //       style: GoogleFonts.outfit(
+                          //         fontSize: screenWidth * 0.11,
+                          //         fontWeight: FontWeight.w300,
+                          //         height: 1.0,
+                          //         color: Colors.white,
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
 
-                          /// "cure"
+                          // /// "cure"
+                          // const TextSpan(
+                          //   text: "cure",
+                          //   style: TextStyle(color: Colors.black),
+                          // ),
                           const TextSpan(
-                            text: "cure",
-                            style: TextStyle(color: Colors.black),
-                          ),
-
-                          const TextSpan(
-                            text: " desk for your cases",
+                            text: "One secure desk for your cases",
                             style: TextStyle(color: Colors.black),
                           ),
                         ],
@@ -681,7 +680,7 @@ class _LightOverViewCaseDeskScreenState
                       mainAxisSpacing: screenHeight * 0.025,
 
                       // 🔥 important — gives more vertical space
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.95,
 
                       children: [
                         _gridCard(
@@ -895,7 +894,7 @@ class _LightOverViewCaseDeskScreenState
       borderRadius: BorderRadius.circular(15),
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(screenWidth * 0.04),
+        padding: EdgeInsets.all(screenWidth * 0.02),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           color: const Color.fromARGB(255, 217, 188, 121),
@@ -915,7 +914,7 @@ class _LightOverViewCaseDeskScreenState
               color: Colors.black,
             ),
 
-            SizedBox(height: screenHeight * 0.015),
+            SizedBox(height: screenHeight * 0.035),
 
             /// TITLE
             Text(

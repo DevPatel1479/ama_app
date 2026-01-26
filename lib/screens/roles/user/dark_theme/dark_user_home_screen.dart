@@ -122,16 +122,18 @@ Widget connectLawyerCard({
 }
 
 Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
   return GridView.builder(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
     itemCount: 2,
 
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 0.98, // 🔥 VERY IMPORTANT
+      crossAxisSpacing: screenWidth * 0.04,
+      mainAxisSpacing: screenHeight * 0.025,
+      childAspectRatio: 1.10,
     ),
 
     itemBuilder: (context, index) {
@@ -345,7 +347,7 @@ class TeamCard extends StatelessWidget {
     final bottomImageSize = cardHeight * 0.6;
 
     // ✅ responsive text padding
-    final textLeftPadding = cardWidth * 0.015;
+    final textLeftPadding = cardWidth * 0.055;
     final textSpacing = cardHeight * 0.08;
 
     return Material(
@@ -404,7 +406,9 @@ class TeamCard extends StatelessWidget {
                       child: Text(
                         "View Team",
                         style: TextStyle(
-                          color: isLight ? Colors.white : Color(0xFFD29F2A),
+                          color: isLight
+                              ? const Color(0xFF2D2319)
+                              : Color(0xFFD29F2A),
                           fontFamily: "Outfit",
                           fontSize: 16,
                           height: 1,
@@ -459,9 +463,9 @@ class TeamCard extends StatelessWidget {
 class CityGrid extends StatelessWidget {
   final List<String> row1 = ["New Delhi", "Mumbai", "Kolkata"];
 
-  final List<String> row2 = ["Chennai", "Bangalore"];
+  final List<String> row2 = ["Chennai", "Bengaluru"];
 
-  final List<String> row3 = ["Jaipur", "Gurgaon", "Hyderabad"];
+  final List<String> row3 = ["Jaipur", "Gurugram", "Hyderabad"];
   final bool isLight;
   CityGrid({super.key, this.isLight = false});
 
@@ -471,9 +475,10 @@ class CityGrid extends StatelessWidget {
 
     final double cardWidth = size.width * 0.27;
     final double cardHeight = size.height * 0.05;
-    final double spacing = size.width * 0.04;
+    final double spacing = size.width * 0.03;
 
     return Column(
+      // crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         /// ───────── ROW 1 (3 ITEMS)
         _buildRow(
@@ -486,7 +491,7 @@ class CityGrid extends StatelessWidget {
           isLight: isLight,
         ),
 
-        SizedBox(height: size.height * 0.025),
+        SizedBox(height: size.height * 0.015),
 
         /// ───────── ROW 2 (2 ITEMS CENTERED)
         _buildRow(
@@ -499,7 +504,7 @@ class CityGrid extends StatelessWidget {
           isLight: isLight,
         ),
 
-        SizedBox(height: size.height * 0.025),
+        SizedBox(height: size.height * 0.015),
 
         /// ───────── ROW 3 (3 ITEMS)
         _buildRow(
@@ -527,7 +532,7 @@ class CityGrid extends StatelessWidget {
     return Row(
       mainAxisAlignment: alignCenter
           ? MainAxisAlignment.center
-          : MainAxisAlignment.spaceBetween,
+          : MainAxisAlignment.center,
       children: List.generate(cities.length * 2 - 1, (index) {
         if (index.isOdd) {
           return SizedBox(width: spacing);
@@ -546,11 +551,11 @@ class CityGrid extends StatelessWidget {
               LocationLauncher.launchByIndex(2);
             } else if (city == "Chennai") {
               LocationLauncher.launchByIndex(3);
-            } else if (city == "Bangalore") {
+            } else if (city == "Bengaluru") {
               LocationLauncher.launchByIndex(4);
             } else if (city == "Jaipur") {
               LocationLauncher.launchByIndex(5);
-            } else if (city == "Gurgaon") {
+            } else if (city == "Gurugram") {
               LocationLauncher.launchByIndex(6);
             } else if (city == "Hyderabad") {
               LocationLauncher.launchByIndex(7);
@@ -702,6 +707,11 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
             SizedBox(
               height: itemHeight,
               child: PageView.builder(
+                onPageChanged: (index) {
+                  setState(() {
+                    _current = index; // <-- update the dot indicator
+                  });
+                },
                 controller: _controller,
                 itemCount: images.length,
                 itemBuilder: (_, index) {
@@ -760,13 +770,14 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(images.length, (i) {
                   final active = _current == i;
+                  final size = active ? 12.0 : 8.0; // diameter of circle
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
                     margin: const EdgeInsets.symmetric(horizontal: 6),
-                    width: active ? 20 : 10,
-                    height: 10,
+                    width: size,
+                    height: size,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
+                      shape: BoxShape.circle, // <-- this ensures a circle
                       color: active ? Colors.white : const Color(0xFF909090),
                     ),
                   );
@@ -907,7 +918,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Consumer<ProfileProvider>(
                 builder: (context, provider, child) {
@@ -946,7 +957,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
               ),
               SizedBox(width: screenWidth * 0.03 * scaleFactor),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     "Hi, ",
@@ -1063,7 +1074,8 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                   ),
                   if (userRole == "client" ||
                       userRole == "advocate" ||
-                      userRole == "user")
+                      userRole == "user" ||
+                      userRole == "legal_expert")
                     Positioned(
                       right: 2,
                       top: 2,
@@ -1153,9 +1165,9 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -1165,312 +1177,387 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
             ),
           ),
 
-          Positioned.fill(
-            child: SafeArea(
+          NestedScrollView(
+            physics: const BouncingScrollPhysics(),
+            headerSliverBuilder: (context, innerBoxScrolled) {
+              return [
+                SliverOverlapAbsorber(
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                    context,
+                  ),
+                  sliver: SliverAppBar(
+                    pinned: true,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    toolbarHeight: 63,
+                    automaticallyImplyLeading: false,
+
+                    flexibleSpace: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                        child: Container(
+                          padding: EdgeInsets.only(
+                            top: MediaQuery.of(context).padding.top,
+                          ),
+                          color: const Color(0xFF171717).withOpacity(0.65),
+                          child: _buildAppBarForHomeScreen(
+                            context: context,
+                            userName: userName,
+                            userEmail: userEmail,
+                            userPhone: userPhone,
+                            userRole: userRole,
+                            avatarDiameter: avatarDiameter,
+                            fontSize: fontSize,
+                            iconSize: iconSize,
+                            dotSize: dotSize,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ];
+            },
+            body: SafeArea(
               bottom: false,
-
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  top:
-                      70 +
-                      MediaQuery.of(
-                        context,
-                      ).padding.top, // space for fixed appbar
-                  left: screenWidth * 0.04 * scaleFactor,
-                  right: screenWidth * 0.04 * scaleFactor,
-                  bottom: contentBottomPadding,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RealtimeImageCarousel(type: "home"),
-                    SizedBox(height: screenHeight * 0.04 * scaleFactor),
-                    if (userRole?.toLowerCase() == "client")
-                      connectLawyerGrid(context),
-                    statOverviewCard(context),
-                    SizedBox(height: screenHeight * 0.02 * scaleFactor),
-
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top:
-                            screenHeight *
-                            0.03 *
-                            scaleFactor, // space below button
-                        left: screenWidth * 0.01 * scaleFactor,
-                        right: screenWidth * 0.04 * scaleFactor,
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft, // ⬅ left align
-                        child: Text(
-                          "Trusted by Leading Organizations",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.04 * scaleFactor,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            height: 1,
-                            letterSpacing: 0,
-                          ),
+              top: false,
+              child: Builder(
+                builder: (context) {
+                  return CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    slivers: [
+                      /// pushes content under appbar
+                      SliverOverlapInjector(
+                        handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                          context,
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      height: screenHeight * 0.02 * scaleFactor,
-                    ), // spacing
-                    SizedBox(
-                      height: MediaQuery.of(context).size.width * 0.20,
-                      child: Stack(
-                        children: [
-                          RepaintBoundary(
-                            child: AutoScrollSlider(
-                              assets: first10,
-                              reverse: false,
-                            ),
-                          ),
-                          // Left fade (opaque)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.02,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Color(0xFF171717), // full background color
-                                    Color(
-                                      0xFF171717,
-                                    ).withOpacity(0.0), // fading
-                                    // effectively "fading into image"
-                                  ],
-                                  stops: [0.0, 1.0],
+
+                      SliverPadding(
+                        padding: EdgeInsets.only(
+                          top: screenHeight * 0.045,
+                          left: screenWidth * 0.04 * scaleFactor,
+                          right: screenWidth * 0.04 * scaleFactor,
+                          bottom: contentBottomPadding,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            RealtimeImageCarousel(type: "home"),
+                            SizedBox(height: screenHeight * 0.04 * scaleFactor),
+                            if (userRole?.toLowerCase() == "client")
+                              connectLawyerGrid(context),
+                            statOverviewCard(context),
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.03 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.04 * scaleFactor,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft, // ⬅ left align
+                                child: Text(
+                                  "Trusted by Leading Organizations",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.04 * scaleFactor,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1,
+                                    letterSpacing: 0,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            SizedBox(
+                              height: screenHeight * 0.02 * scaleFactor,
+                            ), // spacing
+                            SizedBox(
+                              height: MediaQuery.of(context).size.width * 0.20,
+                              child: Stack(
+                                children: [
+                                  RepaintBoundary(
+                                    child: AutoScrollSlider(
+                                      assets: first10,
+                                      reverse: false,
+                                    ),
+                                  ),
+                                  // Left fade (opaque)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.02,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                          colors: [
+                                            Color(
+                                              0xFF171717,
+                                            ), // full background color
+                                            Color(
+                                              0xFF171717,
+                                            ).withOpacity(0.0), // fading
+                                            // effectively "fading into image"
+                                          ],
+                                          stops: [0.0, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
 
-                          // Right fade (opaque)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.02,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerRight,
-                                  end: Alignment.centerLeft,
-                                  colors: [
-                                    Color(0xFF171717), // full background color
-                                    Color(
-                                      0xFF171717,
-                                    ).withOpacity(0.0), // fading
-                                  ],
-                                  stops: [0.0, 1.0],
+                                  // Right fade (opaque)
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Container(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.02,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerRight,
+                                          end: Alignment.centerLeft,
+                                          colors: [
+                                            Color(
+                                              0xFF171717,
+                                            ), // full background color
+                                            Color(
+                                              0xFF171717,
+                                            ).withOpacity(0.0), // fading
+                                          ],
+                                          stops: [0.0, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(
+                              height: screenHeight * 0.03 * scaleFactor,
+                            ), // spacing
+
+                            SizedBox(
+                              height: MediaQuery.of(context).size.width * 0.20,
+                              child: Stack(
+                                children: [
+                                  RepaintBoundary(
+                                    child: AutoScrollSlider(
+                                      assets: next10,
+                                      reverse: true,
+                                    ),
+                                  ),
+
+                                  // Left fade (opaque)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.02,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                          colors: [
+                                            Color(
+                                              0xFF171717,
+                                            ), // full background color
+                                            Color(
+                                              0xFF171717,
+                                            ).withOpacity(0.0), // fading
+                                            // effectively "fading into image"
+                                          ],
+                                          stops: [0.0, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Right fade (opaque)
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Container(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.02,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerRight,
+                                          end: Alignment.centerLeft,
+                                          colors: [
+                                            Color(
+                                              0xFF171717,
+                                            ), // full background color
+                                            Color(
+                                              0xFF171717,
+                                            ).withOpacity(0.0), // fading
+                                          ],
+                                          stops: [0.0, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Below the Padding containing "Our Team" and "See all"
+                            RepaintBoundary(
+                              child: OurLegacySection(
+                                screenWidth: screenWidth,
+                                screenHeight: screenHeight,
+                                scaleFactor: scaleFactor,
+                                isDark: true,
+                              ),
+                            ),
+
+                            SizedBox(
+                              height: screenHeight * 0.02,
+                            ), // spacing between sections
+                            // RepaintBoundary(child: const TeamSlider()),
+                            TeamCard(
+                              topImage: AppAssets.tmL2,
+                              bottomImage: AppAssets.tmL1,
+                              onTap: () {
+                                context.pushNamed(
+                                  AppScreenNames.meetTeamScreen,
+                                );
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.0001 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.000015 * scaleFactor,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "What Our Clients Say",
+                                    style: GoogleFonts.outfit(
+                                      fontSize:
+                                          screenWidth * 0.04 * scaleFactor,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     // Handle "See all" tap here
+                                  //   },
+                                  //   child: Text(
+                                  //     "See all",
+                                  //     style: GoogleFonts.outfit(
+                                  //       fontSize: screenWidth * 0.035 * scaleFactor,
+                                  //       fontWeight: FontWeight.w500,
+                                  //       color: const Color(0xFFD29F2A),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
+                            ),
+                            // Below the Padding containing "Our Team" and "See all"
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                            TestimonialCard(
+                              name: "Pratichi Pradhan",
+                              testimonial:
+                                  "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price.",
+                              clientImage: AppAssets.googleReviewImg,
+                            ),
+                            SizedBox(
+                              height: screenHeight * 0.001 * scaleFactor,
+                            ),
+                            TestimonialCard(
+                              name: "Sk Nazir",
+                              testimonial:
+                                  "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
+                              clientImage: AppAssets.googleReviewImg,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top:
+                                    screenHeight *
+                                    0.03 *
+                                    scaleFactor, // space below button
+                                left: screenWidth * 0.01 * scaleFactor,
+                                right: screenWidth * 0.04 * scaleFactor,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft, // ⬅ left align
+                                child: Text(
+                                  "Our Locations",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.04 * scaleFactor,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1,
+                                    letterSpacing: 0,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(
-                      height: screenHeight * 0.03 * scaleFactor,
-                    ), // spacing
-
-                    SizedBox(
-                      height: MediaQuery.of(context).size.width * 0.20,
-                      child: Stack(
-                        children: [
-                          RepaintBoundary(
-                            child: AutoScrollSlider(
-                              assets: next10,
-                              reverse: true,
-                            ),
-                          ),
-
-                          // Left fade (opaque)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.02,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Color(0xFF171717), // full background color
-                                    Color(
-                                      0xFF171717,
-                                    ).withOpacity(0.0), // fading
-                                    // effectively "fading into image"
-                                  ],
-                                  stops: [0.0, 1.0],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Right fade (opaque)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.02,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerRight,
-                                  end: Alignment.centerLeft,
-                                  colors: [
-                                    Color(0xFF171717), // full background color
-                                    Color(
-                                      0xFF171717,
-                                    ).withOpacity(0.0), // fading
-                                  ],
-                                  stops: [0.0, 1.0],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Below the Padding containing "Our Team" and "See all"
-                    RepaintBoundary(
-                      child: OurLegacySection(
-                        screenWidth: screenWidth,
-                        screenHeight: screenHeight,
-                        scaleFactor: scaleFactor,
-                        isDark: true,
-                      ),
-                    ),
-
-                    SizedBox(
-                      height: screenHeight * 0.02,
-                    ), // spacing between sections
-                    // RepaintBoundary(child: const TeamSlider()),
-                    TeamCard(
-                      topImage: AppAssets.tmL1,
-                      bottomImage: AppAssets.tmL2,
-                      onTap: () {
-                        context.pushNamed(AppScreenNames.meetTeamScreen);
-                      },
-                    ),
-                    SizedBox(height: screenHeight * 0.02 * scaleFactor),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top:
-                            screenHeight *
-                            0.0001 *
-                            scaleFactor, // space below button
-                        left: screenWidth * 0.01 * scaleFactor,
-                        right: screenWidth * 0.000015 * scaleFactor,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "What Our Clients Say",
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.04 * scaleFactor,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              height: 1,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                          // TextButton(
-                          //   onPressed: () {
-                          //     // Handle "See all" tap here
-                          //   },
-                          //   child: Text(
-                          //     "See all",
-                          //     style: GoogleFonts.outfit(
-                          //       fontSize: screenWidth * 0.035 * scaleFactor,
-                          //       fontWeight: FontWeight.w500,
-                          //       color: const Color(0xFFD29F2A),
-                          //     ),
-                          //   ),
-                          // ),
-                        ],
-                      ),
-                    ),
-                    // Below the Padding containing "Our Team" and "See all"
-                    SizedBox(height: screenHeight * 0.001 * scaleFactor),
-                    TestimonialCard(
-                      name: "Pratichi Pradhan",
-                      testimonial:
-                          "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price.",
-                      clientImage: AppAssets.clientImage1,
-                    ),
-                    SizedBox(height: screenHeight * 0.001 * scaleFactor),
-                    TestimonialCard(
-                      name: "Sk Nazir",
-                      testimonial:
-                          "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
-                      clientImage: AppAssets.clientImage2,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top:
-                            screenHeight *
-                            0.03 *
-                            scaleFactor, // space below button
-                        left: screenWidth * 0.01 * scaleFactor,
-                        right: screenWidth * 0.04 * scaleFactor,
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft, // ⬅ left align
-                        child: Text(
-                          "Our Locations",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.04 * scaleFactor,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            height: 1,
-                            letterSpacing: 0,
-                          ),
+                            SizedBox(
+                              height: screenHeight * 0.02 * scaleFactor,
+                            ), // spacing
+                            CityGrid(),
+                          ]),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      height: screenHeight * 0.02 * scaleFactor,
-                    ), // spacing
-                    CityGrid(),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
 
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
-                  height: 63 + MediaQuery.of(context).padding.top,
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top,
-                  ),
-                  color: const Color(0xFF171717).withOpacity(0.65),
+          // Positioned(
+          //   top: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: ClipRect(
+          //     child: BackdropFilter(
+          //       filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          //       child: Container(
+          //         height: 63 + MediaQuery.of(context).padding.top,
+          //         padding: EdgeInsets.only(
+          //           top: MediaQuery.of(context).padding.top,
+          //         ),
+          //         color: const Color(0xFF171717).withOpacity(0.65),
 
-                  child: _buildAppBarForHomeScreen(
-                    context: context,
-                    userName: userName,
-                    userEmail: userEmail,
-                    userPhone: userPhone,
-                    userRole: userRole,
-                    avatarDiameter: avatarDiameter,
-                    fontSize: fontSize,
-                    iconSize: iconSize,
-                    dotSize: dotSize,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          //         child: _buildAppBarForHomeScreen(
+          //           context: context,
+          //           userName: userName,
+          //           userEmail: userEmail,
+          //           userPhone: userPhone,
+          //           userRole: userRole,
+          //           avatarDiameter: avatarDiameter,
+          //           fontSize: fontSize,
+          //           iconSize: iconSize,
+          //           dotSize: dotSize,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // ========== OVERLAY: CustomBottomNav (always on top) ==========
           Positioned(

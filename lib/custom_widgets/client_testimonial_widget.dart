@@ -18,14 +18,14 @@ class TestimonialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    final double imageSize = size.width * 0.14;
+    final double imageSize = size.width * 0.09;
     final double nameFontSize = size.width * 0.032;
     final double testimonialFontSize = size.width * 0.033;
 
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: size.width * 0.02,
-        vertical: size.height * 0.012,
+        vertical: size.height * 0.007,
       ),
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -69,11 +69,11 @@ class TestimonialCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
+                      // BoxShadow(
+                      //   color: Colors.black.withOpacity(0.25),
+                      //   blurRadius: 6,
+                      //   offset: const Offset(0, 3),
+                      // ),
                     ],
                   ),
                   child: ClipOval(

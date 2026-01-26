@@ -6,8 +6,7 @@ import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
-import 'package:ama_legal_solutions/custom_widgets/team_image_slider.dart';
-import 'package:ama_legal_solutions/custom_widgets/video_lazy_loading_widget.dart';
+
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
@@ -120,8 +119,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
     final contentBottomPadding =
         navHeight + (bottomInset > 0 ? bottomInset * 0.6 : 0.0) + 12.0;
     final headerVisualHeight = screenHeight * 0.03; // tweak if you need taller
-    final appBarHeight =
-        MediaQuery.of(context).padding.top + headerVisualHeight;
+
     final role = context.watch<RealTimeRoleProvider>().role;
     userRole = role;
     SystemChrome.setSystemUIOverlayStyle(
@@ -135,58 +133,6 @@ class _LightHomeScreen extends State<LightHomeScreen> {
     // Responsive button
 
     // Single stat widget
-    Widget statItem(String number, String label) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: screenWidth * 0.18 * scaleFactor,
-            child: Text(
-              number,
-              style: GoogleFonts.outfit(
-                fontSize: statNumberFont * scaleFactor,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-                height: 1,
-                letterSpacing: -0.019 * statNumberFont,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: screenWidth * 0.18 * scaleFactor,
-            child: Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: statLabelFont * scaleFactor,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-                height: 1,
-                letterSpacing: -0.019 * statLabelFont,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Vertical separator
-    Widget verticalLine(double height) {
-      return Container(
-        width: 2,
-        height: height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF957223), Colors.white, Color(0xFF44351B)],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       extendBody: true,
@@ -228,7 +174,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
             children: [
               // Left: Avatar + "Hi, name"
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Consumer<ProfileProvider>(
                     builder: (context, provider, child) {
@@ -265,7 +211,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                   ),
                   SizedBox(width: screenWidth * 0.03 * scaleFactor),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         "Hi, ",
@@ -282,7 +228,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: fontSize * scaleFactor,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF000000),
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -387,7 +333,8 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                       ),
                       if (userRole == "client" ||
                           userRole == "advocate" ||
-                          userRole == "user")
+                          userRole == "user" ||
+                          userRole == "legal_expert")
                         Positioned(
                           right: -2,
                           top: -2,
@@ -601,7 +548,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
 
                         statOverviewCard(context, isLight: true),
 
-                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                        SizedBox(height: screenHeight * 0.01 * scaleFactor),
 
                         Padding(
                           padding: EdgeInsets.only(
@@ -617,7 +564,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                             child: Text(
                               "Trusted by Leading Organizations",
                               style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.04 * scaleFactor,
+                                fontSize: screenWidth * 0.045 * scaleFactor,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
                                 height: 1,
@@ -709,12 +656,12 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           isDark: false,
                         ),
                         SizedBox(
-                          height: screenHeight * 0.02,
+                          height: screenHeight * 0.04,
                         ), // spacing between sections
                         // RepaintBoundary(child: const TeamSlider()),
                         TeamCard(
-                          topImage: AppAssets.tmL1,
-                          bottomImage: AppAssets.tmL2,
+                          topImage: AppAssets.tmL2,
+                          bottomImage: AppAssets.tmL1,
                           onTap: () {
                             context.pushNamed(AppScreenNames.meetTeamScreen);
                           },
@@ -852,11 +799,10 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         //     },
                         //   ),
                         // ),
-                        SizedBox(
-                          height: screenHeight * 0.02,
-                        ), // spacing between sections
-
-                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                        // SizedBox(
+                        //   height: screenHeight * 0.02,
+                        // ), // spacing between sections
+                        SizedBox(height: screenHeight * 0.04 * scaleFactor),
                         Padding(
                           padding: EdgeInsets.only(
                             top:
@@ -873,7 +819,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                               Text(
                                 "What Our Clients Say",
                                 style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
+                                  fontSize: screenWidth * 0.045 * scaleFactor,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black,
                                   height: 1,
@@ -897,20 +843,20 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           ),
                         ),
                         // Below the Padding containing "Our Team" and "See all"
-                        SizedBox(height: screenHeight * 0.001 * scaleFactor),
+                        SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         TestimonialCard(
                           name: "Pratichi Pradhan",
                           testimonial:
                               "Phenomenal services! Turnaround time was half day to get the papers in order, extend a reasonable price.",
-                          clientImage: AppAssets.clientImage1,
+                          clientImage: AppAssets.googleReviewImg,
                           isLight: true,
                         ),
-                        SizedBox(height: screenHeight * 0.001 * scaleFactor),
+
                         TestimonialCard(
                           name: "Sk Nazir",
                           testimonial:
                               "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
-                          clientImage: AppAssets.clientImage2,
+                          clientImage: AppAssets.googleReviewImg,
                           isLight: true,
                         ),
 
@@ -918,7 +864,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           padding: EdgeInsets.only(
                             top:
                                 screenHeight *
-                                0.03 *
+                                0.04 *
                                 scaleFactor, // space below button
                             left: screenWidth * 0.01 * scaleFactor,
                             right: screenWidth * 0.04 * scaleFactor,
@@ -928,7 +874,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                             child: Text(
                               "Our Locations",
                               style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.04 * scaleFactor,
+                                fontSize: screenWidth * 0.045 * scaleFactor,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
                                 height: 1,

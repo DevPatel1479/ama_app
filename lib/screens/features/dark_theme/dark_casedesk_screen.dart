@@ -1972,14 +1972,10 @@ class _QueryCardState extends State<QueryCard> {
                     top: screenHeight * 0.012 * scaleFactor,
                   ),
                   decoration: BoxDecoration(
-                    color: widget.isDark == false
-                        ? const Color.fromARGB(255, 217, 188, 121)
-                        : const Color(0xFF2D2319),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: widget.isDark == false
-                          ? const Color(0xFF2D2319)
-                          : const Color(0xFFD29F2A),
+                      color: const Color(0xFFC1A460),
                       width: 1,
                     ),
                   ),
@@ -2001,14 +1997,14 @@ class _QueryCardState extends State<QueryCard> {
                               bottom: screenHeight * 0.008 * scaleFactor,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.20),
+                              color: const Color.fromRGBO(243, 186, 54, 0.4),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.white, width: 1),
+                              border: Border.all(color: Colors.white),
                             ),
                             child: Text(
                               "Expert Remark",
                               style: GoogleFonts.outfit(
-                                color: const Color.fromARGB(255, 9, 168, 38),
+                                color: const Color(0xFF2D2319),
                                 fontSize: 14 * scaleFactor,
                                 fontWeight: FontWeight.w400,
                                 height: 1.0,
@@ -2026,10 +2022,9 @@ class _QueryCardState extends State<QueryCard> {
                             query.remarks!,
                             style: GoogleFonts.outfit(
                               fontSize: 16 * scaleFactor,
-                              fontWeight: FontWeight.w400,
-                              color: widget.isDark == false
-                                  ? const Color(0xFF2D2319)
-                                  : const Color(0xFFD29F2A),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF2D2319),
+
                               height: 1.25, // 125%
                             ),
                           ),
@@ -2043,7 +2038,7 @@ class _QueryCardState extends State<QueryCard> {
                           fontWeight: FontWeight.w400,
                           color: widget.isDark == false
                               ? const Color(0xFF2D2319)
-                              : Colors.white,
+                              : const Color(0xFF2D2319),
                           height: 1.0,
                         ),
                       ),
@@ -2057,26 +2052,26 @@ class _QueryCardState extends State<QueryCard> {
                           fontWeight: FontWeight.w400,
                           color: widget.isDark == false
                               ? const Color(0xFF2D2319)
-                              : Colors.white,
+                              : const Color(0xFF2D2319),
                           height: 1.0,
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.003 * scaleFactor),
+                      // SizedBox(height: screenHeight * 0.003 * scaleFactor),
 
-                      // Resolved By Phone
-                      if (query.resolvedBy?.phone != null &&
-                          query.resolvedBy!.phone!.isNotEmpty)
-                        Text(
-                          "+91 ${query.resolvedBy!.phone!.replaceAll(RegExp(r'^91'), '')}",
-                          style: GoogleFonts.outfit(
-                            fontSize: 15 * scaleFactor,
-                            fontWeight: FontWeight.w400,
-                            color: widget.isDark == false
-                                ? const Color(0xFF2D2319)
-                                : Colors.white,
-                            height: 1.0,
-                          ),
-                        ),
+                      // // Resolved By Phone
+                      // if (query.resolvedBy?.phone != null &&
+                      //     query.resolvedBy!.phone!.isNotEmpty)
+                      //   Text(
+                      //     "+91 ${query.resolvedBy!.phone!.replaceAll(RegExp(r'^91'), '')}",
+                      //     style: GoogleFonts.outfit(
+                      //       fontSize: 15 * scaleFactor,
+                      //       fontWeight: FontWeight.w400,
+                      //       color: widget.isDark == false
+                      //           ? const Color(0xFF2D2319)
+                      //           : Colors.white,
+                      //       height: 1.0,
+                      //     ),
+                      //   ),
                     ],
                   ),
                 ),

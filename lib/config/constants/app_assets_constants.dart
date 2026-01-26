@@ -192,4 +192,6 @@ class AppAssets {
   static const String cmmIcon = "assets/icons/cmm.png";
 
   static const String closeButton = "assets/icons/close_button.png";
+
+  static const String googleReviewImg = "assets/images/google_review.png";
 }

@@ -480,7 +480,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 child: Container(
                   height: kToolbarHeight + MediaQuery.of(context).padding.top,
                   color: const Color(0xFFFFFBF1).withOpacity(0.45),
-                  padding: EdgeInsets.only(left: screenWidth * 0.04),
+                  padding: EdgeInsets.only(
+                    left: screenWidth * 0.04,
+                    top: screenHeight * 0.03,
+                  ),
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [

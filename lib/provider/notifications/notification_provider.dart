@@ -174,7 +174,9 @@ class NotificationProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      showCustomMessage(context, "Error: ${e.toString()}", true);
+      print(e.toString());
+      if (!e.toString().contains("Bad state: No element"))
+        showCustomMessage(context, "Error: ${e.toString()}", true);
     } finally {
       _isLoading = false;
       notifyListeners();
