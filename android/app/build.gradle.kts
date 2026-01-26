@@ -20,7 +20,7 @@ android {
     namespace = "com.ama.ama_legal_solutions"
     compileSdk = 35
     buildToolsVersion = "35.0.0"
-    ndkVersion = "28.0.12433566"
+    
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

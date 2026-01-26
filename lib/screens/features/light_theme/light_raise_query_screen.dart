@@ -182,7 +182,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: screenWidth * 0.050 * scaleFactor,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w300,
                         color: Colors.black,
                         height: 1.0,
                       ),
@@ -194,63 +194,56 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(
-                            // left: screenWidth * 0.10 * scaleFactor,
-                            bottom: screenHeight * 0.015 * scaleFactor,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.04 * scaleFactor,
+                            vertical: screenHeight * 0.010 * scaleFactor,
                           ),
                           child: Text(
                             "Select Service",
                             style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.045 * scaleFactor,
+                              fontSize: screenWidth * 0.055 * scaleFactor,
                               fontWeight: FontWeight.w500,
                               color: Colors.black,
                             ),
                           ),
                         ),
-                        Container(
-                          width: screenWidth * 0.92 * scaleFactor,
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Color.fromRGBO(210, 159, 42, 0.65),
-                                Color.fromRGBO(255, 255, 255, 0.65),
-                              ],
-                            ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.04 * scaleFactor,
+                            vertical: screenHeight * 0.010 * scaleFactor,
                           ),
                           child: Container(
+                            width: double.infinity,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2D2319),
-                              borderRadius: BorderRadius.circular(22),
+                              borderRadius: BorderRadius.circular(25),
+                              color: const Color.fromARGB(255, 217, 188, 121),
                             ),
                             padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.04 * scaleFactor,
-                              vertical: screenHeight * 0.005 * scaleFactor,
+                              horizontal: screenWidth * 0.05 * scaleFactor,
+                              vertical: screenHeight * 0.010 * scaleFactor,
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: selectedService,
-                                dropdownColor: const Color(0xFF2D2319),
-                                icon: const Icon(
-                                  Icons.arrow_drop_down,
-                                  color: Colors.white,
+                                dropdownColor: const Color.fromARGB(
+                                  255,
+                                  217,
+                                  188,
+                                  121,
                                 ),
+                                icon: const Icon(Icons.arrow_drop_down),
                                 isExpanded: true,
                                 borderRadius: BorderRadius.circular(15),
                                 hint: Text(
                                   "Select a Service",
                                   style: GoogleFonts.outfit(
-                                    fontSize: screenWidth * 0.04 * scaleFactor,
-                                    fontWeight: FontWeight.w300,
-                                    color: const Color(0xBFFFFFFF),
+                                    fontSize: screenWidth * 0.04,
+                                    color: Colors.black.withOpacity(0.6),
                                   ),
                                 ),
                                 style: GoogleFonts.outfit(
-                                  fontSize: screenWidth * 0.04 * scaleFactor,
-                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.04,
+                                  color: Colors.black,
                                 ),
                                 onChanged: (value) {
                                   setState(() {
@@ -269,6 +262,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                             ),
                           ),
                         ),
+
                         SizedBox(height: screenHeight * 0.03 * scaleFactor),
                       ],
                     ),
@@ -277,14 +271,15 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
-                      padding: EdgeInsets.only(
-                        left: screenWidth * 0.12 * scaleFactor,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04 * scaleFactor,
+                        vertical: screenHeight * 0.010 * scaleFactor,
                       ),
 
                       child: Text(
                         "Query",
                         style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.045 * scaleFactor, // ~22px
+                          fontSize: screenWidth * 0.055 * scaleFactor, // ~22px
                           fontWeight: FontWeight.w500,
                           color: Colors.black,
                         ),
@@ -293,55 +288,45 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                   ),
 
                   SizedBox(height: screenHeight * 0.015 * scaleFactor),
-
-                  /// Query Card
-                  Container(
-                    width: screenWidth * 0.92 * scaleFactor,
-                    height: screenHeight * 0.28 * scaleFactor,
-                    padding: EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      gradient: const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color.fromRGBO(210, 159, 42, 0.65),
-                          Color.fromRGBO(255, 255, 255, 0.65),
-                        ],
-                      ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.04 * scaleFactor,
+                      vertical: screenHeight * 0.010 * scaleFactor,
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D2319),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: TextField(
-                        controller: _queryController,
-                        textInputAction: TextInputAction.done,
-                        maxLines: null,
-                        expands: true,
-                        style: GoogleFonts.outfit(
-                          fontSize: screenWidth * 0.04 * scaleFactor,
-                          fontWeight: FontWeight.w300,
-                          color: const Color(0xBFFFFFFF),
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Raise your Query...",
-                          hintStyle: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.04 * scaleFactor,
-                            fontWeight: FontWeight.w300,
-                            color: const Color(0xBFFFFFFF),
+                    child:
+                        /// Query Card
+                        Container(
+                          width: double.infinity,
+                          height: screenHeight * 0.28,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.05,
+                            vertical: screenHeight * 0.02,
                           ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.04 * scaleFactor,
-                            vertical: screenHeight * 0.015 * scaleFactor,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            color: const Color.fromARGB(255, 217, 188, 121),
+                          ),
+                          child: TextField(
+                            controller: _queryController,
+                            expands: true,
+                            maxLines: null,
+                            textAlignVertical: TextAlignVertical.top,
+                            style: GoogleFonts.outfit(
+                              fontSize: screenWidth * 0.04,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w300,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Raise your Query...",
+                              hintStyle: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.04,
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                    ),
                   ),
-
                   SizedBox(height: screenHeight * 0.03 * scaleFactor),
                   if (widget.isQuestionPosting == null ||
                       widget.isQuestionPosting == false)
@@ -350,7 +335,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                     Consumer<QueryProvider>(
                       builder: (context, provider, _) {
                         return SizedBox(
-                          width: screenWidth * 0.8 * scaleFactor,
+                          width: screenWidth * 0.9 * scaleFactor,
                           height: screenHeight * 0.06 * scaleFactor,
                           child: ElevatedButton(
                             onPressed: provider.isLoading
@@ -457,7 +442,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                     Consumer<QuestionProvider>(
                       builder: (context, provider, _) {
                         return SizedBox(
-                          width: screenWidth * 0.8 * scaleFactor,
+                          width: screenWidth * 0.9 * scaleFactor,
                           height: screenHeight * 0.06 * scaleFactor,
                           child: ElevatedButton(
                             onPressed: provider.isLoading

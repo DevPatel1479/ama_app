@@ -2,7 +2,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Endpoints {
   static final String baseUrl = dotenv.env["API_BASE_URL"]!;
-
   static final String signup = "$baseUrl/register";
   static final String login = "$baseUrl/login";
   static final String sendOtp = "$baseUrl/otp/send-otp";
@@ -33,6 +32,15 @@ class Endpoints {
   static String getNotifications(String role) =>
       "$baseUrl/notifications/get-notification/$role";
 
+  static String lastSeenNotification = "$baseUrl/notifications/last-seen";
+  static String markNotificationSeen = "$baseUrl/notifications/mark-seen";
+
+  static String adminLastSeenNotification =
+      "$baseUrl/notifications/admin/last-seen";
+
+  static String adminMarkNotification =
+      "$baseUrl/notifications/admin/mark-seen";
+
   static String getNotificationHistory(String userId) =>
       "$baseUrl/notifications/history/$userId";
 
@@ -52,4 +60,10 @@ class Endpoints {
   static final String updateUserData = "$baseUrl/leads/update";
 
   static final String getTeamMembers = "$baseUrl/team/data";
+
+  static final String deleteQuestion = "$baseUrl/question/delete-question";
+  static final String deleteComment =
+      "$baseUrl/question/comment/delete-comment";
+
+  static String imagesByType(String type) => "$baseUrl/images/get/$type";
 }

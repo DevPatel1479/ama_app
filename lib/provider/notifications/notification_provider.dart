@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
+    show LocalStorageHelper;
+
 import 'package:ama_legal_solutions/models/notification_model.dart';
 import 'package:flutter/material.dart';
 
@@ -11,13 +14,50 @@ class NotificationProvider with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  int? _lastOpenedNotificationTime;
+
+  int? get lastOpenedNotificationTime => _lastOpenedNotificationTime;
+
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
-
+  bool _hasFetchedLastSeen = false;
   int _currentPage = 1;
   final int _limit = 10;
   bool _hasMore = true;
   bool get hasMore => _hasMore;
+
+  Future<void> fetchLastOpenedNotificationTime({required String phone}) async {
+    try {
+      final response = await _apiService.post(Endpoints.lastSeenNotification, {
+        "phone": phone,
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true) {
+          _lastOpenedNotificationTime = data['lastOpenedNotificationTime'];
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch last opened time: $e");
+    }
+  }
+
+  Future<void> updateLastOpenedNotificationTime({required String phone}) async {
+    try {
+      final response = await _apiService.post(Endpoints.markNotificationSeen, {
+        "phone": phone,
+      });
+      print(response.body);
+
+      // Locally update to avoid refetch
+      _lastOpenedNotificationTime =
+          DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    } catch (e) {
+      debugPrint("Failed to update last opened time: $e");
+    }
+  }
 
   /// Send notification to specific topic or role
   Future<void> sendNotification({
@@ -72,7 +112,14 @@ class NotificationProvider with ChangeNotifier {
     bool loadMore = false,
   }) async {
     if (loadMore && !_hasMore) return;
-
+    final phone = await LocalStorageHelper.getString("userPhone");
+    // print(loadMore);
+    // print(_currentPage);
+    // print(_hasFetchedLastSeen);
+    if (!_hasFetchedLastSeen) {
+      await fetchLastOpenedNotificationTime(phone: phone ?? "");
+      _hasFetchedLastSeen = true;
+    }
     if (!loadMore) {
       _currentPage = 1;
       _notifications.clear();
@@ -105,7 +152,10 @@ class NotificationProvider with ChangeNotifier {
           if (uniqueNew.length < _limit) _hasMore = false;
 
           _notifications.addAll(uniqueNew);
+
           _currentPage++;
+
+          print(_notifications.first.timestamp);
 
           notifyListeners();
         } else {
@@ -124,7 +174,9 @@ class NotificationProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      showCustomMessage(context, "Error: ${e.toString()}", true);
+      print(e.toString());
+      if (!e.toString().contains("Bad state: No element"))
+        showCustomMessage(context, "Error: ${e.toString()}", true);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -135,6 +187,10 @@ class NotificationProvider with ChangeNotifier {
     _notifications.clear();
     _hasMore = true;
     _currentPage = 1;
+    _isLoading = true;
+    _hasFetchedLastSeen = false;
+    _lastOpenedNotificationTime = null;
+
     notifyListeners();
   }
 }

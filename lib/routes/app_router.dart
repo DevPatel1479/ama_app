@@ -12,8 +12,14 @@ import 'package:ama_legal_solutions/screen_helpers/auth_helper/signup_helper.dar
 import 'package:ama_legal_solutions/screen_helpers/delete_account/delete_account_request_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ama_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ask_laywer_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/bank_details_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/casedesk_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/home_screen_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/live_case_status_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/meet_team_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/overview_casedesk_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/payment_view_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/raise_query_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/services_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/onboarding_helper/get_started_helper.dart';
@@ -418,6 +424,207 @@ final GoRouter appRouter = GoRouter(
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
             return child;
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.overviewCaseDeskPath,
+      name: AppScreenNames.overviewCaseDeskScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          transitionDuration: Duration.zero,
+          child: const OverviewCasedeskHelper(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.paymentViewPath,
+      name: AppScreenNames.paymentViewScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          transitionDuration: Duration.zero,
+          child: const PaymentViewHelper(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.liveCaseStatusPath,
+      name: AppScreenNames.liveCaseStatusScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+
+          // Push instantly
+          transitionDuration: Duration.zero,
+
+          // Pop with very fast smooth animation
+          reverseTransitionDuration: const Duration(milliseconds: 150),
+
+          child: const LiveCaseStatusHelper(),
+
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final slideAnimation =
+                Tween<Offset>(
+                  begin: const Offset(1, 0), // from right
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                );
+
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(animation);
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(opacity: fadeAnimation, child: child),
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.bankDetailsPath,
+      name: AppScreenNames.bankDetailsScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+
+          // Push instantly
+          transitionDuration: Duration.zero,
+
+          // Pop with very fast smooth animation
+          reverseTransitionDuration: const Duration(milliseconds: 150),
+
+          child: const BankDetailsHelper(),
+
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final slideAnimation =
+                Tween<Offset>(
+                  begin: const Offset(1, 0), // from right
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                );
+
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(animation);
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(opacity: fadeAnimation, child: child),
+            );
+          },
+        );
+      },
+    ),
+
+    GoRoute(
+      path: AppPathsForScreen.askLawyerPath,
+      name: AppScreenNames.askLawyerScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+
+          // Push instantly
+          transitionDuration: Duration.zero,
+
+          // Pop with very fast smooth animation
+          reverseTransitionDuration: const Duration(milliseconds: 150),
+
+          child: const AskLaywerHelper(),
+
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final slideAnimation =
+                Tween<Offset>(
+                  begin: const Offset(1, 0), // from right
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                );
+
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(animation);
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(opacity: fadeAnimation, child: child),
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.meetTeamPath,
+      name: AppScreenNames.meetTeamScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+
+          // Push instantly
+          transitionDuration: Duration.zero,
+
+          // Pop with very fast smooth animation
+          reverseTransitionDuration: const Duration(milliseconds: 150),
+
+          child: const MeetTeamHelper(),
+
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final slideAnimation =
+                Tween<Offset>(
+                  begin: const Offset(1, 0), // from right
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                );
+
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(animation);
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(opacity: fadeAnimation, child: child),
+            );
           },
         );
       },

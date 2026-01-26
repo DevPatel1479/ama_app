@@ -8,7 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class CustomBottomNav extends StatefulWidget {
-  const CustomBottomNav({super.key});
+  final bool isLight;
+  const CustomBottomNav({super.key, this.isLight = false});
 
   @override
   State<CustomBottomNav> createState() => _CustomBottomNavState();
@@ -29,11 +30,20 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
     'assets/icons/casedesk_inactive.png',
   ];
 
-  int _indexFromLocation(String location) {
+  int _indexFromLocation(String location, String? role) {
     if (location.startsWith(AppPathsForScreen.userHomePath)) return 0;
     if (location.startsWith(AppPathsForScreen.amaServicesPath)) return 1;
     if (location.startsWith(AppPathsForScreen.amaPath)) return 2;
-    if (location.startsWith(AppPathsForScreen.caseDeskPath)) return 3;
+    if (role != null) {
+      if (role == "admin" || role == "advocate") {
+        if (location.startsWith(AppPathsForScreen.caseDeskPath)) return 3;
+      } else if (role == "client") {
+        if (location.startsWith(AppPathsForScreen.overviewCaseDeskPath)) {
+          return 3;
+        }
+      }
+    }
+    // if (location.startsWith(AppPathsForScreen.overviewCaseDeskPath)) return 3;
     return 0;
   }
 
@@ -54,7 +64,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   //   }
   // }
 
-  void _navigateToIndex(int index, List<String> labels) {
+  void _navigateToIndex(int index, List<String> labels, String? role) {
     final label = labels[index].toLowerCase();
 
     if (label == "home") {
@@ -64,7 +74,15 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
     } else if (label == "ama") {
       context.go(AppPathsForScreen.amaPath);
     } else if (label == "casedesk") {
-      context.go(AppPathsForScreen.caseDeskPath);
+      if (role == null) {
+        context.go(AppPathsForScreen.overviewCaseDeskPath);
+      } else if (role == "admin" || role == "advocate") {
+        context.go(AppPathsForScreen.caseDeskPath);
+      } else if (role == "client") {
+        context.go(AppPathsForScreen.overviewCaseDeskPath);
+      }
+
+      // context.go(AppPathsForScreen.overviewCaseDeskPath);
     }
   }
 
@@ -73,19 +91,22 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
     // final userRole = context.watch<UserProvider>().role ?? '';
     final userRole = context.watch<RealTimeRoleProvider>().role;
     print("found role of the user is $userRole");
+    print(_labels);
     final isUser =
         userRole == 'user' ||
         userRole == 'users' ||
         userRole == 'guest' ||
         userRole == '';
 
-    final filteredLabels = isUser
+    final isLegalExpert = userRole == "legal_expert";
+
+    final filteredLabels = (isUser || isLegalExpert)
         ? _labels.where((label) => label.toLowerCase() != 'casedesk').toList()
         : _labels;
-    final filteredActiveIcons = isUser
+    final filteredActiveIcons = (isUser || isLegalExpert)
         ? _activeIcons.sublist(0, 3)
         : _activeIcons;
-    final filteredInactiveIcons = isUser
+    final filteredInactiveIcons = (isUser || isLegalExpert)
         ? _inactiveIcons.sublist(0, 3)
         : _inactiveIcons;
     final mq = MediaQuery.of(context);
@@ -116,6 +137,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
     final activeIndex = _indexFromLocation(
       location,
+      userRole,
     ).clamp(0, filteredLabels.length - 1);
 
     return SafeArea(
@@ -126,7 +148,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         child: ClipRRect(
           borderRadius: navCornerRadius,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Container(
               height: totalHeight,
               decoration: BoxDecoration(
@@ -160,7 +182,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                     child: InkWell(
                       onTap: () {
                         // if (!isActive) _navigateToIndex(index);
-                        if (!isActive) _navigateToIndex(index, filteredLabels);
+                        if (!isActive)
+                          _navigateToIndex(index, filteredLabels, userRole);
                       },
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,

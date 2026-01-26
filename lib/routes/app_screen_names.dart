@@ -19,4 +19,16 @@ class AppScreenNames {
   static const String deleteAccountRequestScreen =
       "delete_account_request_screen";
   static const String notificationHistoryScreen = "notification_history_screen";
+
+  static const String overviewCaseDeskScreen = "overview_case_desk_screen";
+
+  static const String paymentViewScreen = "payment_view_screen";
+
+  static const String liveCaseStatusScreen = "live_case_status_screen";
+
+  static const String bankDetailsScreen = "bank_details_screen";
+
+  static const String askLawyerScreen = "ask_lawyer_screen";
+
+  static const String meetTeamScreen = "meet_team_screen";
 }

@@ -98,6 +98,22 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
     super.didChangeDependencies();
     final newRole = context.watch<RealTimeRoleProvider>().role;
 
+    _lastRole ??= newRole;
+
+    // role changed → navigate
+    if (_lastRole != newRole) {
+      _lastRole = newRole;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        if (newRole == "admin" || newRole == "advocate") {
+          context.go(AppPathsForScreen.caseDeskPath);
+        } else if (newRole == "client") {
+          context.go(AppPathsForScreen.overviewCaseDeskPath);
+        }
+      });
+    }
+
     // Only refetch if role has actually changed
     if (newRole != null && newRole != _lastRole) {
       _lastRole = newRole;

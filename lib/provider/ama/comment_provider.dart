@@ -9,7 +9,8 @@ import 'package:ama_legal_solutions/api/api_service.dart';
 
 class CommentProvider extends ChangeNotifier {
   final ApiService apiService;
-  bool isSending = false;
+  bool _isSending = false;
+  bool get isSending => _isSending;
   CommentProvider({required this.apiService});
   TextEditingController commentController = TextEditingController();
   List<Comment> _comments = [];
@@ -80,11 +81,11 @@ class CommentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSending(bool value) {
-    if (isSending == value) return;
-    isSending = value;
-    notifyListeners();
-  }
+  // void setSending(bool value) {
+  //   if (isSending == value) return;
+  //   isSending = value;
+  //   notifyListeners();
+  // }
 
   /// Add a comment using ApiService
   Future<bool> postComment({
@@ -100,6 +101,15 @@ class CommentProvider extends ChangeNotifier {
     // print(userRole);
     // print(phone);
     // print(commentedBy);
+    if (content.trim().isEmpty) {
+      showCustomMessage(context, "Comment cannot be empty", true);
+      return false;
+    }
+
+    if (_isSending) return false;
+
+    _isSending = true;
+    notifyListeners();
 
     try {
       final body = {
@@ -135,6 +145,10 @@ class CommentProvider extends ChangeNotifier {
       );
       // print('Error posting comment: $e');
       return false;
+    } finally {
+      /// ✅ ALWAYS reset loader
+      _isSending = false;
+      notifyListeners();
     }
     return true;
   }
@@ -159,5 +173,16 @@ class CommentProvider extends ChangeNotifier {
     _hasMore = true;
     _commentsCount = 0;
     notifyListeners();
+  }
+
+  void removeCommentLocally(String commentId) {
+    final before = _comments.length;
+
+    _comments.removeWhere((c) => c.id == commentId);
+
+    if (_comments.length != before) {
+      _commentsCount = _commentsCount > 0 ? _commentsCount - 1 : 0;
+      notifyListeners();
+    }
   }
 }
