@@ -115,6 +115,21 @@ class FirebaseMessagingService {
     }
   }
 
+  Future<String?> getCurrentFcmToken() async {
+    try {
+      String? token = await _firebaseMessaging.getToken();
+      if (token != null) {
+        print("✅ Current FCM Token: ${token.substring(0, 20)}...");
+      } else {
+        print("⚠️ FCM Token is null");
+      }
+      return token;
+    } catch (e) {
+      print("❌ Error getting FCM token: $e");
+      return null;
+    }
+  }
+
   /// Request notification permission with system dialog
   Future<bool> _requestNotificationPermission() async {
     try {
@@ -509,7 +524,7 @@ class FirebaseMessagingService {
         print('❌ Failed to generate FCM token.');
         return null;
       }
-
+      await LocalStorageHelper.saveString("fcmToken", token);
       print('✅ FCM Token generated: ${token.substring(0, 20)}...');
 
       // Save locally for app use

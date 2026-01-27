@@ -1519,6 +1519,9 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                               height: screenHeight * 0.02 * scaleFactor,
                             ), // spacing
                             CityGrid(),
+                            SizedBox(
+                              height: screenHeight * 0.02 * scaleFactor,
+                            ), // spacing
                           ]),
                         ),
                       ),

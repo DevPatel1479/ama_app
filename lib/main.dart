@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/firebase/fcm/fcm_sync_token_manager.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/firebase/firebase_options.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
@@ -47,6 +48,7 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await FirebaseMessagingService.instance.initialize();
+    FcmSyncTokenManager().start();
     // print("Firebase connected successfully !!");
   } catch (e) {
     // print("Error connecting firebase $e");

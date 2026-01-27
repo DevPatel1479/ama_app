@@ -887,6 +887,9 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           height: screenHeight * 0.02 * scaleFactor,
                         ), // spacing
                         CityGrid(isLight: true),
+                        SizedBox(
+                          height: screenHeight * 0.02 * scaleFactor,
+                        ), // spacing
                       ],
                     ),
                   ),

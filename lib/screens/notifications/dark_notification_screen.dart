@@ -260,7 +260,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         kToolbarHeight +
                         MediaQuery.of(context).padding.top +
                         screenHeight * 0.015, // ✅ top padding added
-                    bottom: screenHeight * 0.015,
+                    bottom: screenHeight * 0.025,
                   ),
                   itemCount:
                       provider.notifications.length +
@@ -553,7 +553,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         kToolbarHeight +
                         MediaQuery.of(context).padding.top +
                         screenHeight * 0.015, // ✅ top padding added
-                    bottom: screenHeight * 0.015,
+                    bottom: screenHeight * 0.025,
                   ),
                   itemCount:
                       provider.notifications.length +
