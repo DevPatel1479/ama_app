@@ -29,10 +29,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:ama_legal_solutions/screens/features/dark_theme/dark_ama_screen.dart'
     show
-        filterQuestionsCompute,
         InlineCommentsSection,
-        timeAgo,
-        showDeleteConfirmDialog;
+        buildLinkText,
+        filterQuestionsCompute,
+        showDeleteConfirmDialog,
+        timeAgo;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -1674,18 +1675,21 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                                 ),
 
                                                 // Answer Content
-                                                Text(
+                                                buildLinkText(
                                                   question.answer!.content ??
                                                       '',
-                                                  style: GoogleFonts.outfit(
-                                                    color: const Color(
-                                                      0xFF2D2319,
-                                                    ),
-                                                    fontSize:
-                                                        screenWidth * 0.035,
-                                                    fontWeight: FontWeight.w600,
-                                                    height: 1.25,
-                                                  ),
+
+                                                  normalStyle:
+                                                      GoogleFonts.outfit(
+                                                        color: const Color(
+                                                          0xFF2D2319,
+                                                        ),
+                                                        fontSize:
+                                                            screenWidth * 0.035,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        height: 1.25,
+                                                      ),
                                                 ),
 
                                                 SizedBox(

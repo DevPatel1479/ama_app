@@ -1,4 +1,5 @@
 // lib/utils/global_notifiers.dart
+import 'package:ama_legal_solutions/provider/notifications/notification_read_state_provider.dart';
 import 'package:flutter/foundation.dart';
 
 /// Private notifier (cannot be accessed outside this file)
@@ -27,3 +28,6 @@ void clearGlobals() {
   _userNameNotifier.value = null;
   _userEmailNotifier.value = null;
 }
+
+NotificationReadStateProvider notificationReadStateProvider =
+    NotificationReadStateProvider();

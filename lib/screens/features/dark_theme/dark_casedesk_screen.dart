@@ -42,6 +42,7 @@ class DarkCasedeskScreen extends StatefulWidget {
 class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   bool isMyCaseActive = true;
   bool isPendingActive = true; // secondary toggle
+
   late ScrollController _scrollController;
   bool isFetchingMore = false;
   bool _userScrolled = false;
@@ -1710,8 +1711,11 @@ class _QueryCardState extends State<QueryCard> {
     final submittedDate = DateTime.fromMillisecondsSinceEpoch(
       query.submittedAt * 1000,
     );
-    final formattedTime = TimeOfDay.fromDateTime(submittedDate).format(context);
-    final formattedDate = "Submitted · Today, $formattedTime";
+    // final formattedTime = TimeOfDay.fromDateTime(submittedDate).format(context);
+    final formattedDate = DateFormat(
+      "dd MMM yyyy, h:mm a",
+    ).format(submittedDate);
+
     final isClient = widget.userRole?.toLowerCase() == "client";
 
     // Determine timestamp

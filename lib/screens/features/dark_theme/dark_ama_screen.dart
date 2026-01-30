@@ -5,7 +5,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
-import 'package:ama_legal_solutions/custom_widgets/custom_ama_screen_widgets.dart';
+
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/models/question_model.dart';
@@ -20,15 +20,19 @@ import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/features/dark_theme/dark_case_overview_screen.dart';
+import 'package:ama_legal_solutions/screens/features/dark_theme/dark_payment_view_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 List<Map<String, dynamic>> filterQuestionsCompute(Map<String, dynamic> params) {
   final List raw = params['raw'] as List;
@@ -157,6 +161,72 @@ Future<bool> showDeleteConfirmDialog(
         },
       ) ??
       false;
+}
+
+Future<void> launch__(String url) async {
+  final uri = Uri.parse(url.startsWith("http") ? url : "https://$url");
+
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+RichText buildLinkText(
+  String text, {
+  TextStyle? normalStyle,
+  TextStyle? linkStyle,
+}) {
+  final spans = <TextSpan>[];
+
+  final combinedRegex = RegExp(
+    r'(https?:\/\/[^\s]+|www\.[^\s]+|\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b)',
+    caseSensitive: false,
+  );
+
+  final matches = combinedRegex.allMatches(text);
+
+  int lastIndex = 0;
+
+  for (final match in matches) {
+    if (match.start > lastIndex) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastIndex, match.start),
+          style: normalStyle,
+        ),
+      );
+    }
+
+    final matchedText = match.group(0)!;
+
+    spans.add(
+      TextSpan(
+        text: matchedText,
+        style:
+            linkStyle ??
+            normalStyle?.copyWith(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            if (matchedText.contains('@')) {
+              openEmail(matchedText);
+            } else {
+              openBlog(matchedText: matchedText);
+            }
+          },
+      ),
+    );
+
+    lastIndex = match.end;
+  }
+
+  if (lastIndex < text.length) {
+    spans.add(TextSpan(text: text.substring(lastIndex), style: normalStyle));
+  }
+
+  return RichText(text: TextSpan(children: spans));
 }
 
 class DarkAmaScreen extends StatefulWidget {
@@ -745,76 +815,39 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
       extendBody: true,
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF171717), Color(0xFF0F0F0F)],
+      body: RepaintBoundary(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF171717), Color(0xFF0F0F0F)],
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            NestedScrollView(
-              physics: const BouncingScrollPhysics(),
-              headerSliverBuilder: (context, innerBoxScrolled) {
-                return [
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                      context,
+          child: Stack(
+            children: [
+              NestedScrollView(
+                physics: const BouncingScrollPhysics(),
+                headerSliverBuilder: (context, innerBoxScrolled) {
+                  return [
+                    SliverOverlapAbsorber(
+                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                        context,
+                      ),
                     ),
-                  ),
-                ];
-              },
-              body: SafeArea(
-                bottom: false,
-                top: false,
-                child: Builder(
-                  builder: (context) {
-                    return
-                    // questions grid - FIXED: LOADER ONLY WHEN LOADING MORE
-                    Consumer<QuestionProvider>(
-                      builder: (context, provider, _) {
-                        // Show initial loading only on first load
-                        if (_isInitialLoading && provider.questions.isEmpty) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          );
-                        }
-
-                        // choose source: show filtered results when searching, otherwise provider list
-                        final List sourceList = (_searchQuery.isNotEmpty)
-                            ? _filteredQuestions
-                            : provider.questions;
-
-                        final List uniqueQuestions = [];
-                        final seen = <String>{};
-                        for (var item in sourceList) {
-                          String? id;
-                          if (item is Question) {
-                            id = item.id;
-                          } else if (item is Map && item['id'] != null) {
-                            id = item['id'].toString();
-                          } else {
-                            // defensive fallback for dynamic objects
-                            try {
-                              id = (item as dynamic).id as String?;
-                            } catch (_) {
-                              id = null;
-                            }
-                          }
-                          if (id == null || id.isEmpty) continue;
-                          if (!seen.contains(id)) {
-                            seen.add(id);
-                            uniqueQuestions.add(item);
-                          }
-                        }
-
-                        if (uniqueQuestions.isEmpty) {
-                          // show searching loader if we're actively searching
-                          if (_searchQuery.isNotEmpty && _isSearching) {
+                  ];
+                },
+                body: SafeArea(
+                  bottom: false,
+                  top: false,
+                  child: Builder(
+                    builder: (context) {
+                      return
+                      // questions grid - FIXED: LOADER ONLY WHEN LOADING MORE
+                      Consumer<QuestionProvider>(
+                        builder: (context, provider, _) {
+                          // Show initial loading only on first load
+                          if (_isInitialLoading && provider.questions.isEmpty) {
                             return const Center(
                               child: CircularProgressIndicator(
                                 color: Colors.white,
@@ -822,513 +855,674 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                             );
                           }
 
-                          // show "no results" when search query present, otherwise "no questions"
-                          return Center(
-                            child: Text(
-                              _searchQuery.isNotEmpty
-                                  ? "No matching questions found"
-                                  : "No questions found",
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          );
-                        }
+                          // choose source: show filtered results when searching, otherwise provider list
+                          final List sourceList = (_searchQuery.isNotEmpty)
+                              ? _filteredQuestions
+                              : provider.questions;
 
-                        // Show message if filtered list is empty
-                        List __filteredQuestions = uniqueQuestions;
-                        if (_activeFilter == "latest") {
-                          final todayStart = DateTime.now();
-                          final startOfDay = DateTime(
-                            todayStart.year,
-                            todayStart.month,
-                            todayStart.day,
-                          ).millisecondsSinceEpoch;
-                          __filteredQuestions = uniqueQuestions
-                              .where((q) => (q.timestamp ?? 0) >= startOfDay)
-                              .toList();
-                          __filteredQuestions.sort(
-                            (a, b) =>
-                                (b.timestamp ?? 0).compareTo(a.timestamp ?? 0),
-                          );
-                        } else if (_activeFilter == "unanswered") {
-                          __filteredQuestions = uniqueQuestions
-                              .where((q) => q.answer == null)
-                              .toList();
-                        }
-                        // Use filtered pagination only when not searching
-                        final bool usePagination = _searchQuery.isEmpty;
+                          final List uniqueQuestions = [];
+                          final seen = <String>{};
+                          for (var item in sourceList) {
+                            String? id;
+                            if (item is Question) {
+                              id = item.id;
+                            } else if (item is Map && item['id'] != null) {
+                              id = item['id'].toString();
+                            } else {
+                              // defensive fallback for dynamic objects
+                              try {
+                                id = (item as dynamic).id as String?;
+                              } catch (_) {
+                                id = null;
+                              }
+                            }
+                            if (id == null || id.isEmpty) continue;
+                            if (!seen.contains(id)) {
+                              seen.add(id);
+                              uniqueQuestions.add(item);
+                            }
+                          }
 
-                        // FIXED: Only add +1 to itemCount when actually loading more
-                        final bool shouldShowLoader =
-                            usePagination &&
-                            provider.hasMore &&
-                            provider.isLoading;
+                          if (uniqueQuestions.isEmpty) {
+                            // show searching loader if we're actively searching
+                            if (_searchQuery.isNotEmpty && _isSearching) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              );
+                            }
 
-                        final int itemCount =
-                            2 +
-                            uniqueQuestions.length +
-                            (shouldShowLoader ? 1 : 0);
-
-                        return RefreshIndicator(
-                          edgeOffset:
-                              MediaQuery.of(context).padding.top +
-                              screenHeight *
-                                  0.10 + // same as ListView top padding
-                              8,
-                          onRefresh: () async {
-                            // reset data and re-fetch from first page
-                            await provider.fetchQuestionsSilently(
-                              context,
-                              reset: true,
+                            // show "no results" when search query present, otherwise "no questions"
+                            return Center(
+                              child: Text(
+                                _searchQuery.isNotEmpty
+                                    ? "No matching questions found"
+                                    : "No questions found",
+                                style: const TextStyle(color: Colors.white),
+                              ),
                             );
-                            // reset collapse state so everything is expanded after refresh
-                            setState(() {
-                              _collapsedIds.clear();
-                              _filteredQuestions = [];
-                              _searchController.clear();
-                              _searchQuery = '';
-                              _isSearching = false;
-                            });
-                          },
-                          child: ListView.builder(
-                            primary: false,
-                            controller: _scrollController,
-                            padding: EdgeInsets.only(
-                              left: screenWidth * 0.04,
-                              right: screenWidth * 0.04,
-                              top: screenHeight * 0.15,
-                              bottom:
-                                  contentBottomPadding +
-                                  keyboardHeight +
-                                  screenHeight * 0.10,
-                            ),
-                            itemCount:
-                                2 + // carousel
-                                uniqueQuestions.length +
-                                (shouldShowLoader ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              // loader row (pagination)
-                              if (index == 0) {
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: screenHeight * 0.02,
-                                  ),
-                                  child: RepaintBoundary(
-                                    child: RealtimeImageCarousel(
-                                      type: "ama",
-                                      height: screenHeight * 0.22,
-                                    ),
-                                  ),
-                                );
-                              }
+                          }
 
-                              /// map index → question index
-                              if (index == 1) {
-                                return Padding(
-                                  padding: EdgeInsetsGeometry.only(
-                                    bottom: screenHeight * 0.02,
-                                  ),
-                                  child: SizedBox(
-                                    height: screenHeight * 0.05, // row height
+                          // Show message if filtered list is empty
+                          List __filteredQuestions = uniqueQuestions;
+                          if (_activeFilter == "latest") {
+                            final todayStart = DateTime.now();
+                            final startOfDay = DateTime(
+                              todayStart.year,
+                              todayStart.month,
+                              todayStart.day,
+                            ).millisecondsSinceEpoch;
+                            __filteredQuestions = uniqueQuestions
+                                .where((q) => (q.timestamp ?? 0) >= startOfDay)
+                                .toList();
+                            __filteredQuestions.sort(
+                              (a, b) => (b.timestamp ?? 0).compareTo(
+                                a.timestamp ?? 0,
+                              ),
+                            );
+                          } else if (_activeFilter == "unanswered") {
+                            __filteredQuestions = uniqueQuestions
+                                .where((q) => q.answer == null)
+                                .toList();
+                          }
+                          // Use filtered pagination only when not searching
+                          final bool usePagination = _searchQuery.isEmpty;
 
-                                    child: ListView(
-                                      scrollDirection: Axis.horizontal,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: screenWidth * 0.01,
-                                      ),
+                          // FIXED: Only add +1 to itemCount when actually loading more
+                          final bool shouldShowLoader =
+                              usePagination &&
+                              provider.hasMore &&
+                              provider.isLoading;
 
-                                      children: [
-                                        _buildFilterButton(
-                                          "Latest",
-                                          "latest",
-                                          screenWidth,
-                                          screenHeight,
-                                        ),
-                                        SizedBox(width: screenWidth * 0.03),
-                                        _buildFilterButton(
-                                          "Unanswered",
-                                          "unanswered",
-                                          screenWidth,
-                                          screenHeight,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
+                          final int itemCount =
+                              2 +
+                              uniqueQuestions.length +
+                              (shouldShowLoader ? 1 : 0);
 
-                              // Adjust actual index for carousel + filter row
-                              final int actualIndex = index - 2;
-
-                              // If filtered list is empty → show message
-                              if (__filteredQuestions.isEmpty) {
-                                // Only show message at the first "card index"
-                                if (actualIndex == 0) {
+                          return RefreshIndicator(
+                            edgeOffset:
+                                MediaQuery.of(context).padding.top +
+                                screenHeight *
+                                    0.10 + // same as ListView top padding
+                                8,
+                            onRefresh: () async {
+                              // reset data and re-fetch from first page
+                              await provider.fetchQuestionsSilently(
+                                context,
+                                reset: true,
+                              );
+                              // reset collapse state so everything is expanded after refresh
+                              setState(() {
+                                _collapsedIds.clear();
+                                _filteredQuestions = [];
+                                _searchController.clear();
+                                _searchQuery = '';
+                                _isSearching = false;
+                              });
+                            },
+                            child: ListView.builder(
+                              primary: false,
+                              controller: _scrollController,
+                              padding: EdgeInsets.only(
+                                left: screenWidth * 0.04,
+                                right: screenWidth * 0.04,
+                                top: screenHeight * 0.15,
+                                bottom:
+                                    contentBottomPadding +
+                                    keyboardHeight +
+                                    screenHeight * 0.10,
+                              ),
+                              itemCount:
+                                  2 + // carousel
+                                  uniqueQuestions.length +
+                                  (shouldShowLoader ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                // loader row (pagination)
+                                if (index == 0) {
                                   return Padding(
                                     padding: EdgeInsets.only(
-                                      top: screenHeight * 0.1,
+                                      bottom: screenHeight * 0.02,
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        _activeFilter == "latest"
-                                            ? "No latest questions found"
-                                            : _activeFilter == "unanswered"
-                                            ? "No unanswered questions found"
-                                            : "No questions found",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
+                                    child: RepaintBoundary(
+                                      child: RealtimeImageCarousel(
+                                        type: "ama",
+                                        height: screenHeight * 0.22,
                                       ),
                                     ),
                                   );
-                                } else {
-                                  return const SizedBox.shrink(); // prevent duplicate messages
                                 }
-                              }
 
-                              // 🟡 Pagination loader
-                              if (shouldShowLoader &&
-                                  actualIndex == uniqueQuestions.length) {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24),
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
+                                /// map index → question index
+                                if (index == 1) {
+                                  return Padding(
+                                    padding: EdgeInsetsGeometry.only(
+                                      bottom: screenHeight * 0.02,
                                     ),
-                                  ),
-                                );
-                              }
+                                    child: SizedBox(
+                                      height: screenHeight * 0.05, // row height
 
-                              // 🛡️ Safety
-                              if (actualIndex < 0 ||
-                                  actualIndex >= uniqueQuestions.length) {
-                                return const SizedBox.shrink();
-                              }
+                                      child: ListView(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.01,
+                                        ),
 
-                              // Ensure actualIndex is safe for filtered list
-                              if (actualIndex >= __filteredQuestions.length) {
-                                return const SizedBox.shrink();
-                              }
-
-                              final question = __filteredQuestions[actualIndex];
-                              final questionId = question.id as String;
-                              final isExpanded = !_collapsedIds.contains(
-                                questionId,
-                              );
-                              final formattedDate = _formatTimestamp(
-                                question.timestamp as int?,
-                              );
-                              final showAddAnswerButton =
-                                  _canUserAddAnswer() &&
-                                  _questionHasNoAnswer(question);
-                              _questionKeys.putIfAbsent(
-                                questionId,
-                                () => GlobalKey(),
-                              );
-                              // determine answer preview limit (adjust as needed)
-                              final answerText = question.answer?.content ?? '';
-                              final int charLimit = screenWidth < 600
-                                  ? 100
-                                  : 160;
-                              final bool answerTooLong =
-                                  answerText.length > charLimit;
-                              final String answerPreview = answerTooLong
-                                  ? answerText
-                                        .substring(0, charLimit)
-                                        .trimRight()
-                                  : answerText;
-
-                              // Inside your ListView.builder, replace the old card Container with this:
-
-                              return RepaintBoundary(
-                                child: Container(
-                                  key: _questionKeys[questionId],
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromRGBO(
-                                      210,
-                                      159,
-                                      42,
-                                      0.07,
-                                    ),
-                                    borderRadius: BorderRadius.circular(15),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.33),
-                                        blurRadius: 12.5,
-                                      ),
-                                    ],
-                                  ),
-                                  padding: EdgeInsets.all(screenWidth * 0.03),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      /// TOP ROW: AVATAR + NAME + TIMESTAMP + ADD ANSWER BUTTON
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
                                         children: [
-                                          CircleAvatar(
-                                            radius: screenWidth * 0.04,
-                                            backgroundColor: Colors.transparent,
-                                            backgroundImage:
-                                                (question.profileImgUrl !=
-                                                        null &&
-                                                    (question.profileImgUrl
-                                                            as String)
-                                                        .isNotEmpty)
-                                                ? NetworkImage(
-                                                    "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                                  )
-                                                : AssetImage(AppAssets.userIcon)
-                                                      as ImageProvider,
+                                          _buildFilterButton(
+                                            "Latest",
+                                            "latest",
+                                            screenWidth,
+                                            screenHeight,
                                           ),
                                           SizedBox(width: screenWidth * 0.03),
-                                          Expanded(
-                                            child: Text(
-                                              question.userName ?? '',
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontSize: screenWidth * 0.036,
-                                                fontWeight: FontWeight.w500,
-                                                height: 1.0,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                          _buildFilterButton(
+                                            "Unanswered",
+                                            "unanswered",
+                                            screenWidth,
+                                            screenHeight,
                                           ),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                timeAgo(question.timestamp),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                // Adjust actual index for carousel + filter row
+                                final int actualIndex = index - 2;
+
+                                // If filtered list is empty → show message
+                                if (__filteredQuestions.isEmpty) {
+                                  // Only show message at the first "card index"
+                                  if (actualIndex == 0) {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        top: screenHeight * 0.1,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          _activeFilter == "latest"
+                                              ? "No latest questions found"
+                                              : _activeFilter == "unanswered"
+                                              ? "No unanswered questions found"
+                                              : "No questions found",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return const SizedBox.shrink(); // prevent duplicate messages
+                                  }
+                                }
+
+                                // 🟡 Pagination loader
+                                if (shouldShowLoader &&
+                                    actualIndex == uniqueQuestions.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                // 🛡️ Safety
+                                if (actualIndex < 0 ||
+                                    actualIndex >= uniqueQuestions.length) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                // Ensure actualIndex is safe for filtered list
+                                if (actualIndex >= __filteredQuestions.length) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                final question =
+                                    __filteredQuestions[actualIndex];
+                                final questionId = question.id as String;
+                                final isExpanded = !_collapsedIds.contains(
+                                  questionId,
+                                );
+                                final formattedDate = _formatTimestamp(
+                                  question.timestamp as int?,
+                                );
+                                final showAddAnswerButton =
+                                    _canUserAddAnswer() &&
+                                    _questionHasNoAnswer(question);
+                                _questionKeys.putIfAbsent(
+                                  questionId,
+                                  () => GlobalKey(),
+                                );
+                                // determine answer preview limit (adjust as needed)
+                                final answerText =
+                                    question.answer?.content ?? '';
+                                final int charLimit = screenWidth < 600
+                                    ? 100
+                                    : 160;
+                                final bool answerTooLong =
+                                    answerText.length > charLimit;
+                                final String answerPreview = answerTooLong
+                                    ? answerText
+                                          .substring(0, charLimit)
+                                          .trimRight()
+                                    : answerText;
+
+                                // Inside your ListView.builder, replace the old card Container with this:
+
+                                return RepaintBoundary(
+                                  child: Container(
+                                    key: _questionKeys[questionId],
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        210,
+                                        159,
+                                        42,
+                                        0.07,
+                                      ),
+                                      borderRadius: BorderRadius.circular(15),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.33),
+                                          blurRadius: 12.5,
+                                        ),
+                                      ],
+                                    ),
+                                    padding: EdgeInsets.all(screenWidth * 0.03),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        /// TOP ROW: AVATAR + NAME + TIMESTAMP + ADD ANSWER BUTTON
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            CircleAvatar(
+                                              radius: screenWidth * 0.04,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              backgroundImage:
+                                                  (question.profileImgUrl !=
+                                                          null &&
+                                                      (question.profileImgUrl
+                                                              as String)
+                                                          .isNotEmpty)
+                                                  ? NetworkImage(
+                                                      "${question.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                                    )
+                                                  : AssetImage(
+                                                          AppAssets.userIcon,
+                                                        )
+                                                        as ImageProvider,
+                                            ),
+                                            SizedBox(width: screenWidth * 0.03),
+                                            Expanded(
+                                              child: Text(
+                                                question.userName ?? '',
                                                 style: GoogleFonts.outfit(
                                                   color: Colors.white,
-                                                  fontSize: screenWidth * 0.035,
+                                                  fontSize: screenWidth * 0.036,
+                                                  fontWeight: FontWeight.w500,
+                                                  height: 1.0,
                                                 ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-
-                                              if (userRole?.toLowerCase() ==
-                                                  "admin") ...[
-                                                SizedBox(
-                                                  width: screenWidth * 0.02,
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  timeAgo(question.timestamp),
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.white,
+                                                    fontSize:
+                                                        screenWidth * 0.035,
+                                                  ),
                                                 ),
 
-                                                Consumer<
-                                                  DeleteQuestionProvider
-                                                >(
-                                                  builder: (_, deleteProvider, __) {
-                                                    final isDeleting =
-                                                        deleteProvider
-                                                            .isDeleting &&
-                                                        deleteProvider
-                                                                .response
-                                                                ?.questionId ==
-                                                            question.id;
+                                                if (userRole?.toLowerCase() ==
+                                                    "admin") ...[
+                                                  SizedBox(
+                                                    width: screenWidth * 0.02,
+                                                  ),
 
-                                                    return GestureDetector(
-                                                      onTap: isDeleting
-                                                          ? null
-                                                          : () async {
-                                                              final confirm =
-                                                                  await showDeleteConfirmDialog(
-                                                                    context,
-                                                                    title:
-                                                                        "Delete Question?",
-                                                                    message:
-                                                                        "This action cannot be undone.",
-                                                                  );
+                                                  Consumer<
+                                                    DeleteQuestionProvider
+                                                  >(
+                                                    builder: (_, deleteProvider, __) {
+                                                      final isDeleting =
+                                                          deleteProvider
+                                                              .isDeleting &&
+                                                          deleteProvider
+                                                                  .response
+                                                                  ?.questionId ==
+                                                              question.id;
 
-                                                              if (!confirm)
-                                                                return;
-
-                                                              final success = await deleteProvider
-                                                                  .deleteQuestion(
-                                                                    questionId:
-                                                                        question
-                                                                            .id,
-                                                                    role:
-                                                                        userRole!,
-                                                                  );
-
-                                                              if (success) {
-                                                                context
-                                                                    .read<
-                                                                      QuestionProvider
-                                                                    >()
-                                                                    .removeQuestionById(
-                                                                      questionId,
+                                                      return GestureDetector(
+                                                        onTap: isDeleting
+                                                            ? null
+                                                            : () async {
+                                                                final confirm =
+                                                                    await showDeleteConfirmDialog(
+                                                                      context,
+                                                                      title:
+                                                                          "Delete Question?",
+                                                                      message:
+                                                                          "This action cannot be undone.",
                                                                     );
-                                                              }
-                                                            },
-                                                      child: isDeleting
-                                                          ? const SizedBox(
-                                                              width: 18,
-                                                              height: 18,
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                    strokeWidth:
-                                                                        2,
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
-                                                            )
-                                                          : const Icon(
-                                                              Icons
-                                                                  .delete_outline,
-                                                              color: Colors
-                                                                  .redAccent,
-                                                              size: 20,
-                                                            ),
+
+                                                                if (!confirm)
+                                                                  return;
+
+                                                                final success = await deleteProvider
+                                                                    .deleteQuestion(
+                                                                      questionId:
+                                                                          question
+                                                                              .id,
+                                                                      role:
+                                                                          userRole!,
+                                                                    );
+
+                                                                if (success) {
+                                                                  context
+                                                                      .read<
+                                                                        QuestionProvider
+                                                                      >()
+                                                                      .removeQuestionById(
+                                                                        questionId,
+                                                                      );
+                                                                }
+                                                              },
+                                                        child: isDeleting
+                                                            ? const SizedBox(
+                                                                width: 18,
+                                                                height: 18,
+                                                                child: CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                              )
+                                                            : const Icon(
+                                                                Icons
+                                                                    .delete_outline,
+                                                                color: Colors
+                                                                    .redAccent,
+                                                                size: 20,
+                                                              ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            if (showAddAnswerButton)
+                                              SizedBox(
+                                                width: screenWidth * 0.03,
+                                              ),
+                                            if (showAddAnswerButton)
+                                              Container(
+                                                height: screenHeight * 0.035,
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    _showAddAnswerDialog(
+                                                      context,
+                                                      questionId,
+                                                      userName!,
+                                                      userRole!,
                                                     );
                                                   },
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          if (showAddAnswerButton)
-                                            SizedBox(width: screenWidth * 0.03),
-                                          if (showAddAnswerButton)
-                                            Container(
-                                              height: screenHeight * 0.035,
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  _showAddAnswerDialog(
-                                                    context,
-                                                    questionId,
-                                                    userName!,
-                                                    userRole!,
-                                                  );
-                                                },
-                                                style:
-                                                    ElevatedButton.styleFrom(
-                                                      padding: EdgeInsets.zero,
-                                                      backgroundColor:
-                                                          Colors.transparent,
-                                                      elevation: 0,
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              6,
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        backgroundColor:
+                                                            Colors.transparent,
+                                                        elevation: 0,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
+                                                        ),
+                                                      ).copyWith(
+                                                        backgroundColor:
+                                                            MaterialStateProperty.all(
+                                                              Colors
+                                                                  .transparent,
                                                             ),
                                                       ),
-                                                    ).copyWith(
-                                                      backgroundColor:
-                                                          MaterialStateProperty.all(
-                                                            Colors.transparent,
+                                                  child: Ink(
+                                                    decoration: BoxDecoration(
+                                                      gradient:
+                                                          const LinearGradient(
+                                                            begin: Alignment
+                                                                .centerLeft,
+                                                            end: Alignment
+                                                                .centerRight,
+                                                            colors: [
+                                                              Color(0xFFD29F2A),
+                                                              Color(0xFFFFFFFF),
+                                                            ],
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
                                                           ),
                                                     ),
-                                                child: Ink(
-                                                  decoration: BoxDecoration(
-                                                    gradient:
-                                                        const LinearGradient(
-                                                          begin: Alignment
-                                                              .centerLeft,
-                                                          end: Alignment
-                                                              .centerRight,
-                                                          colors: [
-                                                            Color(0xFFD29F2A),
-                                                            Color(0xFFFFFFFF),
-                                                          ],
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 4,
+                                                          ),
+                                                      child: Text(
+                                                        "Answer",
+                                                        style:
+                                                            GoogleFonts.outfit(
+                                                              color:
+                                                                  Colors.black,
+                                                              fontSize:
+                                                                  screenWidth *
+                                                                  0.035,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
+                                                    ),
                                                   ),
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 4,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+
+                                        SizedBox(height: screenHeight * 0.015),
+
+                                        /// QUESTION TEXT
+                                        Text(
+                                          question.content ?? '',
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontSize: screenWidth * 0.040,
+                                            fontWeight: FontWeight.w300,
+                                            height: 1.25,
+                                          ),
+                                        ),
+
+                                        SizedBox(height: screenHeight * 0.02),
+
+                                        /// ANSWER LAYOUT (IF ANSWER EXISTS)
+                                        if (question.answer != null)
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: const Color(0xFFC1A460),
+                                              ),
+                                            ),
+                                            padding: EdgeInsets.all(
+                                              screenWidth * 0.035,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Expert Remark + Green Dot
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            vertical:
+                                                                screenHeight *
+                                                                0.005,
+                                                            horizontal:
+                                                                screenWidth *
+                                                                0.025,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            const Color.fromRGBO(
+                                                              243,
+                                                              186,
+                                                              54,
+                                                              0.4,
+                                                            ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: Colors.white,
                                                         ),
-                                                    child: Text(
-                                                      "Answer",
-                                                      style: GoogleFonts.outfit(
-                                                        color: Colors.black,
+                                                      ),
+                                                      child: Text(
+                                                        "Expert Remark",
+                                                        style:
+                                                            GoogleFonts.outfit(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2D2319,
+                                                                  ),
+                                                              fontSize:
+                                                                  screenWidth *
+                                                                  0.035,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              height: 1.0,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      width: screenWidth * 0.03,
+                                                      height:
+                                                          screenWidth * 0.03,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                            color: Color(
+                                                              0xFF04C527,
+                                                            ),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                SizedBox(
+                                                  height: screenHeight * 0.015,
+                                                ),
+
+                                                // Answer Content
+                                                buildLinkText(
+                                                  question.answer!.content ??
+                                                      '',
+                                                  normalStyle:
+                                                      GoogleFonts.outfit(
+                                                        color: const Color(
+                                                          0xFF2D2319,
+                                                        ),
                                                         fontSize:
                                                             screenWidth * 0.035,
                                                         fontWeight:
                                                             FontWeight.w600,
+                                                        height: 1.25,
                                                       ),
-                                                    ),
-                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
 
-                                      SizedBox(height: screenHeight * 0.015),
+                                                SizedBox(
+                                                  height: screenHeight * 0.015,
+                                                ),
 
-                                      /// QUESTION TEXT
-                                      Text(
-                                        question.content ?? '',
-                                        style: GoogleFonts.outfit(
-                                          color: Colors.white,
-                                          fontSize: screenWidth * 0.040,
-                                          fontWeight: FontWeight.w300,
-                                          height: 1.25,
-                                        ),
-                                      ),
-
-                                      SizedBox(height: screenHeight * 0.02),
-
-                                      /// ANSWER LAYOUT (IF ANSWER EXISTS)
-                                      if (question.answer != null)
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(0xFFC1A460),
-                                            ),
-                                          ),
-                                          padding: EdgeInsets.all(
-                                            screenWidth * 0.035,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              // Expert Remark + Green Dot
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Container(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical:
-                                                              screenHeight *
-                                                              0.005,
-                                                          horizontal:
-                                                              screenWidth *
-                                                              0.025,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          const Color.fromRGBO(
-                                                            243,
-                                                            186,
-                                                            54,
-                                                            0.4,
+                                                // Answer by Icon + Text
+                                                Row(
+                                                  children: [
+                                                    question?.answer?.role ==
+                                                            "legal_expert"
+                                                        ? Consumer<
+                                                            ProfileProvider
+                                                          >(
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                  profileProv,
+                                                                  _,
+                                                                ) {
+                                                                  return CircleAvatar(
+                                                                    radius:
+                                                                        screenWidth *
+                                                                        0.035,
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .grey
+                                                                            .shade300,
+                                                                    backgroundImage:
+                                                                        profileProv.hasProfilePhoto &&
+                                                                            profileProv.profilePhotoUrl !=
+                                                                                null
+                                                                        ? NetworkImage(
+                                                                            "${profileProv.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                                                          )
+                                                                        : const AssetImage(
+                                                                                AppAssets.userIcon,
+                                                                              )
+                                                                              as ImageProvider,
+                                                                  );
+                                                                },
+                                                          )
+                                                        : Image.asset(
+                                                            AppAssets.appIcon,
+                                                            width:
+                                                                screenWidth *
+                                                                0.08,
+                                                            height:
+                                                                screenWidth *
+                                                                0.08,
                                                           ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            10,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: Colors.white,
-                                                      ),
+                                                    SizedBox(
+                                                      width:
+                                                          screenWidth * 0.025,
                                                     ),
-                                                    child: Text(
-                                                      "Expert Remark",
+                                                    Text(
+                                                      question
+                                                          ?.answer
+                                                          ?.answeredBy,
                                                       style: GoogleFonts.outfit(
                                                         color: const Color(
                                                           0xFF2D2319,
@@ -1340,347 +1534,254 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                         height: 1.0,
                                                       ),
                                                     ),
-                                                  ),
-                                                  Container(
-                                                    width: screenWidth * 0.03,
-                                                    height: screenWidth * 0.03,
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                          color: Color(
-                                                            0xFF04C527,
-                                                          ),
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-
-                                              SizedBox(
-                                                height: screenHeight * 0.015,
-                                              ),
-
-                                              // Answer Content
-                                              Text(
-                                                question.answer!.content ?? '',
-                                                style: GoogleFonts.outfit(
-                                                  color: const Color(
-                                                    0xFF2D2319,
-                                                  ),
-                                                  fontSize: screenWidth * 0.035,
-                                                  fontWeight: FontWeight.w600,
-                                                  height: 1.25,
+                                                  ],
                                                 ),
-                                              ),
-
-                                              SizedBox(
-                                                height: screenHeight * 0.015,
-                                              ),
-
-                                              // Answer by Icon + Text
-                                              Row(
-                                                children: [
-                                                  question?.answer?.role ==
-                                                          "legal_expert"
-                                                      ? Consumer<
-                                                          ProfileProvider
-                                                        >(
-                                                          builder: (context, profileProv, _) {
-                                                            return CircleAvatar(
-                                                              radius:
-                                                                  screenWidth *
-                                                                  0.035,
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .grey
-                                                                      .shade300,
-                                                              backgroundImage:
-                                                                  profileProv
-                                                                          .hasProfilePhoto &&
-                                                                      profileProv
-                                                                              .profilePhotoUrl !=
-                                                                          null
-                                                                  ? NetworkImage(
-                                                                      "${profileProv.profilePhotoUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                                                    )
-                                                                  : const AssetImage(
-                                                                          AppAssets
-                                                                              .userIcon,
-                                                                        )
-                                                                        as ImageProvider,
-                                                            );
-                                                          },
-                                                        )
-                                                      : Image.asset(
-                                                          AppAssets.appIcon,
-                                                          width:
-                                                              screenWidth *
-                                                              0.08,
-                                                          height:
-                                                              screenWidth *
-                                                              0.08,
-                                                        ),
-                                                  SizedBox(
-                                                    width: screenWidth * 0.025,
-                                                  ),
-                                                  Text(
-                                                    question
-                                                        ?.answer
-                                                        ?.answeredBy,
-                                                    style: GoogleFonts.outfit(
-                                                      color: const Color(
-                                                        0xFF2D2319,
-                                                      ),
-                                                      fontSize:
-                                                          screenWidth * 0.035,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      height: 1.0,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                      SizedBox(height: screenHeight * 0.015),
-
-                                      /// COMMENT LAYOUT (Tappable)
-                                      GestureDetector(
-                                        onTap: () {
-                                          // final commentProvider = context
-                                          //     .read<CommentProvider>();
-                                          // showAskDoubtBottomSheet(
-                                          //   context,
-                                          //   commentProvider,
-                                          //   "dark",
-                                          //   questionId,
-                                          //   userName,
-                                          //   userRole,
-                                          //   userPhone,
-                                          //   profilImgUrl,
-                                          //   question,
-                                          // );
-
-                                          final commentProvider = context
-                                              .read<CommentProvider>();
-
-                                          if (_openedCommentQuestionId !=
-                                              questionId) {
-                                            commentProvider
-                                                .clearExistingComments();
-                                            commentProvider.fetchComments(
-                                              questionId,
-                                              reset: true,
-                                            );
-                                          }
-
-                                          toggleComments(questionId);
-
-                                          scrollToQuestion(questionId);
-                                        },
-                                        child: Container(
-                                          height: screenHeight * 0.045,
-
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: screenWidth * 0.04,
-                                            vertical: screenHeight * 0.01,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromRGBO(
-                                              210,
-                                              159,
-                                              42,
-                                              0.08,
+                                              ],
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              22,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.33,
-                                                ),
-                                                blurRadius: 12.5,
-                                              ),
-                                            ],
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Image.asset(
-                                                AppAssets.cmmIcon,
-                                                width: screenWidth * 0.05,
-                                                height: screenWidth * 0.05,
-                                              ),
-                                              SizedBox(
-                                                width: screenWidth * 0.025,
-                                              ),
-                                              Text(
-                                                "${question.commentsCount ?? 0}",
-                                                style: GoogleFonts.outfit(
-                                                  color: Colors.white,
-                                                  fontSize: screenWidth * 0.037,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
 
-                                      if (_openedCommentQuestionId ==
-                                          questionId)
-                                        InlineCommentsSection(
-                                          questionId: questionId,
-                                          userName: userName,
-                                          userRole: userRole,
-                                          userPhone: userPhone,
-                                          profileImgUrl: profilImgUrl,
-                                          onClose: () {
-                                            setState(() {
-                                              _openedCommentQuestionId = null;
-                                            });
+                                        SizedBox(height: screenHeight * 0.015),
+
+                                        /// COMMENT LAYOUT (Tappable)
+                                        GestureDetector(
+                                          onTap: () {
+                                            // final commentProvider = context
+                                            //     .read<CommentProvider>();
+                                            // showAskDoubtBottomSheet(
+                                            //   context,
+                                            //   commentProvider,
+                                            //   "dark",
+                                            //   questionId,
+                                            //   userName,
+                                            //   userRole,
+                                            //   userPhone,
+                                            //   profilImgUrl,
+                                            //   question,
+                                            // );
+
+                                            final commentProvider = context
+                                                .read<CommentProvider>();
+
+                                            if (_openedCommentQuestionId !=
+                                                questionId) {
+                                              commentProvider
+                                                  .clearExistingComments();
+                                              commentProvider.fetchComments(
+                                                questionId,
+                                                reset: true,
+                                              );
+                                            }
+
+                                            toggleComments(questionId);
+
+                                            scrollToQuestion(questionId);
                                           },
+                                          child: Container(
+                                            height: screenHeight * 0.045,
+
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: screenWidth * 0.04,
+                                              vertical: screenHeight * 0.01,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color.fromRGBO(
+                                                210,
+                                                159,
+                                                42,
+                                                0.08,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(22),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.33),
+                                                  blurRadius: 12.5,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Image.asset(
+                                                  AppAssets.cmmIcon,
+                                                  width: screenWidth * 0.05,
+                                                  height: screenWidth * 0.05,
+                                                ),
+                                                SizedBox(
+                                                  width: screenWidth * 0.025,
+                                                ),
+                                                Text(
+                                                  "${question.commentsCount ?? 0}",
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.white,
+                                                    fontSize:
+                                                        screenWidth * 0.037,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top + 8,
-                      left: screenWidth * 0.04,
-                      right: screenWidth * 0.04,
-                      bottom: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF171717).withOpacity(0.45),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // BACK BUTTON
-                            GestureDetector(
-                              onTap: () =>
-                                  context.go(AppPathsForScreen.userHomePath),
-                              behavior: HitTestBehavior.opaque,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: Image.asset(
-                                  AppAssets.backArrowIcon,
-                                  width: screenWidth * 0.030,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: screenWidth * 0.05),
-                            // TITLE (NOT CENTERED BY EXPANDED)
-                            Text(
-                              "AMA",
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.052,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
 
-                            const Spacer(),
-
-                            // ASK QUESTION BUTTON
-                            _AskQuestionButton(
-                              scaleFactor: scaleFactor,
-                              onPressed: () {
-                                if (userRole?.toLowerCase() == "guest") {
-                                  final isDark = Provider.of<ThemeProvider>(
-                                    context,
-                                    listen: false,
-                                  ).isDarkMode;
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => LoginRequiredDialog(
-                                      isDarkTheme: isDark,
-                                      onLoginPressed: () {
-                                        Navigator.pop(context);
-                                        context.goNamed(AppScreenNames.logIn);
-                                      },
+                                        if (_openedCommentQuestionId ==
+                                            questionId)
+                                          InlineCommentsSection(
+                                            questionId: questionId,
+                                            userName: userName,
+                                            userRole: userRole,
+                                            userPhone: userPhone,
+                                            profileImgUrl: profilImgUrl,
+                                            onClose: () {
+                                              setState(() {
+                                                _openedCommentQuestionId = null;
+                                              });
+                                            },
+                                          ),
+                                      ],
                                     ),
-                                  );
-                                  return;
-                                }
-
-                                context.pushNamed(
-                                  AppScreenNames.raiseQuery,
-                                  queryParameters: {
-                                    "isQuestionPosting": "true",
-                                  },
+                                  ),
                                 );
                               },
                             ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: RepaintBoundary(
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: EdgeInsets.only(
+                          top: MediaQuery.of(context).padding.top + 8,
+                          left: screenWidth * 0.04,
+                          right: screenWidth * 0.04,
+                          bottom: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF171717).withOpacity(0.45),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // BACK BUTTON
+                                GestureDetector(
+                                  onTap: () => context.go(
+                                    AppPathsForScreen.userHomePath,
+                                  ),
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Image.asset(
+                                      AppAssets.backArrowIcon,
+                                      width: screenWidth * 0.030,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.05),
+                                // TITLE (NOT CENTERED BY EXPANDED)
+                                Text(
+                                  "AMA",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.052,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+
+                                const Spacer(),
+
+                                // ASK QUESTION BUTTON
+                                _AskQuestionButton(
+                                  scaleFactor: scaleFactor,
+                                  onPressed: () {
+                                    if (userRole?.toLowerCase() == "guest") {
+                                      final isDark = Provider.of<ThemeProvider>(
+                                        context,
+                                        listen: false,
+                                      ).isDarkMode;
+
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => LoginRequiredDialog(
+                                          isDarkTheme: isDark,
+                                          onLoginPressed: () {
+                                            Navigator.pop(context);
+                                            context.goNamed(
+                                              AppScreenNames.logIn,
+                                            );
+                                          },
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    context.pushNamed(
+                                      AppScreenNames.raiseQuery,
+                                      queryParameters: {
+                                        "isQuestionPosting": "true",
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // SUBTITLE
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: "A Pro Bono Initiative by ",
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      height: 1,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: "AMA Legal Solutions",
+                                    style: GoogleFonts.outfit(
+                                      color: Color(0xFFD29F2A),
+                                      fontSize: 14,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-
-                        // SUBTITLE
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: "A Pro Bono Initiative by ",
-                                style: GoogleFonts.outfit(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  height: 1,
-                                ),
-                              ),
-                              TextSpan(
-                                text: "AMA Legal Solutions",
-                                style: GoogleFonts.outfit(
-                                  color: Color(0xFFD29F2A),
-                                  fontSize: 14,
-                                  height: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: const CustomBottomNav(),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: const CustomBottomNav(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

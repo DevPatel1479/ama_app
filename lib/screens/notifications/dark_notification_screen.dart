@@ -161,7 +161,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark ? Color(0xFF171717) : Color(0xFFFFFBF1),
+      backgroundColor: isDark ? Color(0xFF2D2319) : Color(0xFFFFFBF1),
       extendBody: !isDark,
       extendBodyBehindAppBar: !isDark,
 
@@ -752,7 +752,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 child: Container(
                   height: kToolbarHeight + MediaQuery.of(context).padding.top,
                   color: const Color(
-                    0xFF171717,
+                    0xFF2D2319,
                   ).withOpacity(0.45), // Dark frosted
                   padding: EdgeInsets.only(
                     left: screenWidth * 0.04,

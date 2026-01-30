@@ -9,7 +9,10 @@ import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/realtime_image_carousel.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/notification_read_state_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
@@ -653,7 +656,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
     super.initState();
     _controller = PageController(viewportFraction: 1.0);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RealtimeImageProvider>().listenImages(widget.type);
     });
 
@@ -730,22 +733,15 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
                         child: AspectRatio(
                           aspectRatio: 16 / 9, // 🔥 FIXED RATIO FOR ALL IMAGES
-                          child: Image.network(
-                            img.url,
-                            fit: BoxFit.contain, // ✅ NO CROPPING EVER
-                            alignment: Alignment.center,
-
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey.shade800,
-                                highlightColor: Colors.grey.shade700,
-                                child: Container(color: Colors.grey),
-                              );
-                            },
-
-                            errorBuilder: (_, __, ___) => const Center(
+                          child: CachedNetworkImage(
+                            imageUrl: img.url,
+                            fit: BoxFit.contain, // faster for large images
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.grey.shade800,
+                              highlightColor: Colors.grey.shade700,
+                              child: Container(color: Colors.grey),
+                            ),
+                            errorWidget: (context, url, error) => const Center(
                               child: Icon(
                                 Icons.broken_image,
                                 color: Colors.white54,
@@ -865,6 +861,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
   void initState() {
     super.initState();
     fetchUserNameAndRole();
+    _initNotifications();
   }
 
   Future<void> fetchUserNameAndRole() async {
@@ -892,6 +889,29 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
       );
       // print(provider.profilePhotoUrl);
     }
+  }
+
+  Future<void> _initNotifications() async {
+    // get role from local storage or auth provider
+    final isLoggedIn =
+        await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
+
+    // Only start listener if the user is NOT logged in
+    if (isLoggedIn) return;
+
+    final userRole = await LocalStorageHelper.getString("userRole") ?? "guest";
+    if (userRole == "guest") return;
+    if (!mounted) return;
+    final provider = Provider.of<RealtimeNotificationProvider>(
+      context,
+      listen: false,
+    );
+
+    // Restore local unread flag
+    await provider.restoreUnreadState();
+    // Start Firestore listener
+    provider.startListening(userRole);
+    // await provider.restoreUnreadState();
   }
 
   Widget _buildAppBarForHomeScreen({
@@ -1034,7 +1054,13 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
               Stack(
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
+                      if (userRole?.toLowerCase() != "admin") {
+                        context
+                            .read<RealtimeNotificationProvider>()
+                            .clearUnread();
+                      }
+
                       if (userRole?.toLowerCase() == "guest") {
                         final isDark = Provider.of<ThemeProvider>(
                           context,
@@ -1072,22 +1098,30 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  if (userRole == "client" ||
-                      userRole == "advocate" ||
-                      userRole == "user" ||
-                      userRole == "legal_expert")
-                    Positioned(
-                      right: 2,
-                      top: 2,
-                      child: Container(
-                        width: dotSize,
-                        height: dotSize,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+
+                  /// 🔴 REAL-TIME BADGE
+                  Consumer<RealtimeNotificationProvider>(
+                    builder: (context, provider, _) {
+                      final role = userRole?.toLowerCase();
+
+                      if (role == "admin" || !provider.hasUnread) {
+                        return const SizedBox();
+                      }
+
+                      return Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Container(
+                          width: dotSize,
+                          height: dotSize,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ],

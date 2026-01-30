@@ -183,6 +183,18 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
+  bool get hasUnreadNotifications {
+    if (_notifications.isEmpty) return false;
+
+    // if user never opened notification screen yet
+    if (_lastOpenedNotificationTime == null) return true;
+
+    return _notifications.any((n) {
+      final notifSeconds = n.timestamp; // already unix seconds
+      return notifSeconds > _lastOpenedNotificationTime!;
+    });
+  }
+
   void clearNotifications() {
     _notifications.clear();
     _hasMore = true;

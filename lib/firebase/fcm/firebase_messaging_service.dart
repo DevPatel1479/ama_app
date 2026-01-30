@@ -1,16 +1,21 @@
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart' show WidgetsFlutterBinding;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
   print('📨 Background message received:');
   print('   Title: ${message.notification?.title}');
   print('   Body: ${message.notification?.body}');
   print('   Data: ${message.data}');
-
+  // notificationReadStateProvider.setNewNotification(true);
+  notificationReadStateProvider.setNewNotification(true);
+  // await LocalStorageHelper.saveBool("has_new_notification", true);
   // Handle background message processing
   // You can perform tasks like updating local storage, etc.
 }
@@ -249,7 +254,10 @@ class FirebaseMessagingService {
     print('   Title: ${message.data['title']}');
     print('   Body: ${message.data['body']}');
     print('   Data: ${message.data}');
-
+    notificationReadStateProvider.setNewNotification(true);
+    print(
+      "notification state in foreground  ${notificationReadStateProvider.hasNewNotification}",
+    );
     // Use data payload for accurate newlines
     _showLocalNotification(message);
   }
@@ -260,7 +268,10 @@ class FirebaseMessagingService {
     print('   Title: ${message.notification?.title}');
     print('   Body: ${message.notification?.body}');
     print('   Data: ${message.data}');
-
+    notificationReadStateProvider.setNewNotification(true);
+    print(
+      "notification state in background   ${notificationReadStateProvider.hasNewNotification}",
+    );
     // Handle navigation or other actions based on message data
     _handleMessageAction(message);
   }
@@ -271,7 +282,7 @@ class FirebaseMessagingService {
     print('   Title: ${message.notification?.title}');
     print('   Body: ${message.notification?.body}');
     print('   Data: ${message.data}');
-
+    notificationReadStateProvider.setNewNotification(true);
     // Handle navigation or other actions based on message data
     _handleMessageAction(message);
   }

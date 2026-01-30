@@ -18,10 +18,30 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart' show Shimmer;
 import 'package:url_launcher/url_launcher.dart';
 
-Future<void> openBlog() async {
-  final Uri blogUri = Uri.parse("https://www.amalegalsolutions.com/blog");
+String normalizeUrl(String url) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
 
-  if (!await launchUrl(blogUri, mode: LaunchMode.externalApplication)) {
+  if (url.startsWith('www.')) {
+    return 'https://$url';
+  }
+
+  return 'https://$url';
+}
+
+Future<void> openBlog({String? matchedText}) async {
+  final Uri blogUri = Uri.parse("https://www.amalegalsolutions.com/blog");
+  if (matchedText != null) {
+    final Uri matchedTextUri = Uri.parse(normalizeUrl(matchedText));
+
+    if (!await launchUrl(
+      matchedTextUri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      debugPrint("Could not open blog link");
+    }
+  } else if (!await launchUrl(blogUri, mode: LaunchMode.externalApplication)) {
     debugPrint("Could not open blog link");
   }
 }

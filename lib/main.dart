@@ -14,6 +14,7 @@ import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_history_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/weekly_client_count_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
@@ -86,6 +87,20 @@ void main() async {
         ChangeNotifierProvider<RealTimeRoleProvider>.value(
           value: realTimeRoleProvider,
         ),
+        ChangeNotifierProxyProvider<
+          RealTimeRoleProvider,
+          RealtimeNotificationProvider
+        >(
+          create: (_) => RealtimeNotificationProvider(),
+          update: (_, roleProvider, notificationProvider) {
+            notificationProvider ??= RealtimeNotificationProvider();
+
+            notificationProvider.onRoleChanged(roleProvider.role);
+
+            return notificationProvider;
+          },
+        ),
+
         ChangeNotifierProvider(create: (_) => RealtimeImageProvider()),
         ChangeNotifierProvider(create: (_) => DeleteQuestionProvider()),
         ChangeNotifierProvider(create: (_) => DeleteCommentProvider()),
