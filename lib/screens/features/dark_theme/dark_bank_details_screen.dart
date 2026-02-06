@@ -133,23 +133,25 @@ class _DarkBankDetailsScreenState extends State<DarkBankDetailsScreen> {
                     height: kToolbarHeight + MediaQuery.of(context).padding.top,
                     color: const Color(0xFF171717).withOpacity(0.45),
                     padding: EdgeInsets.only(
-                      left: screenWidth * 0.04,
+                      // left: screenWidth * 0.04,
                       top: MediaQuery.of(context).padding.top,
                     ),
                     alignment: Alignment.centerLeft,
                     child: Row(
                       children: [
-                        GestureDetector(
-                          onTap: () => context.pop(),
-                          child: Image.asset(
+                        IconButton(
+                          padding: EdgeInsets.zero, // remove default padding
+
+                          icon: Image.asset(
                             AppAssets.backArrowIcon,
                             width: screenWidth * 0.06,
                             height: screenWidth * 0.06,
                             fit: BoxFit.contain,
-                            color: Colors.white,
                           ),
+                          onPressed: () => context.pop(),
+                          splashRadius: 24, // optional, makes tap area bigger
                         ),
-                        SizedBox(width: screenWidth * 0.07),
+                        // SizedBox(width: screenWidth * 0.07),
                         const Text(
                           "Banking Details",
                           style: TextStyle(

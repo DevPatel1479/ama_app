@@ -1663,7 +1663,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                       child: Container(
                         padding: EdgeInsets.only(
                           top: MediaQuery.of(context).padding.top + 8,
-                          left: screenWidth * 0.04,
+                          // left: screenWidth * 0.04,
                           right: screenWidth * 0.04,
                           bottom: 14,
                         ),
@@ -1677,20 +1677,23 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 // BACK BUTTON
-                                GestureDetector(
-                                  onTap: () => context.go(
+                                IconButton(
+                                  padding:
+                                      EdgeInsets.zero, // remove default padding
+
+                                  icon: Image.asset(
+                                    AppAssets.backArrowIcon,
+                                    width: screenWidth * 0.06,
+                                    height: screenWidth * 0.06,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  onPressed: () => context.go(
                                     AppPathsForScreen.userHomePath,
                                   ),
-                                  behavior: HitTestBehavior.opaque,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Image.asset(
-                                      AppAssets.backArrowIcon,
-                                      width: screenWidth * 0.030,
-                                    ),
-                                  ),
+                                  splashRadius:
+                                      24, // optional, makes tap area bigger
                                 ),
-                                SizedBox(width: screenWidth * 0.05),
+                                // SizedBox(width: screenWidth * 0.05),
                                 // TITLE (NOT CENTERED BY EXPANDED)
                                 Text(
                                   "AMA",
@@ -1868,18 +1871,16 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                 ),
                 const Spacer(),
 
-                /// CLOSE BUTTON
-                GestureDetector(
-                  onTap: () {
-                    // provider.clearExistingComments();
+                IconButton(
+                  padding: EdgeInsets.zero, // remove default padding
 
-                    widget.onClose();
-                  },
-                  child: Image.asset(
+                  icon: Image.asset(
                     AppAssets.closeButton,
                     width: screenWidth * 0.04,
                     color: widget.isLight ? Colors.black : Colors.white,
                   ),
+                  onPressed: () => widget.onClose(),
+                  splashRadius: 14, // optional, makes tap area bigger
                 ),
               ],
             ),

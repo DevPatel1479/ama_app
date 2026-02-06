@@ -274,7 +274,7 @@ class _DarkPortfolioScreenState extends State<DarkPortfolioScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF171717),
       resizeToAvoidBottomInset: true,
-      
+
       body: Consumer<UserInfoProvider>(
         builder: (context, provider, _) {
           final isLoading = widget.userRole == "user"
@@ -325,14 +325,14 @@ class _DarkPortfolioScreenState extends State<DarkPortfolioScreen>
           ];
 
           final screenWidth = MediaQuery.of(context).size.width;
-
+          final screenHeight = MediaQuery.of(context).size.height;
           return Stack(
             children: [
               SingleChildScrollView(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 100,
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05, // 5% of screen width
+                  vertical: screenHeight * 0.12, // 12% of screen height
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,8 +462,8 @@ class _DarkPortfolioScreenState extends State<DarkPortfolioScreen>
                   child: Container(
                     padding: EdgeInsets.only(
                       top: MediaQuery.of(context).padding.top + 12,
-                      left: 16,
-                      right: 16,
+                      // left: 16,
+                      // right: screenWidth * 0.02,
                       bottom: 16,
                     ),
                     color: Colors.black.withOpacity(
@@ -472,34 +472,38 @@ class _DarkPortfolioScreenState extends State<DarkPortfolioScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            GestureDetector(
-                              behavior: HitTestBehavior.translucent,
+                        Padding(
+                          padding: EdgeInsets.zero,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                padding:
+                                    EdgeInsets.zero, // remove default padding
 
-                              onTap: () => Navigator.pop(context),
-                              child: Image.asset(
-                                AppAssets.backArrowIcon,
-                                width: MediaQuery.of(context).size.width * 0.05,
-                                height:
-                                    MediaQuery.of(context).size.width * 0.05,
+                                icon: Image.asset(
+                                  AppAssets.backArrowIcon,
+                                  width: screenWidth * 0.06,
+                                  height: screenWidth * 0.06,
+                                  fit: BoxFit.contain,
+                                  // color: Colors.black,
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                                splashRadius:
+                                    24, // optional, makes tap area bigger
                               ),
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.02,
-                            ),
-                            Text(
-                              "Portfolio",
-                              style: GoogleFonts.outfit(
-                                fontSize:
-                                    MediaQuery.of(context).size.width * 0.065,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                              SizedBox(width: screenWidth * 0.02),
+                              Text(
+                                "Portfolio",
+                                style: GoogleFonts.outfit(
+                                  fontSize:
+                                      MediaQuery.of(context).size.width * 0.065,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-
                         if (widget.userRole == "user")
                           IconButton(
                             icon: Icon(

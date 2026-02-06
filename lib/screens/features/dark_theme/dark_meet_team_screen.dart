@@ -81,20 +81,26 @@ class _DarkMeetTeamScreenState extends State<DarkMeetTeamScreen> {
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         color: const Color(0xFF171717).withOpacity(0.65),
                         alignment: Alignment.centerLeft,
                         child: Row(
                           children: [
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                              child: Image.asset(
+                            IconButton(
+                              padding:
+                                  EdgeInsets.zero, // remove default padding
+
+                              icon: Image.asset(
                                 AppAssets.backArrowIcon,
-                                width: 24,
-                                height: 24,
-                                color: Colors.white,
+                                width: screenWidth * 0.06,
+                                height: screenWidth * 0.06,
+                                fit: BoxFit.contain,
                               ),
+                              onPressed: () => Navigator.of(context).pop(),
+                              splashRadius:
+                                  24, // optional, makes tap area bigger
                             ),
+
                             const SizedBox(width: 16),
                             Text(
                               'Meet the Team',

@@ -87,21 +87,23 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
 
         title: Row(
           children: [
-            GestureDetector(
-              onTap: () => (widget.isQuestionPosting == true)
+            IconButton(
+              padding: EdgeInsets.zero, // remove default padding
+
+              icon: Image.asset(
+                AppAssets.backArrowIcon,
+                width: screenWidth * 0.06,
+                height: screenWidth * 0.06,
+                fit: BoxFit.contain,
+                color: Colors.black,
+              ),
+              onPressed: () => (widget.isQuestionPosting == true)
                   ? context.go(AppPathsForScreen.userHomePath)
                   : Navigator.pop(context),
-              child: Padding(
-                padding: EdgeInsets.only(left: screenWidth * 0.04),
-                child: Image.asset(
-                  AppAssets.backArrowIcon,
-                  width: screenWidth * 0.06,
-                  height: screenWidth * 0.06,
-                  color: Colors.black,
-                ),
-              ),
+              splashRadius: 24, // optional, makes tap area bigger
             ),
-            SizedBox(width: screenWidth * 0.02 * scaleFactor),
+
+            // SizedBox(width: screenWidth * 0.02 * scaleFactor),
             Text(
               "Raise your Queries",
               style: GoogleFonts.outfit(

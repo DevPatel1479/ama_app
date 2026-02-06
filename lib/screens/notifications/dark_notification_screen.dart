@@ -81,76 +81,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   /// LIGHT THEME APPBAR (your custom golden AppBar)
-  PreferredSizeWidget _buildLightAppBar(double screenWidth) {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(kToolbarHeight),
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            color: const Color(
-              0xFFFFFBF1,
-            ).withOpacity(0.85), // iOS-style frosted background
-            padding: EdgeInsets.only(left: screenWidth * 0.04),
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => context.go(AppPathsForScreen.userHomePath),
-                  child: Image.asset(
-                    AppAssets.backArrowIcon,
-                    width: screenWidth * 0.06,
-                    height: screenWidth * 0.06,
-                    fit: BoxFit.contain,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(width: screenWidth * 0.02),
-
-                Text(
-                  'Notifications',
-                  style: GoogleFonts.outfit(
-                    color: Colors.black,
-                    fontSize: (screenWidth / 100) * 6.5 * 0.85,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// DARK THEME APPBAR (your original black one)
-  PreferredSizeWidget _buildDarkAppBar(double screenWidth) {
-    return AppBar(
-      backgroundColor: Color(0xFF171717),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      leading: IconButton(
-        icon: Image.asset(
-          AppAssets.backArrowIcon,
-          width: screenWidth * 0.06,
-          height: screenWidth * 0.06,
-          fit: BoxFit.contain,
-          color: Colors.white,
-        ),
-        onPressed: () => context.go(AppPathsForScreen.userHomePath),
-      ),
-      title: Text(
-        "Notifications",
-        style: GoogleFonts.outfit(
-          fontSize: screenWidth * 0.065,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
-      ),
-      centerTitle: false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -480,22 +410,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 child: Container(
                   height: kToolbarHeight + MediaQuery.of(context).padding.top,
                   color: const Color(0xFFFFFBF1).withOpacity(0.45),
-                  padding: EdgeInsets.only(
-                    left: screenWidth * 0.04,
-                    top: screenHeight * 0.03,
-                  ),
+                  padding: EdgeInsets.only(top: screenHeight * 0.03),
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go(AppPathsForScreen.userHomePath),
-                        child: Image.asset(
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
                           AppAssets.backArrowIcon,
                           width: screenWidth * 0.06,
                           height: screenWidth * 0.06,
                           fit: BoxFit.contain,
                           color: Colors.black,
                         ),
+                        onPressed: () =>
+                            context.go(AppPathsForScreen.userHomePath),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
                       SizedBox(width: screenWidth * 0.02),
                       Text(
@@ -755,23 +686,26 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     0xFF2D2319,
                   ).withOpacity(0.45), // Dark frosted
                   padding: EdgeInsets.only(
-                    left: screenWidth * 0.04,
+                    // left: screenWidth * 0.04,
                     top: MediaQuery.of(context).padding.top,
                   ),
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go(AppPathsForScreen.userHomePath),
-                        child: Image.asset(
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
                           AppAssets.backArrowIcon,
                           width: screenWidth * 0.06,
                           height: screenWidth * 0.06,
                           fit: BoxFit.contain,
-                          color: Colors.white,
                         ),
+                        onPressed: () =>
+                            context.go(AppPathsForScreen.userHomePath),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: screenWidth * 0.001),
                       Text(
                         'Notifications',
                         style: GoogleFonts.outfit(

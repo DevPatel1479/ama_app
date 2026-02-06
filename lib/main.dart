@@ -5,6 +5,7 @@ import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/fcm_sync_token_manager.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/firebase/firebase_options.dart';
+import 'package:ama_legal_solutions/login_status_sync/login_status_sync.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/delete_comment_provider.dart';
@@ -15,6 +16,7 @@ import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart
 import 'package:ama_legal_solutions/provider/notifications/notification_history_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/scheduled_notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/weekly_client_count_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
@@ -50,6 +52,7 @@ void main() async {
     );
     await FirebaseMessagingService.instance.initialize();
     FcmSyncTokenManager().start();
+
     // print("Firebase connected successfully !!");
   } catch (e) {
     // print("Error connecting firebase $e");
@@ -65,9 +68,11 @@ void main() async {
   updateGlobalUserName(savedName);
   updateGlobalUserEmail(savedEmail);
   // ✅ CHECK IF USER IS LOGGED IN
+
   final isLoggedIn =
       await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
   final savedPhone = await LocalStorageHelper.getString("userPhone");
+  LoginStatusSyncService.syncLoginStatusIfNeeded(savedPhone ?? "");
   final initialRole = await LocalStorageHelper.getString("userRole") ?? "N/A";
   // 👇 We create providers ONCE so we can access RealTimeRoleProvider
   final realTimeRoleProvider = RealTimeRoleProvider();
@@ -110,6 +115,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => ProfileProvider(),
         ), // added profile provider
+        ChangeNotifierProvider(create: (_) => ScheduledNotificationProvider()),
         ChangeNotifierProvider(
           create: (_) => UserInfoProvider(),
         ), // added profile provider

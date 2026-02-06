@@ -693,6 +693,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final double itemWidth = MediaQuery.of(context).size.width * 0.9;
     final double itemHeight = itemWidth * 9 / 16; // keeps 16:9 ratio
     return Consumer<RealtimeImageProvider>(
@@ -737,9 +738,17 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
                             imageUrl: img.url,
                             fit: BoxFit.contain, // faster for large images
                             placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.grey.shade800,
-                              highlightColor: Colors.grey.shade700,
-                              child: Container(color: Colors.grey),
+                              baseColor: isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade300,
+                              highlightColor: isDark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade100,
+                              child: Container(
+                                color: isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade200,
+                              ),
                             ),
                             errorWidget: (context, url, error) => const Center(
                               child: Icon(
@@ -794,10 +803,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
           width: double.infinity,
           height: widget.height ?? MediaQuery.of(context).size.width * 0.5,
           margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(16),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         ),
         const SizedBox(height: 12),
         Container(
@@ -1271,7 +1277,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
 
                       SliverPadding(
                         padding: EdgeInsets.only(
-                          top: screenHeight * 0.045,
+                          // top: screenHeight * 0.045,
                           left: screenWidth * 0.04 * scaleFactor,
                           right: screenWidth * 0.04 * scaleFactor,
                           bottom: contentBottomPadding,

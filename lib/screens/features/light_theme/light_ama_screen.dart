@@ -841,12 +841,11 @@ class _LightAmaScreenState extends State<LightAmaScreen>
         ),
 
         titleSpacing: 0,
-        toolbarHeight: kToolbarHeight + screenHeight * 0.02,
+        toolbarHeight: kToolbarHeight + screenHeight * 0.03,
 
         title: Padding(
           padding: EdgeInsets.only(
             // top: MediaQuery.of(context).padding.top,
-            left: screenWidth * 0.04 * scaleFactor,
             right: screenWidth * 0.04 * scaleFactor,
             // bottom: screenHeight * 0.015 * scaleFactor,
           ),
@@ -858,17 +857,22 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                 children: [
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go(AppPathsForScreen.userHomePath),
-                        child: Image.asset(
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
                           AppAssets.backArrowIcon,
-                          width: screenWidth * 0.06 * scaleFactor,
-                          height: screenWidth * 0.06 * scaleFactor,
+                          width: screenWidth * 0.06,
+                          height: screenWidth * 0.06,
                           fit: BoxFit.contain,
                           color: Colors.black,
                         ),
+                        onPressed: () =>
+                            context.go(AppPathsForScreen.userHomePath),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
-                      SizedBox(width: screenWidth * 0.06 * scaleFactor),
+
+                      // SizedBox(width: screenWidth * 0.06 * scaleFactor),
                       Text(
                         "AMA",
                         style: GoogleFonts.outfit(

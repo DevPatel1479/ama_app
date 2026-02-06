@@ -175,6 +175,7 @@ class _SplashScreenState extends State<DarkSplashScreen>
                         fontFamily: "Cormorant",
                         fontSize: size.width * 0.055, // responsive font
                         fontWeight: FontWeight.w400,
+                        fontStyle: FontStyle.italic,
                         color: Color(0xFFFFFFFF),
                       ),
                     ),

@@ -66,4 +66,6 @@ class Endpoints {
       "$baseUrl/question/comment/delete-comment";
 
   static String imagesByType(String type) => "$baseUrl/images/get/$type";
+
+  static String scheduleNotification = "$baseUrl/notifications/schedule";
 }

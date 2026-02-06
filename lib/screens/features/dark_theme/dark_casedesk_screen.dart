@@ -728,22 +728,27 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                       // Top Bar
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.04 * scaleFactor,
+                          // horizontal: screenWidth * 0.04 * scaleFactor,
                           vertical: screenHeight * 0.015 * scaleFactor,
                         ),
                         child: Row(
                           children: [
-                            GestureDetector(
-                              onTap: () =>
-                                  context.go(AppPathsForScreen.userHomePath),
-                              child: Image.asset(
+                            IconButton(
+                              padding:
+                                  EdgeInsets.zero, // remove default padding
+
+                              icon: Image.asset(
                                 AppAssets.backArrowIcon,
-                                width: screenWidth * 0.06 * scaleFactor,
-                                height: screenWidth * 0.06 * scaleFactor,
+                                width: screenWidth * 0.06,
+                                height: screenWidth * 0.06,
                                 fit: BoxFit.contain,
                               ),
+                              onPressed: () =>
+                                  context.go(AppPathsForScreen.userHomePath),
+                              splashRadius:
+                                  24, // optional, makes tap area bigger
                             ),
-                            SizedBox(width: screenWidth * 0.02 * scaleFactor),
+                            // SizedBox(width: screenWidth * 0.02 * scaleFactor),
                             Text(
                               "My Casedesk",
                               style: GoogleFonts.outfit(

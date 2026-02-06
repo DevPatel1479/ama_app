@@ -579,7 +579,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: screenHeight * 0.05 * scaleFactor),
+                        // SizedBox(height: screenHeight * 0.05 * scaleFactor),
                         RealtimeImageCarousel(type: "home"),
                         SizedBox(height: screenHeight * 0.04 * scaleFactor),
                         if (userRole?.toLowerCase() == "client")

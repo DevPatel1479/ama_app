@@ -67,24 +67,27 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
             /// Fixed Custom AppBar
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04 * scaleFactor,
                 vertical: screenHeight * 0.015 * scaleFactor,
               ),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () =>
+                  IconButton(
+                    padding: EdgeInsets.zero, // remove default padding
+
+                    icon: Image.asset(
+                      AppAssets.backArrowIcon,
+                      width: screenWidth * 0.06,
+                      height: screenWidth * 0.06,
+                      fit: BoxFit.contain,
+                    ),
+                    onPressed: () =>
                         (widget.isQuestionPosting != null &&
                             widget.isQuestionPosting == true)
                         ? context.go(AppPathsForScreen.userHomePath)
                         : Navigator.pop(context),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.06 * scaleFactor,
-                      height: screenWidth * 0.06 * scaleFactor,
-                      fit: BoxFit.contain,
-                    ),
+                    splashRadius: 24, // optional, makes tap area bigger
                   ),
+
                   SizedBox(width: screenWidth * 0.02 * scaleFactor),
                   Text(
                     "Raise your Queries",

@@ -178,6 +178,7 @@ class _SplashScreenState extends State<LightSplashScreen>
                           fontFamily: "Cormorant",
                           fontSize: size.width * 0.055, // responsive
                           fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.italic,
                           color: Color(0xFF000000), // Black for light theme
                         ),
                       ),

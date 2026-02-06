@@ -1,14 +1,14 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
-import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
     show LocalStorageHelper;
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemUiOverlayStyle, SystemChrome;
+
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
@@ -154,40 +154,32 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     }
   }
 
-  String _formatTimestamp(int timestamp) {
-    if (timestamp < 1000000000000) {
-      timestamp *= 1000; // convert seconds → milliseconds
-    }
-    final date = DateTime.fromMillisecondsSinceEpoch(
-      timestamp,
-      isUtc: false,
-    ).toLocal();
-    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
-  }
-
   PreferredSizeWidget _buildLightAppBar(double screenWidth) {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(kToolbarHeight),
+      preferredSize: const Size.fromHeight(kToolbarHeight + 10),
       child: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             color: const Color(
               0xFFFFFBF1,
-            ).withOpacity(0.85), // iOS-style frosted background
-            padding: EdgeInsets.only(left: screenWidth * 0.04),
+            ).withOpacity(0.35), // iOS-style frosted background
+            // padding: EdgeInsets.only(left: screenWidth * 0.04),
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.go(AppPathsForScreen.userHomePath),
-                  child: Image.asset(
+                IconButton(
+                  padding: EdgeInsets.zero, // remove default padding
+
+                  icon: Image.asset(
                     AppAssets.backArrowIcon,
                     width: screenWidth * 0.06,
                     height: screenWidth * 0.06,
                     fit: BoxFit.contain,
                     color: Colors.black,
                   ),
+                  onPressed: () => context.go(AppPathsForScreen.userHomePath),
+                  splashRadius: 24, // optional, makes tap area bigger
                 ),
                 SizedBox(width: screenWidth * 0.02),
                 Text(
@@ -208,29 +200,48 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
 
   /// DARK THEME APPBAR (your original black one)
   PreferredSizeWidget _buildDarkAppBar(double screenWidth) {
-    return AppBar(
-      backgroundColor: const Color(0xFF171717),
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      leading: IconButton(
-        icon: Image.asset(
-          AppAssets.backArrowIcon,
-          width: screenWidth * 0.06,
-          height: screenWidth * 0.06,
-          fit: BoxFit.contain,
-          color: Colors.white,
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(kToolbarHeight + 10),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: kToolbarHeight + MediaQuery.of(context).padding.top,
+            color: const Color(0xFF2D2319).withOpacity(0.45), // Dark frosted
+            padding: EdgeInsets.only(
+              // left: screenWidth * 0.04,
+              top: MediaQuery.of(context).padding.top,
+            ),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero, // remove default padding
+
+                  icon: Image.asset(
+                    AppAssets.backArrowIcon,
+                    width: screenWidth * 0.06,
+                    height: screenWidth * 0.06,
+                    fit: BoxFit.contain,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => context.go(AppPathsForScreen.userHomePath),
+                  splashRadius: 24, // optional, makes tap area bigger
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Text(
+                  'Notifications History',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.065,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        onPressed: () => context.go(AppPathsForScreen.userHomePath),
       ),
-      title: Text(
-        "Notification Hstory",
-        style: GoogleFonts.outfit(
-          fontSize: screenWidth * 0.065,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
-      ),
-      centerTitle: false,
     );
   }
 
@@ -276,19 +287,23 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: isDark ? Color(0xFF171717) : Color(0xFFFFFBF1),
-      extendBody: !isDark,
-      extendBodyBehindAppBar: !isDark,
+      backgroundColor: isDark ? Color(0xFF2D2319) : Color(0xFFFFFBF1),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
 
       appBar: isDark
           ? _buildDarkAppBar(screenWidth)
           : _buildLightAppBar(screenWidth),
 
       body: isDark
-          ? Consumer<NotificationHistoryProvider>(
-              builder: (contex, provider, _) {
-                return buildForDarkTheme(provider, screenWidth, screenHeight);
-              },
+          ? SafeArea(
+              top: false,
+              bottom: false,
+              child: Consumer<NotificationHistoryProvider>(
+                builder: (contex, provider, _) {
+                  return buildForDarkTheme(provider, screenWidth, screenHeight);
+                },
+              ),
             )
           : Consumer<NotificationHistoryProvider>(
               builder: (contex, provider, _) {
@@ -303,10 +318,16 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     double screenWidth,
     double screenHeight,
   ) {
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
     return userId == null
         ? const Center(child: CircularProgressIndicator(color: Colors.amber))
         : SafeArea(
+            top: false,
+            bottom: false,
             child: RefreshIndicator(
+              edgeOffset: topPadding,
+
               color: Colors.amber,
               backgroundColor: Colors.black,
               onRefresh: _onRefresh,
@@ -344,8 +365,12 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                   : ListView.builder(
                       controller: _scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.symmetric(
-                        vertical: screenHeight * 0.015,
+                      padding: EdgeInsets.fromLTRB(
+                        0,
+                        // screenWidth * 0.01, // left padding (optional)
+                        topPadding, // top padding to avoid app bar
+                        0,
+                        screenHeight * 0.015, // bottom padding
                       ),
                       itemCount:
                           provider.notifications.length +
@@ -570,6 +595,8 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     double screenWidth,
     double screenHeight,
   ) {
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
     return userId == null
         ? const Center(child: CircularProgressIndicator(color: Colors.amber))
         : Stack(
@@ -612,8 +639,12 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                     : ListView.builder(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.symmetric(
-                          vertical: screenHeight * 0.015,
+                        padding: EdgeInsets.fromLTRB(
+                          0,
+                          // screenWidth * 0.01, // left padding (optional)
+                          topPadding, // top padding to avoid app bar
+                          0,
+                          screenHeight * 0.015, // bottom padding
                         ),
                         itemCount:
                             provider.notifications.length +
@@ -625,7 +656,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                               padding: EdgeInsets.all(16),
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  color: Colors.black,
+                                  color: Colors.amber,
                                 ),
                               ),
                             );

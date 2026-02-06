@@ -146,18 +146,22 @@ class DarkLiveCaseStatusScreen extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.only(
                     top: MediaQuery.of(context).padding.top,
-                    left: 16,
+                    // left: 16,
                     right: 16,
                   ),
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new,
-                          color: Colors.white,
-                          size: 22,
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
+                          AppAssets.backArrowIcon,
+                          width: screenWidth * 0.06,
+                          height: screenWidth * 0.06,
+                          fit: BoxFit.contain,
                         ),
+                        onPressed: () => context.pop(),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
                       const Spacer(),
                       Text(

@@ -391,22 +391,25 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                   padding: EdgeInsets.only(top: topInset),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.04 * 0.85,
+                      // horizontal: screenWidth * 0.04 * 0.85,
                       vertical: screenWidth * 0.04 * 0.85,
                     ),
                     child: Row(
                       children: [
-                        GestureDetector(
-                          onTap: () =>
-                              context.go(AppPathsForScreen.userHomePath),
-                          child: Image.asset(
+                        IconButton(
+                          padding: EdgeInsets.zero, // remove default padding
+
+                          icon: Image.asset(
                             AppAssets.backArrowIcon,
-                            width: screenWidth * 0.06 * 0.85,
-                            height: screenWidth * 0.06 * 0.85,
+                            width: screenWidth * 0.06,
+                            height: screenWidth * 0.06,
                             fit: BoxFit.contain,
                           ),
+                          onPressed: () =>
+                              context.go(AppPathsForScreen.userHomePath),
+                          splashRadius: 24, // optional, makes tap area bigger
                         ),
-                        SizedBox(width: screenWidth * 0.02 * 0.85),
+                        SizedBox(width: screenWidth * 0.001 * 0.85),
                         Text(
                           'Services',
                           style: GoogleFonts.outfit(

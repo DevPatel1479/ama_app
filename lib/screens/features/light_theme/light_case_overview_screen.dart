@@ -276,34 +276,32 @@ class _LightOverViewCaseDeskScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Top Bar
-            Padding(
-              padding: EdgeInsets.only(
-                left: screenWidth * 0.04,
-                // top: MediaQuery.of(context).padding.top,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.go(AppPathsForScreen.userHomePath),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.06,
-                      height: screenWidth * 0.06,
-                      fit: BoxFit.contain,
-                      color: Colors.black,
-                    ),
+            Row(
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero, // remove default padding
+
+                  icon: Image.asset(
+                    AppAssets.backArrowIcon,
+                    width: screenWidth * 0.06,
+                    height: screenWidth * 0.06,
+                    fit: BoxFit.contain,
+                    color: Colors.black,
                   ),
-                  SizedBox(width: screenWidth * 0.02),
-                  Text(
-                    'Case Desk',
-                    style: GoogleFonts.outfit(
-                      color: Colors.black,
-                      fontSize: screenWidth * 0.050,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  onPressed: () => context.go(AppPathsForScreen.userHomePath),
+                  splashRadius: 24, // optional, makes tap area bigger
+                ),
+
+                // SizedBox(width: screenWidth * 0.02),
+                Text(
+                  'Case Desk',
+                  style: GoogleFonts.outfit(
+                    color: Colors.black,
+                    fontSize: screenWidth * 0.050,
+                    fontWeight: FontWeight.w700,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

@@ -5,6 +5,7 @@ import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/login_status_sync/login_status_sync.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/material.dart';
@@ -234,6 +235,11 @@ class LoginProvider extends ChangeNotifier {
         await LocalStorageHelper.saveString("userPhone", phone);
         final userId = "${role}_${phone}";
         generateAndStoreFcmToken(userId);
+        await LoginStatusSyncService.updateLoginStatus(
+          phone: phone,
+          logout: false,
+        );
+        await LocalStorageHelper.saveBool("isLogInStatusInserted", true);
         // showCustomMessage(
         //   context,
         //   data["message"] ?? "OTP verified successfully",
