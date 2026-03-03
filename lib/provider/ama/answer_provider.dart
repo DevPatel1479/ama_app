@@ -21,6 +21,7 @@ class AnswerProvider with ChangeNotifier {
     required String content,
     required String answeredBy,
     required String role,
+    required String questionOwnerPhone,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -30,10 +31,11 @@ class AnswerProvider with ChangeNotifier {
         "content": content,
         "answeredBy": answeredBy,
         "role": role,
+        "questionOwnerPhone": questionOwnerPhone,
       });
 
       final data = jsonDecode(response.body);
-
+      print("adding answer  to ${questionOwnerPhone}");
       if (response.statusCode == 200 && data['answer'] != null) {
         _answer = AnswerModel.fromJson(data['answer']);
         showCustomMessage(

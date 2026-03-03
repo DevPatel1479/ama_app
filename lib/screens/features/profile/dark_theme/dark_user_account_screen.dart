@@ -342,6 +342,42 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     // if (widget.role.toLowerCase() != "user" &&
                     //     widget.role.toLowerCase() != "users")
                     SizedBox(height: screenHeight * 0.03),
+
+                    if (widget.role.toLowerCase() == "user" ||
+                        widget.role.toLowerCase() == "guest") ...[
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Image.asset(
+                              AppAssets.grid2Img,
+                              width: screenWidth * 0.04,
+                              height: screenWidth * 0.04,
+                              color: Colors.white,
+
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          SizedBox(width: screenWidth * 0.04),
+                          GestureDetector(
+                            onTap: () async {
+                              context.pushNamed(
+                                AppScreenNames.paymentViewScreen,
+                              );
+                            },
+                            child: Text(
+                              "Payment & Billing",
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.040,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: screenHeight * 0.03),
+                    ],
                     // 🔹 App Policies Header
                     Text(
                       "App Policies",

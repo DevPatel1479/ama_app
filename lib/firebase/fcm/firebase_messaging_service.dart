@@ -1,9 +1,14 @@
+import 'dart:convert' show jsonDecode, jsonEncode;
+
 import 'package:ama_legal_solutions/api/api_service.dart';
 import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
+import 'package:ama_legal_solutions/utils/notification_navigation_helper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart' show WidgetsFlutterBinding;
+import 'package:flutter/material.dart'
+    show WidgetsFlutterBinding, WidgetsBinding;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
@@ -15,6 +20,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('   Data: ${message.data}');
   // notificationReadStateProvider.setNewNotification(true);
   notificationReadStateProvider.setNewNotification(true);
+
   // await LocalStorageHelper.saveBool("has_new_notification", true);
   // Handle background message processing
   // You can perform tasks like updating local storage, etc.
@@ -112,8 +118,10 @@ class FirebaseMessagingService {
       // Handle notification tap when app is terminated
       RemoteMessage? initialMessage = await _firebaseMessaging
           .getInitialMessage();
+      print("initial message checking ... $initialMessage");
       if (initialMessage != null) {
-        _handleInitialMessage(initialMessage);
+        print("📨 Initial message received in TERMINATED state");
+        NotificationNavigation.handle(initialMessage.data);
       }
     } catch (e) {
       print('❌ Error initializing Firebase Messaging: $e');
@@ -272,8 +280,9 @@ class FirebaseMessagingService {
     print(
       "notification state in background   ${notificationReadStateProvider.hasNewNotification}",
     );
+    NotificationNavigation.handle(message.data);
     // Handle navigation or other actions based on message data
-    _handleMessageAction(message);
+    // _handleMessageAction(message);
   }
 
   /// Handle initial message (when app is terminated)
@@ -284,7 +293,8 @@ class FirebaseMessagingService {
     print('   Data: ${message.data}');
     notificationReadStateProvider.setNewNotification(true);
     // Handle navigation or other actions based on message data
-    _handleMessageAction(message);
+    // _handleMessageAction(message);
+    NotificationNavigation.handle(message.data);
   }
 
   // /// Show local notification
@@ -367,7 +377,7 @@ class FirebaseMessagingService {
         title,
         body,
         platformChannelSpecifics,
-        payload: message.data.toString(),
+        payload: jsonEncode(message.data),
       );
 
       print('✅ Local notification displayed');
@@ -378,14 +388,17 @@ class FirebaseMessagingService {
 
   /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    print('👆 Notification tapped:');
-    print('   Payload: ${response.payload}');
+    print('👆 Notification tapped RAW: ${response.payload}');
 
-    // Parse payload and handle navigation
-    if (response.payload != null) {
-      // You can parse the payload and navigate to specific screens
-      // For example: navigate to a specific question, profile, etc.
-      print('📱 Handling notification tap action');
+    if (response.payload == null) return;
+
+    try {
+      final data = jsonDecode(response.payload!);
+      print("✅ Decoded payload: $data");
+
+      NotificationNavigation.handle(Map<String, dynamic>.from(data));
+    } catch (e) {
+      print("❌ Payload decode failed: $e");
     }
   }
 

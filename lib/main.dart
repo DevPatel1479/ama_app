@@ -6,11 +6,14 @@ import 'package:ama_legal_solutions/firebase/fcm/fcm_sync_token_manager.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
 import 'package:ama_legal_solutions/firebase/firebase_options.dart';
 import 'package:ama_legal_solutions/login_status_sync/login_status_sync.dart';
+import 'package:ama_legal_solutions/provider/ama/ama_leads_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/answer_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/comment_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/delete_comment_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/delete_question_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
+import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
+import 'package:ama_legal_solutions/provider/billcut/billcut_leads_provider.dart';
 import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_history_provider.dart';
@@ -28,6 +31,7 @@ import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.d
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_router.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
+import 'package:ama_legal_solutions/utils/notification_navigation_helper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/rendering.dart';
@@ -83,10 +87,12 @@ void main() async {
   else if (isLoggedIn && savedPhone != null && savedPhone.isNotEmpty) {
     realTimeRoleProvider.startRoleListener("91${savedPhone}");
   }
+  final loginProvider = LoginProvider();
 
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<LoginProvider>.value(value: loginProvider),
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
         ChangeNotifierProvider<RealTimeRoleProvider>.value(
@@ -126,6 +132,8 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => CommentProvider(apiService: ApiService()),
         ),
+        ChangeNotifierProvider(create: (_) => AmaLeadsProvider()),
+        ChangeNotifierProvider(create: (_) => BillCutLeadsProvider()),
         ChangeNotifierProvider(create: (_) => RemarksProvider()),
         ChangeNotifierProvider(create: (_) => ResolveQueryProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
@@ -138,17 +146,57 @@ void main() async {
   );
 }
 
-class AmaLegalSolutionsApp extends StatelessWidget {
+class AmaLegalSolutionsApp extends StatefulWidget {
   const AmaLegalSolutionsApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<AmaLegalSolutionsApp> createState() => _AmaLegalSolutionsAppState();
+}
+
+class _AmaLegalSolutionsAppState extends State<AmaLegalSolutionsApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LoginProvider>().initialize(context);
+      context.read<LoginProvider>().checkSession(context);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _consumePendingDeepLink();
+    });
+  }
+
+  Future<void> _consumePendingDeepLink() async {
+    if (pendingDeepLink != null && isRouterReady) {
+      final link = pendingDeepLink!;
+      pendingDeepLink = null;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        appRouter.go(link);
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<LoginProvider>().checkSession(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'AMA Legal Solutions',
       routerConfig: appRouter,
-      // routerDelegate: appRouter.routerDelegate,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

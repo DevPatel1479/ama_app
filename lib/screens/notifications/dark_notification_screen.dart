@@ -1,7 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
-import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
+
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
     show LocalStorageHelper;
 // import 'package:ama_legal_solutions/models/notification_model.dart'
@@ -9,7 +9,6 @@ import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart'
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
@@ -17,7 +16,7 @@ import 'package:ama_legal_solutions/provider/notifications/notification_provider
 import 'package:go_router/go_router.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({Key? key}) : super(key: key);
+  const NotificationScreen({super.key});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
@@ -58,6 +57,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     setState(() => _userRole = role);
 
     if (role != null && role.isNotEmpty) {
+      if (!mounted) return;
       await _provider.fetchNotifications(context: context, role: role);
     }
   }
@@ -723,18 +723,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ],
       ),
     );
-  }
-
-  /// ✅ FIXED timestamp (handles seconds or milliseconds safely)
-  String _formatTimestamp(int timestamp) {
-    if (timestamp < 1000000000000) {
-      timestamp *= 1000; // convert seconds → milliseconds
-    }
-    final date = DateTime.fromMillisecondsSinceEpoch(
-      timestamp,
-      isUtc: false,
-    ).toLocal();
-    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
   }
 
   Future<void> _markNotificationsSeen() async {

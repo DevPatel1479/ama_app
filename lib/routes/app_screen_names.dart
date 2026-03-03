@@ -31,4 +31,7 @@ class AppScreenNames {
   static const String askLawyerScreen = "ask_lawyer_screen";
 
   static const String meetTeamScreen = "meet_team_screen";
+
+  static const String amaLeadsScreen = "ama_leads_screen";
+  static const String adminAmaLeadsScreen = "admin_ama_leads_screen";
 }

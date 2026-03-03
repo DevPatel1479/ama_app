@@ -230,7 +230,9 @@ RichText buildLinkText(
 }
 
 class DarkAmaScreen extends StatefulWidget {
-  const DarkAmaScreen({super.key});
+  final String? tappedQuestionId;
+  final String? tappedCommentId;
+  const DarkAmaScreen({super.key, this.tappedQuestionId, this.tappedCommentId});
   @override
   _DarkAmaScreenState createState() => _DarkAmaScreenState();
 }
@@ -266,6 +268,9 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
 
   // Track if we're doing initial load vs real-time update
   bool _isInitialLoading = true;
+
+  String? _highlightedQuestionId;
+  Timer? _highlightTimer;
 
   @override
   void initState() {
@@ -303,6 +308,51 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
       }
     });
     _searchController.addListener(_onSearchChanged);
+    if (widget.tappedQuestionId != null) {
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (!mounted) return;
+
+        /// 🔥 If comment deep link → open comments & highlight COMMENT (not question)
+        if (widget.tappedCommentId != null) {
+          _openCommentsAndScrollToQuestion(widget.tappedQuestionId!);
+        }
+        /// 🔥 Else → highlight QUESTION only
+        else {
+          _scrollToAndHighlightQuestion(widget.tappedQuestionId!);
+        }
+      });
+    }
+  }
+
+  void _openCommentsAndScrollToQuestion(String questionId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _questionKeys[questionId];
+      final ctx = key?.currentContext;
+
+      if (ctx != null) {
+        // Scroll to the question first
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          alignment: 0.2,
+        );
+
+        // Open comments
+        final commentProvider = context.read<CommentProvider>();
+        commentProvider.clearExistingComments();
+        commentProvider.fetchComments(questionId, reset: true);
+
+        setState(() {
+          _openedCommentQuestionId = questionId;
+        });
+      } else {
+        // Retry until widget is mounted
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _openCommentsAndScrollToQuestion(questionId);
+        });
+      }
+    });
   }
 
   void toggleComments(String questionId) {
@@ -311,6 +361,38 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
         _openedCommentQuestionId = null;
       } else {
         _openedCommentQuestionId = questionId;
+      }
+    });
+  }
+
+  void _scrollToAndHighlightQuestion(String questionId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _questionKeys[questionId];
+      final ctx = key?.currentContext;
+
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          alignment: 0.2,
+        );
+
+        setState(() {
+          _highlightedQuestionId = questionId;
+        });
+
+        _highlightTimer?.cancel();
+        _highlightTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() => _highlightedQuestionId = null);
+          }
+        });
+      } else {
+        // 🔁 Retry if widget not built yet (pagination / async load)
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _scrollToAndHighlightQuestion(questionId);
+        });
       }
     });
   }
@@ -585,6 +667,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
     String questionId,
     String answeredBy,
     String role,
+    String questionOwnerPhone,
   ) {
     final TextEditingController _controller = TextEditingController();
 
@@ -673,6 +756,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                             content: content,
                             answeredBy: answeredBy,
                             role: role,
+                            questionOwnerPhone: questionOwnerPhone,
                           );
 
                           if (!answerProvider.isLoading) {
@@ -789,6 +873,27 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
     });
   }
 
+  List<Map<String, String>> _getDropdownValues() {
+    final role = userRole?.toLowerCase() ?? "";
+
+    if (role == "user" || role == "client" || role == "guest") {
+      return [
+        {'key': 'all', 'label': 'All'}, // default: all questions
+        {'key': 'unanswered', 'label': 'Unanswered'},
+        {'key': 'posted_by_me', 'label': 'Posted by me'},
+        {'key': 'answered', 'label': 'Answered'},
+      ];
+    } else {
+      // admin / advocate
+      return [
+        {'key': 'all', 'label': 'All'}, // default: all questions
+        {'key': 'unanswered', 'label': 'Unanswered'},
+        {'key': 'answered_by_me', 'label': 'Answered by me'},
+        {'key': 'answered', 'label': 'Answered'},
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -839,7 +944,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                 },
                 body: SafeArea(
                   bottom: false,
-                  top: false,
+                  // top: false,
                   child: Builder(
                     builder: (context) {
                       return
@@ -906,25 +1011,48 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
 
                           // Show message if filtered list is empty
                           List __filteredQuestions = uniqueQuestions;
-                          if (_activeFilter == "latest") {
-                            final todayStart = DateTime.now();
-                            final startOfDay = DateTime(
-                              todayStart.year,
-                              todayStart.month,
-                              todayStart.day,
-                            ).millisecondsSinceEpoch;
-                            __filteredQuestions = uniqueQuestions
-                                .where((q) => (q.timestamp ?? 0) >= startOfDay)
-                                .toList();
-                            __filteredQuestions.sort(
-                              (a, b) => (b.timestamp ?? 0).compareTo(
-                                a.timestamp ?? 0,
-                              ),
-                            );
-                          } else if (_activeFilter == "unanswered") {
-                            __filteredQuestions = uniqueQuestions
-                                .where((q) => q.answer == null)
-                                .toList();
+
+                          switch (_activeFilter) {
+                            case 'all': // show all questions
+                              __filteredQuestions = uniqueQuestions;
+                              __filteredQuestions.sort(
+                                (a, b) => (b.timestamp ?? 0).compareTo(
+                                  a.timestamp ?? 0,
+                                ),
+                              );
+                              break;
+
+                            case 'unanswered':
+                              __filteredQuestions = uniqueQuestions
+                                  .where((q) => q.answer == null)
+                                  .toList();
+                              break;
+
+                            case 'posted_by_me':
+                              __filteredQuestions = uniqueQuestions
+                                  .where((q) => q.phone == userPhone)
+                                  .toList();
+                              break;
+
+                            case 'answered_by_me':
+                              __filteredQuestions = uniqueQuestions
+                                  .where(
+                                    (q) =>
+                                        q.answer != null &&
+                                        q.answer!.answeredBy.toLowerCase() ==
+                                            userName?.toLowerCase(),
+                                  )
+                                  .toList();
+                              break;
+
+                            case 'answered':
+                              __filteredQuestions = uniqueQuestions
+                                  .where((q) => q.answer != null)
+                                  .toList();
+                              break;
+
+                            default:
+                              __filteredQuestions = uniqueQuestions;
                           }
                           // Use filtered pagination only when not searching
                           final bool usePagination = _searchQuery.isEmpty;
@@ -982,6 +1110,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                 if (index == 0) {
                                   return Padding(
                                     padding: EdgeInsets.only(
+                                      top: screenHeight * 0.03,
                                       bottom: screenHeight * 0.02,
                                     ),
                                     child: RepaintBoundary(
@@ -995,32 +1124,75 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
 
                                 /// map index → question index
                                 if (index == 1) {
+                                  final dropdownKeys = _getDropdownValues()
+                                      .map((filter) => filter['key'])
+                                      .toList();
+
+                                  // Ensure active filter is valid
+                                  if (!dropdownKeys.contains(_activeFilter)) {
+                                    _activeFilter =
+                                        "all"; // default to all questions
+                                  }
+
                                   return Padding(
-                                    padding: EdgeInsetsGeometry.only(
+                                    padding: EdgeInsets.only(
                                       bottom: screenHeight * 0.02,
+                                      left: screenWidth * 0.04,
+                                      right: screenWidth * 0.04,
                                     ),
                                     child: SizedBox(
-                                      height: screenHeight * 0.05, // row height
-
-                                      child: ListView(
-                                        scrollDirection: Axis.horizontal,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: screenWidth * 0.01,
-                                        ),
-
+                                      height: screenHeight * 0.06,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .end, // push to right
                                         children: [
-                                          _buildFilterButton(
-                                            "Latest",
-                                            "latest",
-                                            screenWidth,
-                                            screenHeight,
+                                          Text(
+                                            "Filter by:",
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontSize: screenWidth * 0.04,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
-                                          SizedBox(width: screenWidth * 0.03),
-                                          _buildFilterButton(
-                                            "Unanswered",
-                                            "unanswered",
-                                            screenWidth,
-                                            screenHeight,
+                                          SizedBox(width: screenWidth * 0.05),
+                                          DropdownButtonHideUnderline(
+                                            child: DropdownButton<String>(
+                                              value: _activeFilter,
+                                              isExpanded: false,
+                                              dropdownColor: const Color(
+                                                0xFF2D2D2D,
+                                              ),
+                                              iconEnabledColor: Colors.white,
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontSize: screenWidth * 0.04,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              onChanged: (value) {
+                                                if (value != null) {
+                                                  setState(() {
+                                                    _activeFilter = value;
+                                                  });
+                                                }
+                                              },
+                                              items: _getDropdownValues().map((
+                                                filter,
+                                              ) {
+                                                return DropdownMenuItem<String>(
+                                                  value: filter['key'],
+                                                  child: Text(
+                                                    filter['label']!,
+                                                    style: GoogleFonts.outfit(
+                                                      color: Colors.white,
+                                                      fontSize:
+                                                          screenWidth * 0.04,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1084,6 +1256,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                 final question =
                                     __filteredQuestions[actualIndex];
                                 final questionId = question.id as String;
+                                final clientPhone = question.phone as String;
                                 final isExpanded = !_collapsedIds.contains(
                                   questionId,
                                 );
@@ -1112,28 +1285,48 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                     : answerText;
 
                                 // Inside your ListView.builder, replace the old card Container with this:
-
+                                final bool isHighlighted =
+                                    _highlightedQuestionId == questionId;
                                 return RepaintBoundary(
-                                  child: Container(
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 400),
+
                                     key: _questionKeys[questionId],
                                     margin: const EdgeInsets.symmetric(
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(
-                                        210,
-                                        159,
-                                        42,
-                                        0.07,
-                                      ),
+                                      color: isHighlighted
+                                          ? const Color.fromRGBO(
+                                              210,
+                                              159,
+                                              42,
+                                              0.35,
+                                            )
+                                          : const Color.fromRGBO(
+                                              210,
+                                              159,
+                                              42,
+                                              0.07,
+                                            ),
                                       borderRadius: BorderRadius.circular(15),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.33),
-                                          blurRadius: 12.5,
+                                          color: isHighlighted
+                                              ? Colors.amber.withOpacity(0.8)
+                                              : Colors.black.withOpacity(0.33),
+                                          blurRadius: isHighlighted ? 25 : 12.5,
+                                          spreadRadius: isHighlighted ? 2 : 0,
                                         ),
                                       ],
+                                      border: isHighlighted
+                                          ? Border.all(
+                                              color: Colors.amberAccent,
+                                              width: 1.5,
+                                            )
+                                          : null,
                                     ),
+
                                     padding: EdgeInsets.all(screenWidth * 0.03),
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
@@ -1279,6 +1472,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                                       questionId,
                                                       userName!,
                                                       userRole!,
+                                                      question.phone as String,
                                                     );
                                                   },
                                                   style:
@@ -1631,8 +1825,10 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                                             questionId: questionId,
                                             userName: userName,
                                             userRole: userRole,
-                                            userPhone: userPhone,
+                                            userPhone: clientPhone,
                                             profileImgUrl: profilImgUrl,
+                                            tappedCommentId:
+                                                widget.tappedCommentId,
                                             onClose: () {
                                               setState(() {
                                                 _openedCommentQuestionId = null;
@@ -1656,6 +1852,7 @@ class _DarkAmaScreenState extends State<DarkAmaScreen> {
                 top: 0,
                 left: 0,
                 right: 0,
+
                 child: RepaintBoundary(
                   child: ClipRect(
                     child: BackdropFilter(
@@ -1799,6 +1996,7 @@ class InlineCommentsSection extends StatefulWidget {
   final String? profileImgUrl;
   final VoidCallback onClose;
   final bool isLight;
+  final String? tappedCommentId;
 
   const InlineCommentsSection({
     Key? key,
@@ -1809,6 +2007,7 @@ class InlineCommentsSection extends StatefulWidget {
     this.userPhone,
     this.profileImgUrl,
     this.isLight = false,
+    this.tappedCommentId,
   }) : super(key: key);
 
   @override
@@ -1816,11 +2015,14 @@ class InlineCommentsSection extends StatefulWidget {
 }
 
 class _InlineCommentsSectionState extends State<InlineCommentsSection> {
+  final Map<String, GlobalKey> _commentKeys = {};
+  String? _highlightedCommentId;
+  Timer? _highlightTimer;
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       Future.delayed(const Duration(milliseconds: 250), () {
         if (!mounted) return;
 
@@ -1834,6 +2036,44 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
           alignment: 0.3,
         );
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final provider = context.read<CommentProvider>();
+
+        // Wait until comments are loaded
+        if (widget.tappedCommentId != null) {
+          await Future.delayed(const Duration(milliseconds: 600));
+          _scrollToAndHighlightComment(widget.tappedCommentId!);
+        }
+      });
+    });
+  }
+
+  void _scrollToAndHighlightComment(String commentId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _commentKeys[commentId];
+      final ctx = key?.currentContext;
+
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.3,
+        );
+
+        setState(() => _highlightedCommentId = commentId);
+
+        _highlightTimer?.cancel();
+        _highlightTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() => _highlightedCommentId = null);
+          }
+        });
+      } else {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _scrollToAndHighlightComment(commentId);
+        });
+      }
     });
   }
 
@@ -1913,165 +2153,193 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                 ),
                 itemBuilder: (context, index) {
                   final c = provider.comments[index];
+                  final isHighlighted = _highlightedCommentId == c.id;
+
                   final bool isExpert =
                       (c.userRole?.toLowerCase() != "user" &&
                       c.userRole?.toLowerCase() != "client");
                   final bool isLegalExpert =
                       c.userRole?.toLowerCase() == "legal_expert";
+                  final commentId = c.id!;
+                  _commentKeys.putIfAbsent(commentId, () => GlobalKey());
+                  return AnimatedContainer(
+                    key: _commentKeys[commentId],
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: screenWidth * 0.035,
-                            backgroundImage:
-                                c.profileImgUrl != null &&
-                                    c.profileImgUrl!.isNotEmpty
-                                ? NetworkImage(
-                                    "${c.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
-                                  )
-                                : AssetImage(AppAssets.userIcon)
-                                      as ImageProvider,
-                          ),
+                    duration: const Duration(milliseconds: 400),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isHighlighted
+                          ? const Color.fromRGBO(210, 159, 42, 0.25)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: isHighlighted
+                          ? [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.7),
+                                blurRadius: 20,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : [],
+                      border: isHighlighted
+                          ? Border.all(color: Colors.amberAccent, width: 1.2)
+                          : null,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: screenWidth * 0.035,
+                              backgroundImage:
+                                  c.profileImgUrl != null &&
+                                      c.profileImgUrl!.isNotEmpty
+                                  ? NetworkImage(
+                                      "${c.profileImgUrl}?v=${DateTime.now().millisecondsSinceEpoch}",
+                                    )
+                                  : AssetImage(AppAssets.userIcon)
+                                        as ImageProvider,
+                            ),
 
-                          SizedBox(width: screenWidth * 0.03),
+                            SizedBox(width: screenWidth * 0.03),
 
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    c.commentedBy ?? "",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.outfit(
-                                      color: widget.isLight
-                                          ? Colors.black
-                                          : Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-
-                                if (isExpert) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: widget.isLight
-                                          ? const Color(0xFF2D2319)
-                                          : const Color.fromRGBO(
-                                              255,
-                                              219,
-                                              137,
-                                              0.64,
-                                            ),
-                                    ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
                                     child: Text(
-                                      isLegalExpert == true
-                                          ? "Legal Expert"
-                                          : "Expert",
+                                      c.commentedBy ?? "",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.outfit(
-                                        fontSize: 10,
                                         color: widget.isLight
-                                            ? Colors.white
-                                            : isLegalExpert == true
-                                            ? Colors.white
-                                            : const Color(0xFF2D2319),
+                                            ? Colors.black
+                                            : Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ),
-                                ],
-                              ],
-                            ),
-                          ),
 
-                          Text(
-                            timeAgo(c.timestamp ?? 1),
-                            style: GoogleFonts.outfit(
-                              color: widget.isLight
-                                  ? Colors.black87
-                                  : Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                          if (widget.userRole?.toLowerCase() == "admin")
-                            Consumer<DeleteCommentProvider>(
-                              builder: (_, deleteProvider, __) {
-                                final isDeleting =
-                                    deleteProvider.isDeleting &&
-                                    deleteProvider.response?.commentId == c.id;
-
-                                return GestureDetector(
-                                  onTap: isDeleting
-                                      ? null
-                                      : () async {
-                                          final confirm =
-                                              await showDeleteConfirmDialog(
-                                                context,
-                                                title: "Delete Comment?",
-                                                message:
-                                                    "This comment will be permanently removed.",
-                                              );
-
-                                          if (!confirm) return;
-
-                                          final success = await deleteProvider
-                                              .deleteComment(
-                                                questionId: widget.questionId,
-                                                commentId: c.id!,
-                                                role: widget.userRole!,
-                                              );
-
-                                          if (success) {
-                                            /// ✅ deletes ONLY selected comment
-                                            provider.removeCommentLocally(
-                                              c.id!,
-                                            );
-                                          }
-                                        },
-                                  child: isDeleting
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Icon(
-                                          Icons.delete_outline,
+                                  if (isExpert) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: widget.isLight
+                                            ? const Color(0xFF2D2319)
+                                            : const Color.fromRGBO(
+                                                255,
+                                                219,
+                                                137,
+                                                0.64,
+                                              ),
+                                      ),
+                                      child: Text(
+                                        isLegalExpert == true
+                                            ? "Legal Expert"
+                                            : "Expert",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
                                           color: widget.isLight
-                                              ? Colors.black
-                                              : Colors.redAccent,
-                                          size: 18,
+                                              ? Colors.white
+                                              : isLegalExpert == true
+                                              ? Colors.white
+                                              : const Color(0xFF2D2319),
                                         ),
-                                );
-                              },
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
-                        ],
-                      ),
 
-                      SizedBox(height: screenHeight * 0.01),
+                            Text(
+                              timeAgo(c.timestamp ?? 1),
+                              style: GoogleFonts.outfit(
+                                color: widget.isLight
+                                    ? Colors.black87
+                                    : Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (widget.userRole?.toLowerCase() == "admin")
+                              Consumer<DeleteCommentProvider>(
+                                builder: (_, deleteProvider, __) {
+                                  final isDeleting =
+                                      deleteProvider.isDeleting &&
+                                      deleteProvider.response?.commentId ==
+                                          c.id;
 
-                      Text(
-                        c.content ?? "",
-                        style: GoogleFonts.outfit(
-                          color: widget.isLight ? Colors.black : Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w300,
-                          height: 1.0,
+                                  return GestureDetector(
+                                    onTap: isDeleting
+                                        ? null
+                                        : () async {
+                                            final confirm =
+                                                await showDeleteConfirmDialog(
+                                                  context,
+                                                  title: "Delete Comment?",
+                                                  message:
+                                                      "This comment will be permanently removed.",
+                                                );
+
+                                            if (!confirm) return;
+
+                                            final success = await deleteProvider
+                                                .deleteComment(
+                                                  questionId: widget.questionId,
+                                                  commentId: c.id!,
+                                                  role: widget.userRole!,
+                                                );
+
+                                            if (success) {
+                                              /// ✅ deletes ONLY selected comment
+                                              provider.removeCommentLocally(
+                                                c.id!,
+                                              );
+                                            }
+                                          },
+                                    child: isDeleting
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.delete_outline,
+                                            color: widget.isLight
+                                                ? Colors.black
+                                                : Colors.redAccent,
+                                            size: 18,
+                                          ),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
-                      ),
-                    ],
+
+                        SizedBox(height: screenHeight * 0.01),
+
+                        Text(
+                          c.content ?? "",
+                          style: GoogleFonts.outfit(
+                            color: widget.isLight ? Colors.black : Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w300,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -2117,8 +2385,8 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                     IconButton(
                       onPressed: provider.isSending
                           ? null
-                          : () {
-                              provider.postComment(
+                          : () async {
+                              final success = await provider.postComment(
                                 context: context,
                                 questionId: widget.questionId,
                                 content: provider.commentController.text.trim(),
@@ -2127,6 +2395,9 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                                 phone: widget.userPhone ?? "",
                                 profileImgUrl: widget.profileImgUrl ?? "",
                               );
+                              if (success) {
+                                provider.commentController.clear();
+                              }
                             },
                       icon: provider.isSending
                           ? const SizedBox(

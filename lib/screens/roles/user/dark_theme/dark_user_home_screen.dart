@@ -81,7 +81,7 @@ Widget connectLawyerCard({
               icon,
               width: size.width * 0.11,
               fit: BoxFit.contain,
-              color: isLight ? Colors.black : null,
+              // color: isLight ? Colors.black : null,
             ),
 
             SizedBox(height: space),
@@ -143,11 +143,50 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
       return connectLawyerCard(
         isLight: isLight,
         context: context,
-        icon: index == 0 ? AppAssets.connectL : AppAssets.connectC,
+        icon: index == 0 ? AppAssets.hg1Img : AppAssets.hg2Img,
         title: index == 0 ? "Connect to Lawyer" : "Track My Case",
         subtitle: index == 0
             ? "Trusted advice from verified experts"
             : "Live status & case progress",
+        onTap: () {
+          if (index == 0) {
+            context.pushNamed(AppScreenNames.raiseQuery);
+          } else {
+            context.pushNamed(AppScreenNames.overviewCaseDeskScreen);
+          }
+        },
+      );
+    },
+  );
+}
+
+Widget connectLawyerSecondaryGrid(
+  BuildContext context, {
+  bool isLight = false,
+}) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+
+  return GridView.builder(
+    shrinkWrap: true,
+    padding: EdgeInsets.zero,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: 2,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: screenWidth * 0.04,
+      mainAxisSpacing: screenHeight * 0.025,
+      childAspectRatio: 1.10,
+    ),
+    itemBuilder: (context, index) {
+      return connectLawyerCard(
+        isLight: isLight,
+        context: context,
+        icon: index == 0 ? AppAssets.hg3Img : AppAssets.hg4Img,
+        title: index == 0 ? "Request Assistance" : "Ask Your Question",
+        subtitle: index == 0
+            ? "Need help? We’re here to assist you"
+            : "Legal answers within 45 minutes",
         onTap: () {
           if (index == 0) {
             context.pushNamed(
@@ -155,7 +194,7 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
               queryParameters: {"isFilingDispute": "true"},
             );
           } else {
-            context.pushNamed(AppScreenNames.overviewCaseDeskScreen);
+            context.pushNamed(AppScreenNames.ama);
           }
         },
       );
@@ -658,9 +697,8 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RealtimeImageProvider>().listenImages(widget.type);
+      _startAutoSlide();
     });
-
-    _startAutoSlide();
   }
 
   void _startAutoSlide() {
@@ -1055,6 +1093,28 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                     ),
                   ),
                 ),
+              if (userRole?.toLowerCase() == "advocate" ||
+                  userRole?.toLowerCase() == "admin")
+                GestureDetector(
+                  onTap: () {
+                    userRole?.toLowerCase() == "advocate"
+                        ? context.pushNamed(
+                            AppScreenNames.amaLeadsScreen,
+                            queryParameters: {"name": userName},
+                          )
+                        : context.pushNamed(AppScreenNames.adminAmaLeadsScreen);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: screenWidth * 0.03 * scaleFactor,
+                    ),
+                    child: Icon(
+                      Icons.assignment_ind_outlined, // lead-ish vibe
+                      size: iconSize,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
 
               /// Notification Icon with badge
               Stack(
@@ -1286,8 +1346,19 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                           delegate: SliverChildListDelegate([
                             RealtimeImageCarousel(type: "home"),
                             SizedBox(height: screenHeight * 0.04 * scaleFactor),
-                            if (userRole?.toLowerCase() == "client")
+                            if (userRole?.toLowerCase() == "client") ...[
                               connectLawyerGrid(context),
+                              SizedBox(
+                                height: screenHeight * 0.02 * scaleFactor,
+                              ),
+                            ],
+                            if (userRole?.toLowerCase() == "user") ...[
+                              /// 🔥 Very small spacing between two grids
+                              connectLawyerSecondaryGrid(context),
+                              SizedBox(
+                                height: screenHeight * 0.02 * scaleFactor,
+                              ),
+                            ],
                             statOverviewCard(context),
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
 

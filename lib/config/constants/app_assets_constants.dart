@@ -194,4 +194,13 @@ class AppAssets {
   static const String closeButton = "assets/icons/close_button.png";
 
   static const String googleReviewImg = "assets/images/google_review.png";
+  static const String lightAppLogo = "assets/icons/light_app_logo.png";
+
+  static const String hg1Img = "assets/images/hg1.png";
+  static const String hg2Img = "assets/images/hg2.png";
+  static const String hg3Img = "assets/images/hg3.png";
+  static const String hg4Img = "assets/images/hg4.png";
+  static const String hg5Img = "assets/images/hg5.png";
+  static const String solutionsTextImg = "assets/images/solutions_text.png";
+  static const String solutionsTextLightImg = "assets/images/solutions_text.png";
 }

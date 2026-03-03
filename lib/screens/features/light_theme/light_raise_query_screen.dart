@@ -105,7 +105,10 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
 
             // SizedBox(width: screenWidth * 0.02 * scaleFactor),
             Text(
-              "Raise your Queries",
+              (widget.isQuestionPosting != null &&
+                      widget.isQuestionPosting == true)
+                  ? "Ask a Question"
+                  : "Raise your Queries",
               style: GoogleFonts.outfit(
                 fontSize: screenWidth * 0.055,
                 fontWeight: FontWeight.w600,

@@ -8,16 +8,26 @@ import 'package:provider/provider.dart';
 
 class AmaScreenHelper {
   /// Returns the appropriate Get Started screen based on theme
-  static Widget getScreen(BuildContext context) {
+  static Widget getScreen(
+    BuildContext context, {
+    String? tappedQuestionId,
+    String? tappedCommentId,
+  }) {
     final isDarkMode = Provider.of<ThemeProvider>(
       context,
       listen: false,
     ).isDarkMode;
 
     if (isDarkMode) {
-      return const DarkAmaScreen();
+      return DarkAmaScreen(
+        tappedQuestionId: tappedQuestionId,
+        tappedCommentId: tappedCommentId,
+      );
     } else {
-      return const LightAmaScreen();
+      return LightAmaScreen(
+        tappedQuestionId: tappedQuestionId,
+        tappedCommentId: tappedCommentId,
+      );
     }
   }
 }

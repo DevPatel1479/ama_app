@@ -54,6 +54,7 @@ class ScheduledNotificationProvider extends ChangeNotifier {
         payload,
       );
 
+
       final decoded = jsonDecode(response.body);
       print("response ${decoded}");
       if (response.statusCode == 201 && decoded["success"] == true) {

@@ -112,6 +112,7 @@ class CommentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("comment on user phone  : $phone");
       final body = {
         'content': content,
         'commentedBy': commentedBy,

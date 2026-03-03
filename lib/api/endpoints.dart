@@ -30,7 +30,7 @@ class Endpoints {
       "$baseUrl/notifications/send-topic-notification";
 
   static String getNotifications(String role) =>
-      "$baseUrl/notifications/get-notification/$role";
+      "$baseUrl/notifications/get-notification/v2/$role";
 
   static String lastSeenNotification = "$baseUrl/notifications/last-seen";
   static String markNotificationSeen = "$baseUrl/notifications/mark-seen";
@@ -68,4 +68,65 @@ class Endpoints {
   static String imagesByType(String type) => "$baseUrl/images/get/$type";
 
   static String scheduleNotification = "$baseUrl/notifications/schedule";
+
+  static String fetchAmaLeads(
+    String name,
+    int limit,
+    String? cursorId, {
+    String? search,
+  }) {
+    final params = <String, String>{"name": name, "limit": limit.toString()};
+
+    if (cursorId != null) params["cursorId"] = cursorId;
+    if (search != null && search.trim().isNotEmpty) params["search"] = search;
+
+    final query = Uri(queryParameters: params).query;
+    return "$baseUrl/ama-leads?$query";
+  }
+
+  static String fetchAmaLeadsAdmin(
+    int limit,
+    String? cursorId, {
+    String? search,
+  }) {
+    final params = <String, String>{"role": "admin", "limit": limit.toString()};
+    if (search != null && search.trim().isNotEmpty) params["search"] = search;
+    if (cursorId != null) {
+      params["cursorId"] = cursorId;
+    }
+
+    final query = Uri(queryParameters: params).query;
+    return "$baseUrl/ama-leads/admin?$query";
+  }
+
+  static String fetchBillCutLeads(
+    String name,
+    int limit,
+    String? cursorId, {
+    String? search,
+  }) {
+    final params = <String, String>{"name": name, "limit": limit.toString()};
+
+    if (cursorId != null) params["cursorId"] = cursorId;
+    if (search != null && search.trim().isNotEmpty) params["search"] = search;
+
+    final query = Uri(queryParameters: params).query;
+    
+    return "$baseUrl/billCut-leads?$query";
+  }
+
+  static String fetchBillCutLeadsAdmin(
+    int limit,
+    String? cursorId, {
+    String? search,
+  }) {
+    final params = <String, String>{"role": "admin", "limit": limit.toString()};
+    if (search != null && search.trim().isNotEmpty) params["search"] = search;
+    if (cursorId != null) {
+      params["cursorId"] = cursorId;
+    }
+
+    final query = Uri(queryParameters: params).query;
+    return "$baseUrl/billCut-leads/admin?$query";
+  }
 }

@@ -656,7 +656,7 @@ class _DarkOverViewCaseDeskScreenState
                     _gridCard(
                       screenWidth: screenWidth,
                       screenHeight: screenHeight,
-                      image: AppAssets.grid1Img,
+                      image: AppAssets.hg1Img,
                       title: "Ask your Lawyer",
                       subtitle: "Get your query resolved in 45 minutes",
                       onTap: () {
@@ -666,7 +666,7 @@ class _DarkOverViewCaseDeskScreenState
                     _gridCard(
                       screenWidth: screenWidth,
                       screenHeight: screenHeight,
-                      image: AppAssets.grid2Img,
+                      image: AppAssets.hg5Img,
                       title: "Payment & Billing",
                       subtitle: "View invoices & payment history",
                       onTap: () {

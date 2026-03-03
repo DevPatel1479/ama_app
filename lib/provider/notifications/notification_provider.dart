@@ -21,7 +21,7 @@ class NotificationProvider with ChangeNotifier {
   List<NotificationModel> _notifications = [];
   List<NotificationModel> get notifications => _notifications;
   bool _hasFetchedLastSeen = false;
-  int _currentPage = 1;
+  String? _lastDocId;
   final int _limit = 10;
   bool _hasMore = true;
   bool get hasMore => _hasMore;
@@ -121,7 +121,7 @@ class NotificationProvider with ChangeNotifier {
       _hasFetchedLastSeen = true;
     }
     if (!loadMore) {
-      _currentPage = 1;
+      _lastDocId = null;
       _notifications.clear();
       _hasMore = true;
     }
@@ -131,7 +131,7 @@ class NotificationProvider with ChangeNotifier {
 
     try {
       final response = await _apiService.get(
-        "${Endpoints.getNotifications(role)}?page=$_currentPage&limit=$_limit",
+        "${Endpoints.getNotifications(role)}?phone=$phone&limit=$_limit${_lastDocId != null ? "&lastDocId=$_lastDocId" : ""}",
       );
 
       if (response.statusCode == 200) {
@@ -142,18 +142,15 @@ class NotificationProvider with ChangeNotifier {
             response.body,
           );
 
+          _lastDocId = data['lastDocId'];
+          _hasMore = data['hasMore'] ?? false;
           // ✅ Remove duplicates based on notification ID
           final existingIds = _notifications.map((n) => n.id).toSet();
           final uniqueNew = newNotifications
               .where((n) => !existingIds.contains(n.id))
               .toList();
 
-          // ✅ Check if more pages available
-          if (uniqueNew.length < _limit) _hasMore = false;
-
           _notifications.addAll(uniqueNew);
-
-          _currentPage++;
 
           print(_notifications.first.timestamp);
 
@@ -174,9 +171,10 @@ class NotificationProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      print(e.toString());
-      if (!e.toString().contains("Bad state: No element"))
+      // print(e.toString());
+      if (!e.toString().contains("Bad state: No element")) {
         showCustomMessage(context, "Error: ${e.toString()}", true);
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -198,7 +196,7 @@ class NotificationProvider with ChangeNotifier {
   void clearNotifications() {
     _notifications.clear();
     _hasMore = true;
-    _currentPage = 1;
+
     _isLoading = true;
     _hasFetchedLastSeen = false;
     _lastOpenedNotificationTime = null;
