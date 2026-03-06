@@ -608,7 +608,9 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         SizedBox(height: screenHeight * 0.04 * scaleFactor),
                         if (userRole?.toLowerCase() == "client") ...[
                           connectLawyerGrid(context, isLight: true),
-
+                          SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                        ],
+                        if (userRole?.toLowerCase() == "user") ...[
                           /// 🔥 Very small spacing between two grids
                           connectLawyerSecondaryGrid(context, isLight: true),
                           SizedBox(height: screenHeight * 0.02 * scaleFactor),

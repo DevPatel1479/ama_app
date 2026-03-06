@@ -131,7 +131,9 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
     itemCount: 2,
-
+    padding: isLight == false
+        ? EdgeInsets.only(top: screenHeight * 0.01)
+        : EdgeInsets.zero,
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
       crossAxisSpacing: screenWidth * 0.04,
@@ -169,7 +171,9 @@ Widget connectLawyerSecondaryGrid(
 
   return GridView.builder(
     shrinkWrap: true,
-    padding: EdgeInsets.zero,
+    padding: isLight == false
+        ? EdgeInsets.only(top: screenHeight * 0.01)
+        : EdgeInsets.zero,
     physics: const NeverScrollableScrollPhysics(),
     itemCount: 2,
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1345,7 +1349,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             RealtimeImageCarousel(type: "home"),
-                            SizedBox(height: screenHeight * 0.04 * scaleFactor),
+                            SizedBox(height: screenHeight * 0.03 * scaleFactor),
                             if (userRole?.toLowerCase() == "client") ...[
                               connectLawyerGrid(context),
                               SizedBox(

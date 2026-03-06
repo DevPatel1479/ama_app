@@ -122,7 +122,7 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: h * 0.06),
+                  SizedBox(height: h * 0.07),
                   Center(
                     child: SizedBox(
                       width: w * 0.55,
@@ -183,7 +183,7 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                     ),
                   ),
 
-                  SizedBox(height: h * 0.06),
+                  SizedBox(height: h * 0.03),
 
                   SizedBox(
                     width: w * 0.85,
@@ -220,7 +220,7 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                     ),
                   ),
 
-                  SizedBox(height: h * 0.06),
+                  SizedBox(height: h * 0.08),
 
                   GestureDetector(
                     onTapDown: (_) => setState(() => _scale = 0.95),

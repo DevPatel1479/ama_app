@@ -36,7 +36,7 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
     final h = size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF241B11),
+      backgroundColor: const Color(0xFF1A1107),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -126,8 +126,9 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: w * 0.08),
+              padding: EdgeInsets.fromLTRB(w * 0.08, 0, w * 0.08, 0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // SizedBox(height: h * 0.01),

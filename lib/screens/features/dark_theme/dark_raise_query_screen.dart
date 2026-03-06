@@ -307,6 +307,7 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                                       }
                                       if (widget.isFilingDispute != null &&
                                           widget.isFilingDispute == true) {
+                                        if (!context.mounted) return;
                                         await provider.raiseQuery(
                                           context: context,
                                           role: role,
@@ -316,6 +317,16 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                                           selectedService: selectedService,
                                           fileDispute: true,
                                         );
+                                        if (provider.successMessage != null) {
+                                          print(provider.successMessage);
+                                          if (!context.mounted) return;
+                                          context.pop();
+                                          showCustomMessage(
+                                            context,
+                                            provider.successMessage ?? "",
+                                            false,
+                                          );
+                                        }
                                       } else {
                                         final success = await provider
                                             .raiseQuery(

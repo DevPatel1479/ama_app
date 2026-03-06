@@ -74,6 +74,7 @@ final GoRouter appRouter = GoRouter(
           child: SplashScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
+
             return child;
           },
         );

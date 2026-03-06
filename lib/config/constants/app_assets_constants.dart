@@ -202,5 +202,5 @@ class AppAssets {
   static const String hg4Img = "assets/images/hg4.png";
   static const String hg5Img = "assets/images/hg5.png";
   static const String solutionsTextImg = "assets/images/solutions_text.png";
-  static const String solutionsTextLightImg = "assets/images/solutions_text.png";
+  static const String solutionsTextLightImg = "assets/images/solutions_text_light.png";
 }
