@@ -6,6 +6,81 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ama_legal_solutions/provider/teams/team_provider.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 
+class _MeetTeamAppBar extends SliverPersistentHeaderDelegate {
+  final double screenWidth;
+  final double screenHeight;
+
+  _MeetTeamAppBar({required this.screenWidth, required this.screenHeight});
+
+  final double extraHeight = 40; // tall glass
+
+  @override
+  double get minExtent =>
+      kToolbarHeight +
+      MediaQueryData.fromWindow(WidgetsBinding.instance.window).padding.top +
+      extraHeight;
+
+  @override
+  double get maxExtent =>
+      kToolbarHeight +
+      MediaQueryData.fromWindow(WidgetsBinding.instance.window).padding.top +
+      extraHeight;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          color: const Color(0xFF171717).withOpacity(0.65),
+          padding: EdgeInsets.only(
+            top:
+                MediaQuery.of(context).padding.top +
+                8, // <-- reduced top padding
+            left: 10,
+            right: 10,
+            bottom: 12, // optional: small bottom padding for vertical centering
+          ),
+          alignment: Alignment.centerLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                icon: Image.asset(
+                  AppAssets.backArrowIcon,
+                  width: screenWidth * 0.06,
+                  height: screenWidth * 0.06,
+                  fit: BoxFit.contain,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                splashRadius: 24,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                'Meet the Team',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      false;
+}
+
 class DarkMeetTeamScreen extends StatefulWidget {
   const DarkMeetTeamScreen({super.key});
 
@@ -43,6 +118,7 @@ class _DarkMeetTeamScreenState extends State<DarkMeetTeamScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     const int crossAxisCount = 2;
@@ -69,48 +145,13 @@ class _DarkMeetTeamScreenState extends State<DarkMeetTeamScreen> {
               physics: const BouncingScrollPhysics(),
               slivers: [
                 // iOS-style frosted AppBar
-                SliverAppBar(
+                SliverPersistentHeader(
                   pinned: true,
-                  floating: true,
-                  snap: true,
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  expandedHeight: 70,
-                  automaticallyImplyLeading: false,
-                  flexibleSpace: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        color: const Color(0xFF171717).withOpacity(0.65),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                              child: Image.asset(
-                                AppAssets.backArrowIcon,
-                                width: 24,
-                                height: 24,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              'Meet the Team',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  delegate: _MeetTeamAppBar(
+                    screenWidth: screenWidth,
+                    screenHeight: screenHeight,
                   ),
                 ),
-
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     spacing,

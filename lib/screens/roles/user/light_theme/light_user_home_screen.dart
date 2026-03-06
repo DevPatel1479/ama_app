@@ -6,6 +6,8 @@ import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
@@ -20,7 +22,8 @@ import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home
         next10,
         statOverviewCard,
         CityGrid,
-        RealtimeImageCarousel;
+        RealtimeImageCarousel,
+        connectLawyerSecondaryGrid;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 // import 'package:chewie/chewie.dart';
@@ -51,6 +54,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
   void initState() {
     super.initState();
     fetchUserNameAndRole();
+    _initNotifications();
   }
 
   Future<void> fetchUserNameAndRole() async {
@@ -78,6 +82,29 @@ class _LightHomeScreen extends State<LightHomeScreen> {
       );
       // print(provider.profilePhotoUrl);
     }
+  }
+
+  Future<void> _initNotifications() async {
+    // get role from local storage or auth provider
+    final isLoggedIn =
+        await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
+
+    // Only start listener if the user is NOT logged in
+    if (isLoggedIn) return;
+    print("starting... ");
+    final userRole = await LocalStorageHelper.getString("userRole") ?? "guest";
+    if (userRole == "guest") return;
+    if (!mounted) return;
+    final provider = Provider.of<RealtimeNotificationProvider>(
+      context,
+      listen: false,
+    );
+
+    // Restore local unread flag
+    await provider.restoreUnreadState();
+    // Start Firestore listener
+    provider.startListening(userRole);
+    // await provider.restoreUnreadState();
   }
 
   final lightGradient = const LinearGradient(
@@ -284,13 +311,41 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         ),
                       ),
                     ),
-
+                  if (userRole?.toLowerCase() == "advocate" ||
+                      userRole?.toLowerCase() == "admin")
+                    GestureDetector(
+                      onTap: () {
+                        userRole?.toLowerCase() == "advocate"
+                            ? context.pushNamed(
+                                AppScreenNames.amaLeadsScreen,
+                                queryParameters: {"name": userName},
+                              )
+                            : context.pushNamed(
+                                AppScreenNames.adminAmaLeadsScreen,
+                              );
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: screenWidth * 0.03 * scaleFactor,
+                        ),
+                        child: Icon(
+                          Icons.assignment_ind_outlined, // lead-ish vibe
+                          size: iconSize,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   // notification icon + dot
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
                       GestureDetector(
                         onTap: () {
+                          if (userRole?.toLowerCase() != "admin") {
+                            context
+                                .read<RealtimeNotificationProvider>()
+                                .clearUnread();
+                          }
                           if (userRole?.toLowerCase() == "guest") {
                             final isDark = Provider.of<ThemeProvider>(
                               context,
@@ -331,22 +386,30 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      if (userRole == "client" ||
-                          userRole == "advocate" ||
-                          userRole == "user" ||
-                          userRole == "legal_expert")
-                        Positioned(
-                          right: -2,
-                          top: -2,
-                          child: Container(
-                            width: dotSize,
-                            height: dotSize,
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
+
+                      /// 🔴 REAL-TIME BADGE
+                      Consumer<RealtimeNotificationProvider>(
+                        builder: (context, provider, _) {
+                          final role = userRole?.toLowerCase();
+
+                          if (role == "admin" || !provider.hasUnread) {
+                            return const SizedBox();
+                          }
+
+                          return Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Container(
+                              width: dotSize,
+                              height: dotSize,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -540,11 +603,18 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: screenHeight * 0.05 * scaleFactor),
+                        // SizedBox(height: screenHeight * 0.05 * scaleFactor),
                         RealtimeImageCarousel(type: "home"),
                         SizedBox(height: screenHeight * 0.04 * scaleFactor),
-                        if (userRole?.toLowerCase() == "client")
+                        if (userRole?.toLowerCase() == "client") ...[
                           connectLawyerGrid(context, isLight: true),
+                          SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                        ],
+                        if (userRole?.toLowerCase() == "user") ...[
+                          /// 🔥 Very small spacing between two grids
+                          connectLawyerSecondaryGrid(context, isLight: true),
+                          SizedBox(height: screenHeight * 0.02 * scaleFactor),
+                        ],
 
                         statOverviewCard(context, isLight: true),
 
@@ -887,6 +957,9 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           height: screenHeight * 0.02 * scaleFactor,
                         ), // spacing
                         CityGrid(isLight: true),
+                        SizedBox(
+                          height: screenHeight * 0.02 * scaleFactor,
+                        ), // spacing
                       ],
                     ),
                   ),

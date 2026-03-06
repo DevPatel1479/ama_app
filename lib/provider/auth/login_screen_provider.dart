@@ -5,14 +5,22 @@ import 'package:ama_legal_solutions/api/endpoints.dart';
 import 'package:ama_legal_solutions/custom_messages_widgets/custom_flushbar_message.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/login_status_sync/login_status_sync.dart';
+import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
+import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
+import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/routes/app_router.dart';
+import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class LoginProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
   bool isLoading = false;
   bool otpSent = false;
   String? role;
@@ -39,12 +47,137 @@ class LoginProvider extends ChangeNotifier {
   bool get isResendAvailable => _secondsRemaining == 0;
   int get secondsRemaining => _secondsRemaining;
   Timer? _resendTimer;
-
+  bool _isLoggedIn = false;
+  bool get isLoggedIn => _isLoggedIn;
+  static const _keySessionExpiry = "session_expiry";
   // Focus nodes for OTP boxes (required for backward/forward movement)
   final List<FocusNode> otpFocusNodes = List.generate(6, (_) => FocusNode());
 
   String normalizeCountryCode(String code) {
     return code.replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  Future<void> initialize(BuildContext context) async {
+    final loggedIn =
+        await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
+
+    final expiryString = await LocalStorageHelper.getString(_keySessionExpiry);
+
+    print("expiry time .. $expiryString");
+
+    if (!loggedIn) {
+      _isLoggedIn = false;
+      _isInitialized = true; // ✅ ADD THIS
+      notifyListeners();
+      return;
+    }
+
+    if (expiryString == null) {
+      await createSession();
+      _isLoggedIn = true;
+      _isInitialized = true; // ✅ ADD THIS
+      notifyListeners();
+      return;
+    }
+
+    final expiryTime = DateTime.parse(expiryString);
+
+    if (DateTime.now().isAfter(expiryTime)) {
+      if (!context.mounted) return;
+      print("triggering logout ... init state");
+      await logout(context);
+      _isLoggedIn = false;
+    } else {
+      _isLoggedIn = true;
+    }
+
+    _isInitialized = true; // ✅ KEEP THIS
+    notifyListeners();
+  }
+
+  Future<void> checkSession(BuildContext context) async {
+    final expiryString = await LocalStorageHelper.getString(_keySessionExpiry);
+
+    if (expiryString == null) return;
+
+    final expiryTime = DateTime.parse(expiryString);
+
+    if (DateTime.now().isAfter(expiryTime)) {
+      if (!context.mounted) return;
+      print("triggering logout ... in checksession ");
+
+      await logout(context);
+      _isLoggedIn = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout(
+    BuildContext context, {
+    GoRouter? router,
+    String? role,
+  }) async {
+    // 1️⃣ Immediately update state so redirect works
+    _isLoggedIn = false;
+    notifyListeners();
+
+    // 2️⃣ Navigate to login screen immediately
+    if (appRouter != null) {
+      appRouter.go(AppPathsForScreen.logInPath);
+    }
+
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final roleProvider = Provider.of<RealTimeRoleProvider>(
+      context,
+      listen: false,
+    );
+
+    try {
+      final phone = await getUserPhone();
+
+      // 🔥 Backend sync
+      await LoginStatusSyncService.updateLoginStatus(
+        phone: phone ?? "",
+        logout: true,
+      );
+
+      final wasDark = themeProvider.isDarkMode;
+
+      // Stop realtime listeners
+      roleProvider.stop();
+
+      // Unsubscribe topics
+      final weekTopic = await LocalStorageHelper.getString("userWeekTopic");
+      await FirebaseMessagingService.instance.unsubscribeFromTopicFor(
+        weekTopicValue: weekTopic,
+      );
+
+      // Clear everything
+      await LocalStorageHelper.clearAll();
+
+      // Restore important flags
+      await themeProvider.setTheme(wasDark);
+      await LocalStorageHelper.saveBool("isAcceptedPolicy", true);
+      await LocalStorageHelper.saveBool("isDeleteRequestMade", true);
+      await LocalStorageHelper.saveBool("isGetStartedTapped", true);
+
+      if (role == "guest") {
+        await LocalStorageHelper.saveBool("isGuestLoggedOut", true);
+      } else {
+        await LocalStorageHelper.saveBool("isNormalUser", true);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> createSession() async {
+    await LocalStorageHelper.saveString(
+      _keySessionExpiry,
+      DateTime.now()
+          .add(const Duration(days: 7)) // 1 week session
+          .toIso8601String(),
+    );
   }
 
   void setCountryCode(String code) {
@@ -231,15 +364,23 @@ class LoginProvider extends ChangeNotifier {
 
       if (response.statusCode == 200 && data["success"] == true) {
         await LocalStorageHelper.saveBool("isUserLoggedIn", true);
+
         await LocalStorageHelper.saveString("userPhone", phone);
+        await createSession();
+
         final userId = "${role}_${phone}";
         generateAndStoreFcmToken(userId);
+        await LoginStatusSyncService.updateLoginStatus(
+          phone: phone,
+          logout: false,
+        );
+        await LocalStorageHelper.saveBool("isLogInStatusInserted", true);
         // showCustomMessage(
         //   context,
         //   data["message"] ?? "OTP verified successfully",
         //   false,
         // );
-
+        _isLoggedIn = true;
         success = true;
         // _setLoading(false, successLogin: true);
       } else {

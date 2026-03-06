@@ -776,18 +776,24 @@ class _DarkAskLaywerScreenState extends State<DarkAskLaywerScreen> {
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.only(
+                    right: MediaQuery.of(context).size.width * 0.03,
+                  ),
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new,
-                          color: Colors.white,
-                          size: 22,
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
+                          AppAssets.backArrowIcon,
+                          width: screenWidth * 0.06,
+                          height: screenWidth * 0.06,
+                          fit: BoxFit.contain,
                         ),
+                        onPressed: () => context.pop(),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
-                      const SizedBox(width: 12),
+                      // const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           "Ask your Lawyer",

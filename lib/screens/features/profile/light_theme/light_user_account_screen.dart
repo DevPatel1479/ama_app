@@ -6,6 +6,7 @@ import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dar
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
+import 'package:ama_legal_solutions/login_status_sync/login_status_sync.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
@@ -90,8 +91,8 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
           title: Padding(
             padding: EdgeInsets.only(
               // top: MediaQuery.of(context).padding.top,
-              left: screenWidth * 0.04 * scaleFactor,
-              right: screenWidth * 0.04 * scaleFactor,
+              // left: screenWidth * 0.04 * scaleFactor,
+              right: screenWidth * 0.02 * scaleFactor,
               // bottom: screenHeight * 0.015 * scaleFactor,
             ),
             child: Column(
@@ -101,17 +102,20 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                 // 🔹 Top Bar
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Image.asset(
+                    IconButton(
+                      padding: EdgeInsets.zero, // remove default padding
+
+                      icon: Image.asset(
                         AppAssets.backArrowIcon,
-                        width: screenWidth * 0.05,
-                        height: screenWidth * 0.05,
+                        width: screenWidth * 0.06,
+                        height: screenWidth * 0.06,
                         fit: BoxFit.contain,
                         color: Colors.black,
                       ),
+                      onPressed: () => Navigator.pop(context),
+                      splashRadius: 24, // optional, makes tap area bigger
                     ),
-                    SizedBox(width: screenWidth * 0.02),
+                    SizedBox(width: screenWidth * 0.001),
                     Text(
                       "Account",
                       style: GoogleFonts.outfit(
@@ -430,6 +434,43 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                       // if (widget.role.toLowerCase() != "user" &&
                       //     widget.role.toLowerCase() != "users")
                       SizedBox(height: screenHeight * 0.03),
+                      if (widget.role.toLowerCase() == "user" ||
+                          widget.role.toLowerCase() == "guest") ...[
+                        Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Image.asset(
+                                AppAssets.grid2Img,
+                                width: screenWidth * 0.04,
+                                height: screenWidth * 0.04,
+                                color: Colors.black,
+
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+
+                            SizedBox(width: screenWidth * 0.04),
+                            GestureDetector(
+                              onTap: () async {
+                                context.pushNamed(
+                                  AppScreenNames.paymentViewScreen,
+                                );
+                              },
+                              child: Text(
+                                "Payment & Billing",
+                                style: GoogleFonts.outfit(
+                                  fontSize: screenWidth * 0.040,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.03),
+                      ],
+
                       // 🔹 App Policies Header
                       Text(
                         "App Policies",
@@ -907,6 +948,11 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                             );
 
                             try {
+                              final phone = await getUserPhone();
+                              await LoginStatusSyncService.updateLoginStatus(
+                                phone: phone ?? "",
+                                logout: true,
+                              );
                               // Preserve the theme before clearing all storage
                               final wasDark = themeProvider.isDarkMode;
                               final userProvider = Provider.of<UserProvider>(

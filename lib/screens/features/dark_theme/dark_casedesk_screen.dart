@@ -42,6 +42,7 @@ class DarkCasedeskScreen extends StatefulWidget {
 class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
   bool isMyCaseActive = true;
   bool isPendingActive = true; // secondary toggle
+
   late ScrollController _scrollController;
   bool isFetchingMore = false;
   bool _userScrolled = false;
@@ -727,22 +728,27 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
                       // Top Bar
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.04 * scaleFactor,
+                          // horizontal: screenWidth * 0.04 * scaleFactor,
                           vertical: screenHeight * 0.015 * scaleFactor,
                         ),
                         child: Row(
                           children: [
-                            GestureDetector(
-                              onTap: () =>
-                                  context.go(AppPathsForScreen.userHomePath),
-                              child: Image.asset(
+                            IconButton(
+                              padding:
+                                  EdgeInsets.zero, // remove default padding
+
+                              icon: Image.asset(
                                 AppAssets.backArrowIcon,
-                                width: screenWidth * 0.06 * scaleFactor,
-                                height: screenWidth * 0.06 * scaleFactor,
+                                width: screenWidth * 0.06,
+                                height: screenWidth * 0.06,
                                 fit: BoxFit.contain,
                               ),
+                              onPressed: () =>
+                                  context.go(AppPathsForScreen.userHomePath),
+                              splashRadius:
+                                  24, // optional, makes tap area bigger
                             ),
-                            SizedBox(width: screenWidth * 0.02 * scaleFactor),
+                            // SizedBox(width: screenWidth * 0.02 * scaleFactor),
                             Text(
                               "My Casedesk",
                               style: GoogleFonts.outfit(
@@ -1710,8 +1716,11 @@ class _QueryCardState extends State<QueryCard> {
     final submittedDate = DateTime.fromMillisecondsSinceEpoch(
       query.submittedAt * 1000,
     );
-    final formattedTime = TimeOfDay.fromDateTime(submittedDate).format(context);
-    final formattedDate = "Submitted · Today, $formattedTime";
+    // final formattedTime = TimeOfDay.fromDateTime(submittedDate).format(context);
+    final formattedDate = DateFormat(
+      "dd MMM yyyy, h:mm a",
+    ).format(submittedDate);
+
     final isClient = widget.userRole?.toLowerCase() == "client";
 
     // Determine timestamp

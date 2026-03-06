@@ -372,23 +372,25 @@ class _LightAskLaywerScreenState extends State<LightAskLaywerScreen> {
             // Top Bar
             Padding(
               padding: EdgeInsets.only(
-                left: screenWidth * 0.04,
                 right: screenWidth * 0.04, // ✅ ADD THIS
                 // top: MediaQuery.of(context).padding.top,
               ),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Image.asset(
+                  IconButton(
+                    padding: EdgeInsets.zero, // remove default padding
+
+                    icon: Image.asset(
                       AppAssets.backArrowIcon,
                       width: screenWidth * 0.06,
                       height: screenWidth * 0.06,
                       fit: BoxFit.contain,
                       color: Colors.black,
                     ),
+                    onPressed: () => context.pop(),
+                    splashRadius: 24, // optional, makes tap area bigger
                   ),
-                  SizedBox(width: screenWidth * 0.02),
+
                   Text(
                     'Ask your Lawyer',
                     style: GoogleFonts.outfit(

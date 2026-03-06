@@ -31,7 +31,8 @@ class QueryProvider with ChangeNotifier {
     'pending': null,
     'resolved': null,
   };
-
+  String? _successMessage;
+  String? get successMessage => _successMessage;
   int _lastUsedLimit = 10;
 
   bool _isFetchingMore = false; // private
@@ -138,6 +139,7 @@ class QueryProvider with ChangeNotifier {
         final userId = "${role}_$phone";
 
         _isFileDisputerLoading = true;
+        _successMessage = null;
         notifyListeners();
 
         final response = await _apiService.post(Endpoints.fileDispute, {
@@ -149,11 +151,13 @@ class QueryProvider with ChangeNotifier {
         final data = jsonDecode(response.body);
         if (response.statusCode == 200) {
           _isFileDisputerLoading = false;
+          _successMessage = data["message"];
           notifyListeners();
-          showCustomMessage(context, data['message'], false);
+          // showCustomMessage(context, data['message'], false);
           return true;
         } else {
           _isFileDisputerLoading = false;
+          _successMessage = null;
           notifyListeners();
           showCustomMessage(
             context,

@@ -317,21 +317,21 @@ class _LightPortfolioScreenState extends State<LightPortfolioScreen>
         title: Padding(
           padding: EdgeInsets.only(
             // top: MediaQuery.of(context).padding.top,
-            left: screenWidth * 0.04 * scaleFactor,
+            // left: screenWidth * 0.04 * scaleFactor,
             right: screenWidth * 0.04 * scaleFactor,
             // bottom: screenHeight * 0.015 * scaleFactor,
           ),
           child: Row(
             children: [
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () => Navigator.pop(context),
-                child: Image.asset(
+              IconButton(
+                icon: Image.asset(
                   AppAssets.backArrowIcon,
-                  width: screenWidth * 0.05,
-                  height: screenWidth * 0.05,
+                  width: screenWidth * 0.06,
+                  height: screenWidth * 0.06,
                   color: Colors.black,
                 ),
+                onPressed: () => Navigator.pop(context),
+                splashRadius: 24, // optional
               ),
               SizedBox(width: MediaQuery.of(context).size.width * 0.02),
               Expanded(

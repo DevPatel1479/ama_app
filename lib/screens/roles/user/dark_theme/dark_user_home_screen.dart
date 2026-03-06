@@ -9,7 +9,10 @@ import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/realtime_image_carousel.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
+import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/notification_read_state_provider.dart';
+import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
@@ -78,7 +81,7 @@ Widget connectLawyerCard({
               icon,
               width: size.width * 0.11,
               fit: BoxFit.contain,
-              color: isLight ? Colors.black : null,
+              // color: isLight ? Colors.black : null,
             ),
 
             SizedBox(height: space),
@@ -128,7 +131,9 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
     itemCount: 2,
-
+    padding: isLight == false
+        ? EdgeInsets.only(top: screenHeight * 0.01)
+        : EdgeInsets.zero,
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
       crossAxisSpacing: screenWidth * 0.04,
@@ -140,11 +145,52 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
       return connectLawyerCard(
         isLight: isLight,
         context: context,
-        icon: index == 0 ? AppAssets.connectL : AppAssets.connectC,
+        icon: index == 0 ? AppAssets.hg1Img : AppAssets.hg2Img,
         title: index == 0 ? "Connect to Lawyer" : "Track My Case",
         subtitle: index == 0
             ? "Trusted advice from verified experts"
             : "Live status & case progress",
+        onTap: () {
+          if (index == 0) {
+            context.pushNamed(AppScreenNames.raiseQuery);
+          } else {
+            context.pushNamed(AppScreenNames.overviewCaseDeskScreen);
+          }
+        },
+      );
+    },
+  );
+}
+
+Widget connectLawyerSecondaryGrid(
+  BuildContext context, {
+  bool isLight = false,
+}) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+
+  return GridView.builder(
+    shrinkWrap: true,
+    padding: isLight == false
+        ? EdgeInsets.only(top: screenHeight * 0.01)
+        : EdgeInsets.zero,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: 2,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: screenWidth * 0.04,
+      mainAxisSpacing: screenHeight * 0.025,
+      childAspectRatio: 1.10,
+    ),
+    itemBuilder: (context, index) {
+      return connectLawyerCard(
+        isLight: isLight,
+        context: context,
+        icon: index == 0 ? AppAssets.hg3Img : AppAssets.hg4Img,
+        title: index == 0 ? "Request Assistance" : "Ask Your Question",
+        subtitle: index == 0
+            ? "Need help? We’re here to assist you"
+            : "Legal answers within 45 minutes",
         onTap: () {
           if (index == 0) {
             context.pushNamed(
@@ -152,7 +198,7 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
               queryParameters: {"isFilingDispute": "true"},
             );
           } else {
-            context.pushNamed(AppScreenNames.overviewCaseDeskScreen);
+            context.pushNamed(AppScreenNames.ama);
           }
         },
       );
@@ -653,11 +699,10 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
     super.initState();
     _controller = PageController(viewportFraction: 1.0);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RealtimeImageProvider>().listenImages(widget.type);
+      _startAutoSlide();
     });
-
-    _startAutoSlide();
   }
 
   void _startAutoSlide() {
@@ -690,6 +735,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final double itemWidth = MediaQuery.of(context).size.width * 0.9;
     final double itemHeight = itemWidth * 9 / 16; // keeps 16:9 ratio
     return Consumer<RealtimeImageProvider>(
@@ -730,22 +776,23 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
                         child: AspectRatio(
                           aspectRatio: 16 / 9, // 🔥 FIXED RATIO FOR ALL IMAGES
-                          child: Image.network(
-                            img.url,
-                            fit: BoxFit.contain, // ✅ NO CROPPING EVER
-                            alignment: Alignment.center,
-
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey.shade800,
-                                highlightColor: Colors.grey.shade700,
-                                child: Container(color: Colors.grey),
-                              );
-                            },
-
-                            errorBuilder: (_, __, ___) => const Center(
+                          child: CachedNetworkImage(
+                            imageUrl: img.url,
+                            fit: BoxFit.contain, // faster for large images
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade300,
+                              highlightColor: isDark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade100,
+                              child: Container(
+                                color: isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade200,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => const Center(
                               child: Icon(
                                 Icons.broken_image,
                                 color: Colors.white54,
@@ -798,10 +845,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
           width: double.infinity,
           height: widget.height ?? MediaQuery.of(context).size.width * 0.5,
           margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(16),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         ),
         const SizedBox(height: 12),
         Container(
@@ -865,6 +909,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
   void initState() {
     super.initState();
     fetchUserNameAndRole();
+    _initNotifications();
   }
 
   Future<void> fetchUserNameAndRole() async {
@@ -892,6 +937,29 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
       );
       // print(provider.profilePhotoUrl);
     }
+  }
+
+  Future<void> _initNotifications() async {
+    // get role from local storage or auth provider
+    final isLoggedIn =
+        await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
+
+    // Only start listener if the user is NOT logged in
+    if (isLoggedIn) return;
+
+    final userRole = await LocalStorageHelper.getString("userRole") ?? "guest";
+    if (userRole == "guest") return;
+    if (!mounted) return;
+    final provider = Provider.of<RealtimeNotificationProvider>(
+      context,
+      listen: false,
+    );
+
+    // Restore local unread flag
+    await provider.restoreUnreadState();
+    // Start Firestore listener
+    provider.startListening(userRole);
+    // await provider.restoreUnreadState();
   }
 
   Widget _buildAppBarForHomeScreen({
@@ -1029,12 +1097,40 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                     ),
                   ),
                 ),
+              if (userRole?.toLowerCase() == "advocate" ||
+                  userRole?.toLowerCase() == "admin")
+                GestureDetector(
+                  onTap: () {
+                    userRole?.toLowerCase() == "advocate"
+                        ? context.pushNamed(
+                            AppScreenNames.amaLeadsScreen,
+                            queryParameters: {"name": userName},
+                          )
+                        : context.pushNamed(AppScreenNames.adminAmaLeadsScreen);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: screenWidth * 0.03 * scaleFactor,
+                    ),
+                    child: Icon(
+                      Icons.assignment_ind_outlined, // lead-ish vibe
+                      size: iconSize,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
 
               /// Notification Icon with badge
               Stack(
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
+                      if (userRole?.toLowerCase() != "admin") {
+                        context
+                            .read<RealtimeNotificationProvider>()
+                            .clearUnread();
+                      }
+
                       if (userRole?.toLowerCase() == "guest") {
                         final isDark = Provider.of<ThemeProvider>(
                           context,
@@ -1072,22 +1168,30 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  if (userRole == "client" ||
-                      userRole == "advocate" ||
-                      userRole == "user" ||
-                      userRole == "legal_expert")
-                    Positioned(
-                      right: 2,
-                      top: 2,
-                      child: Container(
-                        width: dotSize,
-                        height: dotSize,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+
+                  /// 🔴 REAL-TIME BADGE
+                  Consumer<RealtimeNotificationProvider>(
+                    builder: (context, provider, _) {
+                      final role = userRole?.toLowerCase();
+
+                      if (role == "admin" || !provider.hasUnread) {
+                        return const SizedBox();
+                      }
+
+                      return Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Container(
+                          width: dotSize,
+                          height: dotSize,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ],
@@ -1237,7 +1341,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
 
                       SliverPadding(
                         padding: EdgeInsets.only(
-                          top: screenHeight * 0.045,
+                          // top: screenHeight * 0.045,
                           left: screenWidth * 0.04 * scaleFactor,
                           right: screenWidth * 0.04 * scaleFactor,
                           bottom: contentBottomPadding,
@@ -1245,9 +1349,20 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             RealtimeImageCarousel(type: "home"),
-                            SizedBox(height: screenHeight * 0.04 * scaleFactor),
-                            if (userRole?.toLowerCase() == "client")
+                            SizedBox(height: screenHeight * 0.03 * scaleFactor),
+                            if (userRole?.toLowerCase() == "client") ...[
                               connectLawyerGrid(context),
+                              SizedBox(
+                                height: screenHeight * 0.02 * scaleFactor,
+                              ),
+                            ],
+                            if (userRole?.toLowerCase() == "user") ...[
+                              /// 🔥 Very small spacing between two grids
+                              connectLawyerSecondaryGrid(context),
+                              SizedBox(
+                                height: screenHeight * 0.02 * scaleFactor,
+                              ),
+                            ],
                             statOverviewCard(context),
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
@@ -1519,6 +1634,9 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                               height: screenHeight * 0.02 * scaleFactor,
                             ), // spacing
                             CityGrid(),
+                            SizedBox(
+                              height: screenHeight * 0.02 * scaleFactor,
+                            ), // spacing
                           ]),
                         ),
                       ),

@@ -46,7 +46,7 @@ class _LightMeetTeamScreenState extends State<LightMeetTeamScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     const int crossAxisCount = 2;
@@ -56,63 +56,65 @@ class _LightMeetTeamScreenState extends State<LightMeetTeamScreen> {
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
+      // <-- IMPORTANT: make scaffold transparent so page background can extend under system UI/home indicator
       backgroundColor: Color(0xFFF8BD00),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color.fromARGB(255, 244, 206, 83),
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
 
-        // ⭐ NATIVE WAY TO ROUND ONLY BOTTOM
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(screenWidth * 0.07),
-            bottomRight: Radius.circular(screenWidth * 0.07),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          kToolbarHeight + MediaQuery.of(context).padding.top,
+        ),
+        child: AppBar(
+          elevation: 0,
+          backgroundColor: const Color.fromARGB(255, 244, 206, 83),
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
           ),
-        ),
 
-        titleSpacing: 0,
-        toolbarHeight: kToolbarHeight,
-
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Bar
-            Padding(
-              padding: EdgeInsets.only(
-                left: screenWidth * 0.04,
-                // top: MediaQuery.of(context).padding.top,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.06,
-                      height: screenWidth * 0.06,
-                      fit: BoxFit.contain,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.02),
-                  Text(
-                    'Meet the Team',
-                    style: GoogleFonts.outfit(
-                      color: Colors.black,
-                      fontSize: screenWidth * 0.050,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+          // Rounded bottom corners
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(screenWidth * 0.07),
+              bottomRight: Radius.circular(screenWidth * 0.07),
             ),
-          ],
+          ),
+
+          titleSpacing: 0,
+          toolbarHeight:
+              kToolbarHeight + 10, // match preferredSize extra height
+
+          title: Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: Image.asset(
+                    AppAssets.backArrowIcon,
+                    width: screenWidth * 0.06,
+                    height: screenWidth * 0.06,
+                    fit: BoxFit.contain,
+                    color: Colors.black,
+                  ),
+                  onPressed: () => context.pop(),
+                  splashRadius: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Meet the Team',
+                  style: GoogleFonts.outfit(
+                    color: Colors.black,
+                    fontSize: (screenWidth / 100) * 6.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: GradientTopLayout(

@@ -20,8 +20,8 @@ class NotificationModel {
   factory NotificationModel.fromMap(Map<String, dynamic> map) {
     return NotificationModel(
       id: map['id'] ?? '',
-      title: map['n_title'] ?? '',
-      body: map['n_body'] ?? '',
+      title: map['title'] ?? '',
+      body: map['body'] ?? '',
       timestamp: map['timestamp'] ?? 0,
       sentBy: map['sent_by'],
       topics: map['topics'] != null

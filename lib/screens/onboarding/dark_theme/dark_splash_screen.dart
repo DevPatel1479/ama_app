@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
@@ -25,7 +26,7 @@ class _SplashScreenState extends State<DarkSplashScreen>
   @override
   void initState() {
     super.initState();
-
+    _initNotifications();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -65,6 +66,28 @@ class _SplashScreenState extends State<DarkSplashScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _initNotifications() async {
+    // get role from local storage or auth provider
+    bool? isLoggedIn =
+        await LocalStorageHelper.getBool("isUserLoggedIn") ?? false;
+
+    if (isLoggedIn == false) return;
+
+    final userRole = await LocalStorageHelper.getString("userRole") ?? "guest";
+    if (userRole == "guest") return;
+    if (!mounted) return;
+    final provider = Provider.of<RealtimeNotificationProvider>(
+      context,
+      listen: false,
+    );
+    print("started listening at splash ... ");
+    // Restore local unread flag
+    await provider.restoreUnreadState();
+
+    // Start Firestore listener
+    provider.startListening(userRole);
   }
 
   void checkAuth() async {
@@ -152,6 +175,7 @@ class _SplashScreenState extends State<DarkSplashScreen>
                         fontFamily: "Cormorant",
                         fontSize: size.width * 0.055, // responsive font
                         fontWeight: FontWeight.w400,
+                        fontStyle: FontStyle.italic,
                         color: Color(0xFFFFFFFF),
                       ),
                     ),

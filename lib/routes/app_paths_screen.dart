@@ -28,4 +28,6 @@ class AppPathsForScreen {
 
   static const String askLawyerPath = "/askLawyerScreen";
   static const String meetTeamPath = "/meetTeamScreen";
+  static const String amaLeadsPath = "/amaLeadsScreen";
+  static const String adminAmaLeadsPath = "/adminAmaLeadsScreen";
 }

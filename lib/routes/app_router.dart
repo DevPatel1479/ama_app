@@ -10,8 +10,10 @@ import 'package:ama_legal_solutions/screen_helpers/app_complaint/terms_and_condi
 import 'package:ama_legal_solutions/screen_helpers/auth_helper/login_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/auth_helper/signup_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/delete_account/delete_account_request_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/admin_ama_leads_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/advocate_casedesk_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ama_helper.dart';
+import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ama_leads_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/ask_laywer_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/bank_details_helper.dart';
 import 'package:ama_legal_solutions/screen_helpers/main_content_helper/casedesk_helper.dart';
@@ -39,8 +41,27 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+final loginProvider = LoginProvider();
 final GoRouter appRouter = GoRouter(
   initialLocation: AppPathsForScreen.splashPath,
+  refreshListenable: loginProvider,
+  redirect: (context, state) {
+    final isInitialized = loginProvider.isInitialized;
+    final isLoggedIn = loginProvider.isLoggedIn;
+    final isGoingToLogin = state.matchedLocation == AppPathsForScreen.logInPath;
+
+    if (!isInitialized) return null;
+
+    if (!isLoggedIn) {
+      return isGoingToLogin ? null : AppPathsForScreen.logInPath;
+    }
+
+    if (isLoggedIn && isGoingToLogin) {
+      return AppPathsForScreen.userHomePath;
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,
@@ -53,6 +74,7 @@ final GoRouter appRouter = GoRouter(
           child: SplashScreenHelper.getScreen(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
+
             return child;
           },
         );
@@ -126,10 +148,8 @@ final GoRouter appRouter = GoRouter(
           key: state.pageKey,
           opaque: true,
           transitionDuration: Duration.zero,
-          child: ChangeNotifierProvider(
-            create: (_) => LoginProvider(),
-            child: LoginScreenHelper.getScreen(context),
-          ),
+          child: LoginScreenHelper.getScreen(context),
+
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
             return child;
@@ -216,11 +236,17 @@ final GoRouter appRouter = GoRouter(
       path: AppPathsForScreen.amaPath,
       name: AppScreenNames.ama,
       pageBuilder: (context, state) {
+        final questionId = state.uri.queryParameters['questionId'];
+        final commentId = state.uri.queryParameters['commentId'];
         return CustomTransitionPage(
           key: state.pageKey,
           transitionDuration: Duration.zero,
           opaque: true,
-          child: AmaScreenHelper.getScreen(context),
+          child: AmaScreenHelper.getScreen(
+            context,
+            tappedQuestionId: questionId,
+            tappedCommentId: commentId,
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // return FadeTransition(opacity: animation, child: child);
             return child;
@@ -625,6 +651,41 @@ final GoRouter appRouter = GoRouter(
               position: slideAnimation,
               child: FadeTransition(opacity: fadeAnimation, child: child),
             );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.amaLeadsPath,
+      name: AppScreenNames.amaLeadsScreen,
+      pageBuilder: (context, state) {
+        final name = state.uri.queryParameters["name"] ?? "";
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          transitionDuration: Duration.zero,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: AmaLeadsScreenHelper.getScreen(context, name),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: AppPathsForScreen.adminAmaLeadsPath,
+      name: AppScreenNames.adminAmaLeadsScreen,
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: true,
+          transitionDuration: Duration.zero,
+          // child: ServicesScreenHelper.getScreen(context),
+          child: AdminAmaLeadsHelper.getScreen(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // return FadeTransition(opacity: animation, child: child);
+            return child;
           },
         );
       },

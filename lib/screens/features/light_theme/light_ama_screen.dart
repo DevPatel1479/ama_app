@@ -29,10 +29,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:ama_legal_solutions/screens/features/dark_theme/dark_ama_screen.dart'
     show
-        filterQuestionsCompute,
         InlineCommentsSection,
-        timeAgo,
-        showDeleteConfirmDialog;
+        buildLinkText,
+        filterQuestionsCompute,
+        showDeleteConfirmDialog,
+        timeAgo;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -81,7 +82,13 @@ class _AskQuestionButton extends StatelessWidget {
 }
 
 class LightAmaScreen extends StatefulWidget {
-  const LightAmaScreen({super.key});
+  final String? tappedQuestionId;
+  final String? tappedCommentId;
+  const LightAmaScreen({
+    super.key,
+    this.tappedQuestionId,
+    this.tappedCommentId,
+  });
   @override
   _LightAmaScreenState createState() => _LightAmaScreenState();
 }
@@ -119,6 +126,8 @@ class _LightAmaScreenState extends State<LightAmaScreen>
   // Track if we're doing initial load vs real-time update
   bool _isInitialLoading = true;
   final TextEditingController _searchController = TextEditingController();
+  String? _highlightedQuestionId;
+  Timer? _highlightTimer;
 
   @override
   void initState() {
@@ -163,6 +172,83 @@ class _LightAmaScreenState extends State<LightAmaScreen>
       }
     });
     _searchController.addListener(_onSearchChanged);
+    if (widget.tappedQuestionId != null) {
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (!mounted) return;
+
+        /// 🔥 If comment deep link → open comments & highlight COMMENT (not question)
+        if (widget.tappedCommentId != null) {
+          _openCommentsAndScrollToQuestion(widget.tappedQuestionId!);
+        }
+        /// 🔥 Else → highlight QUESTION only
+        else {
+          _scrollToAndHighlightQuestion(widget.tappedQuestionId!);
+        }
+      });
+    }
+  }
+
+  void _openCommentsAndScrollToQuestion(String questionId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _questionKeys[questionId];
+      final ctx = key?.currentContext;
+
+      if (ctx != null) {
+        // Scroll to the question first
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          alignment: 0.2,
+        );
+
+        // Open comments
+        final commentProvider = context.read<CommentProvider>();
+        commentProvider.clearExistingComments();
+        commentProvider.fetchComments(questionId, reset: true);
+
+        setState(() {
+          _openedCommentQuestionId = questionId;
+        });
+      } else {
+        // Retry until widget is mounted
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _openCommentsAndScrollToQuestion(questionId);
+        });
+      }
+    });
+  }
+
+  void _scrollToAndHighlightQuestion(String questionId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _questionKeys[questionId];
+      final ctx = key?.currentContext;
+
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          alignment: 0.2,
+        );
+
+        setState(() {
+          _highlightedQuestionId = questionId;
+        });
+
+        _highlightTimer?.cancel();
+        _highlightTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() => _highlightedQuestionId = null);
+          }
+        });
+      } else {
+        // 🔁 Retry if widget not built yet (pagination / async load)
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _scrollToAndHighlightQuestion(questionId);
+        });
+      }
+    });
   }
 
   Future<void> _loadInitialQuestions() async {
@@ -447,6 +533,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
     String questionId,
     String answeredBy,
     String role,
+    String questionOwnerPhone,
   ) {
     final TextEditingController _controller = TextEditingController();
 
@@ -535,6 +622,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                             content: content,
                             answeredBy: answeredBy,
                             role: role,
+                            questionOwnerPhone: questionOwnerPhone,
                           );
 
                           if (!answerProvider.isLoading) {
@@ -790,6 +878,27 @@ class _LightAmaScreenState extends State<LightAmaScreen>
     });
   }
 
+  List<Map<String, String>> _getDropdownValues() {
+    final role = userRole?.toLowerCase() ?? "";
+
+    if (role == "user" || role == "client" || role == "guest") {
+      return [
+        {'key': 'all', 'label': 'All'}, // default: all questions
+        {'key': 'unanswered', 'label': 'Unanswered'},
+        {'key': 'posted_by_me', 'label': 'Posted by me'},
+        {'key': 'answered', 'label': 'Answered'},
+      ];
+    } else {
+      // admin / advocate
+      return [
+        {'key': 'all', 'label': 'All'}, // default: all questions
+        {'key': 'unanswered', 'label': 'Unanswered'},
+        {'key': 'answered_by_me', 'label': 'Answered by me'},
+        {'key': 'answered', 'label': 'Answered'},
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -840,12 +949,11 @@ class _LightAmaScreenState extends State<LightAmaScreen>
         ),
 
         titleSpacing: 0,
-        toolbarHeight: kToolbarHeight + screenHeight * 0.02,
+        toolbarHeight: kToolbarHeight + screenHeight * 0.03,
 
         title: Padding(
           padding: EdgeInsets.only(
             // top: MediaQuery.of(context).padding.top,
-            left: screenWidth * 0.04 * scaleFactor,
             right: screenWidth * 0.04 * scaleFactor,
             // bottom: screenHeight * 0.015 * scaleFactor,
           ),
@@ -857,17 +965,22 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                 children: [
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go(AppPathsForScreen.userHomePath),
-                        child: Image.asset(
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
                           AppAssets.backArrowIcon,
-                          width: screenWidth * 0.06 * scaleFactor,
-                          height: screenWidth * 0.06 * scaleFactor,
+                          width: screenWidth * 0.06,
+                          height: screenWidth * 0.06,
                           fit: BoxFit.contain,
                           color: Colors.black,
                         ),
+                        onPressed: () =>
+                            context.go(AppPathsForScreen.userHomePath),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
-                      SizedBox(width: screenWidth * 0.06 * scaleFactor),
+
+                      // SizedBox(width: screenWidth * 0.06 * scaleFactor),
                       Text(
                         "AMA",
                         style: GoogleFonts.outfit(
@@ -1132,27 +1245,47 @@ class _LightAmaScreenState extends State<LightAmaScreen>
 
                             // Show message if filtered list is empty
                             List __filteredQuestions = uniqueQuestions;
-                            if (_activeFilter == "latest") {
-                              final todayStart = DateTime.now();
-                              final startOfDay = DateTime(
-                                todayStart.year,
-                                todayStart.month,
-                                todayStart.day,
-                              ).millisecondsSinceEpoch;
-                              __filteredQuestions = uniqueQuestions
-                                  .where(
-                                    (q) => (q.timestamp ?? 0) >= startOfDay,
-                                  )
-                                  .toList();
-                              __filteredQuestions.sort(
-                                (a, b) => (b.timestamp ?? 0).compareTo(
-                                  a.timestamp ?? 0,
-                                ),
-                              );
-                            } else if (_activeFilter == "unanswered") {
-                              __filteredQuestions = uniqueQuestions
-                                  .where((q) => q.answer == null)
-                                  .toList();
+                            switch (_activeFilter) {
+                              case 'all': // show all questions
+                                __filteredQuestions = uniqueQuestions;
+                                __filteredQuestions.sort(
+                                  (a, b) => (b.timestamp ?? 0).compareTo(
+                                    a.timestamp ?? 0,
+                                  ),
+                                );
+                                break;
+
+                              case 'unanswered':
+                                __filteredQuestions = uniqueQuestions
+                                    .where((q) => q.answer == null)
+                                    .toList();
+                                break;
+
+                              case 'posted_by_me':
+                                __filteredQuestions = uniqueQuestions
+                                    .where((q) => q.phone == userPhone)
+                                    .toList();
+                                break;
+
+                              case 'answered_by_me':
+                                __filteredQuestions = uniqueQuestions
+                                    .where(
+                                      (q) =>
+                                          q.answer != null &&
+                                          q.answer!.answeredBy.toLowerCase() ==
+                                              userName?.toLowerCase(),
+                                    )
+                                    .toList();
+                                break;
+
+                              case 'answered':
+                                __filteredQuestions = uniqueQuestions
+                                    .where((q) => q.answer != null)
+                                    .toList();
+                                break;
+
+                              default:
+                                __filteredQuestions = uniqueQuestions;
                             }
                             // Use filtered pagination only when not searching
                             final bool usePagination = _searchQuery.isEmpty;
@@ -1218,42 +1351,111 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                     );
                                   }
 
-                                  /// map index → question index
                                   if (index == 1) {
+                                    final dropdownKeys = _getDropdownValues()
+                                        .map((filter) => filter['key'])
+                                        .toList();
+
+                                    // Ensure active filter is valid
+                                    if (!dropdownKeys.contains(_activeFilter)) {
+                                      _activeFilter =
+                                          "all"; // default to all questions
+                                    }
+
                                     return Padding(
-                                      padding: EdgeInsetsGeometry.only(
+                                      padding: EdgeInsets.only(
                                         bottom: screenHeight * 0.02,
+                                        left: screenWidth * 0.04,
+                                        right: screenWidth * 0.04,
                                       ),
                                       child: SizedBox(
-                                        height:
-                                            screenHeight * 0.05, // row height
-
-                                        child: ListView(
-                                          scrollDirection: Axis.horizontal,
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: screenWidth * 0.01,
-                                          ),
-
+                                        height: screenHeight * 0.06,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment
+                                              .end, // push to right
                                           children: [
-                                            _buildFilterButton(
-                                              "Latest",
-                                              "latest",
-                                              screenWidth,
-                                              screenHeight,
+                                            Text(
+                                              "Filter by:",
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.black87,
+                                                fontSize: screenWidth * 0.04,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
-                                            SizedBox(width: screenWidth * 0.03),
-                                            _buildFilterButton(
-                                              "Unanswered",
-                                              "unanswered",
-                                              screenWidth,
-                                              screenHeight,
+                                            SizedBox(width: screenWidth * 0.04),
+
+                                            // Light themed dropdown container
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: screenWidth * 0.03,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                  color: Colors.black12,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.05),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  value: _activeFilter,
+                                                  isExpanded: false,
+                                                  dropdownColor: Colors.white,
+                                                  iconEnabledColor:
+                                                      Colors.black87,
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.black87,
+                                                    fontSize:
+                                                        screenWidth * 0.04,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  onChanged: (value) {
+                                                    if (value != null) {
+                                                      setState(() {
+                                                        _activeFilter = value;
+                                                      });
+                                                    }
+                                                  },
+                                                  items: _getDropdownValues().map((
+                                                    filter,
+                                                  ) {
+                                                    return DropdownMenuItem<
+                                                      String
+                                                    >(
+                                                      value: filter['key'],
+                                                      child: Text(
+                                                        filter['label']!,
+                                                        style:
+                                                            GoogleFonts.outfit(
+                                                              color: Colors
+                                                                  .black87,
+                                                              fontSize:
+                                                                  screenWidth *
+                                                                  0.04,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     );
                                   }
-
                                   // Adjust actual index for carousel + filter row
                                   final int actualIndex = index - 2;
 
@@ -1341,25 +1543,57 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                       : answerText;
 
                                   // Inside your ListView.builder, replace the old card Container with this:
-
-                                  return Container(
+                                  final bool isHighlighted =
+                                      _highlightedQuestionId == questionId;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 400),
                                     key: _questionKeys[questionId],
                                     margin: const EdgeInsets.symmetric(
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        217,
-                                        188,
-                                        121,
-                                      ),
+                                      color: isHighlighted
+                                          ? const Color.fromRGBO(
+                                              210,
+                                              159,
+                                              42,
+                                              0.35,
+                                            )
+                                          : const Color.fromARGB(
+                                              255,
+                                              217,
+                                              188,
+                                              121,
+                                            ),
                                       borderRadius: BorderRadius.circular(15),
+                                      border: isHighlighted
+                                          ? Border.all(
+                                              color: Colors.black.withOpacity(
+                                                0.6,
+                                              ),
+                                              width: 2,
+                                            )
+                                          : null,
+
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.33),
-                                          blurRadius: 12.5,
+                                          color: // 👈 dark halo
+                                          Colors.black.withOpacity(
+                                            0.33,
+                                          ),
+                                          blurRadius: isHighlighted ? 28 : 12.5,
+                                          spreadRadius: isHighlighted ? 4 : 0,
+                                          offset: const Offset(0, 10),
                                         ),
+                                        if (isHighlighted)
+                                          BoxShadow(
+                                            color: const Color(0xFFFFB703)
+                                                .withOpacity(
+                                                  0.8,
+                                                ), // warm glow ring
+                                            blurRadius: 16,
+                                            spreadRadius: 2,
+                                          ),
                                       ],
                                     ),
                                     padding: EdgeInsets.all(screenWidth * 0.03),
@@ -1503,6 +1737,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                                       questionId,
                                                       userName!,
                                                       userRole!,
+                                                      question.phone as String,
                                                     );
                                                   },
                                                   style:
@@ -1674,18 +1909,21 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                                 ),
 
                                                 // Answer Content
-                                                Text(
+                                                buildLinkText(
                                                   question.answer!.content ??
                                                       '',
-                                                  style: GoogleFonts.outfit(
-                                                    color: const Color(
-                                                      0xFF2D2319,
-                                                    ),
-                                                    fontSize:
-                                                        screenWidth * 0.035,
-                                                    fontWeight: FontWeight.w600,
-                                                    height: 1.25,
-                                                  ),
+
+                                                  normalStyle:
+                                                      GoogleFonts.outfit(
+                                                        color: const Color(
+                                                          0xFF2D2319,
+                                                        ),
+                                                        fontSize:
+                                                            screenWidth * 0.035,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        height: 1.25,
+                                                      ),
                                                 ),
 
                                                 SizedBox(
@@ -1855,8 +2093,10 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                                             questionId: questionId,
                                             userName: userName,
                                             userRole: userRole,
-                                            userPhone: userPhone,
+                                            userPhone: question.phone as String,
                                             profileImgUrl: profilImgUrl,
+                                            tappedCommentId:
+                                                widget.tappedCommentId,
                                             onClose: () {
                                               setState(() {
                                                 _openedCommentQuestionId = null;

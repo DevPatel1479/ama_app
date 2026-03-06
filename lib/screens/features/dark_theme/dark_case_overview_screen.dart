@@ -18,10 +18,30 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart' show Shimmer;
 import 'package:url_launcher/url_launcher.dart';
 
-Future<void> openBlog() async {
-  final Uri blogUri = Uri.parse("https://www.amalegalsolutions.com/blog");
+String normalizeUrl(String url) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
 
-  if (!await launchUrl(blogUri, mode: LaunchMode.externalApplication)) {
+  if (url.startsWith('www.')) {
+    return 'https://$url';
+  }
+
+  return 'https://$url';
+}
+
+Future<void> openBlog({String? matchedText}) async {
+  final Uri blogUri = Uri.parse("https://www.amalegalsolutions.com/blog");
+  if (matchedText != null) {
+    final Uri matchedTextUri = Uri.parse(normalizeUrl(matchedText));
+
+    if (!await launchUrl(
+      matchedTextUri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      debugPrint("Could not open blog link");
+    }
+  } else if (!await launchUrl(blogUri, mode: LaunchMode.externalApplication)) {
     debugPrint("Could not open blog link");
   }
 }
@@ -636,7 +656,7 @@ class _DarkOverViewCaseDeskScreenState
                     _gridCard(
                       screenWidth: screenWidth,
                       screenHeight: screenHeight,
-                      image: AppAssets.grid1Img,
+                      image: AppAssets.hg1Img,
                       title: "Ask your Lawyer",
                       subtitle: "Get your query resolved in 45 minutes",
                       onTap: () {
@@ -646,7 +666,7 @@ class _DarkOverViewCaseDeskScreenState
                     _gridCard(
                       screenWidth: screenWidth,
                       screenHeight: screenHeight,
-                      image: AppAssets.grid2Img,
+                      image: AppAssets.hg5Img,
                       title: "Payment & Billing",
                       subtitle: "View invoices & payment history",
                       onTap: () {
@@ -698,21 +718,24 @@ class _DarkOverViewCaseDeskScreenState
                   height: kToolbarHeight + MediaQuery.of(context).padding.top,
                   color: const Color(0xFF171717).withOpacity(0.45),
                   padding: EdgeInsets.only(
-                    left: screenWidth * 0.04,
+                    // left: screenWidth * 0.04,
                     top: MediaQuery.of(context).padding.top,
                   ),
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go(AppPathsForScreen.userHomePath),
-                        child: Image.asset(
+                      IconButton(
+                        padding: EdgeInsets.zero, // remove default padding
+
+                        icon: Image.asset(
                           AppAssets.backArrowIcon,
                           width: screenWidth * 0.06,
                           height: screenWidth * 0.06,
                           fit: BoxFit.contain,
-                          color: Colors.white,
                         ),
+                        onPressed: () =>
+                            context.go(AppPathsForScreen.userHomePath),
+                        splashRadius: 24, // optional, makes tap area bigger
                       ),
                       SizedBox(width: screenWidth * 0.02),
                       Text(

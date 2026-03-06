@@ -90,8 +90,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   Widget build(BuildContext context) {
     // final userRole = context.watch<UserProvider>().role ?? '';
     final userRole = context.watch<RealTimeRoleProvider>().role;
-    print("found role of the user is $userRole");
-    print(_labels);
+    // print("found role of the user is $userRole");
+
     final isUser =
         userRole == 'user' ||
         userRole == 'users' ||

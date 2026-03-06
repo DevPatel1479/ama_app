@@ -386,38 +386,38 @@ class _LightServicesScreenState extends State<LightServicesScreen>
         titleSpacing: 0,
         toolbarHeight: kToolbarHeight,
 
-        title: Padding(
-          padding: EdgeInsets.only(left: screenWidth * 0.04), // ⭐ LEFT PADDING
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.go(AppPathsForScreen.userHomePath),
-                    child: Image.asset(
-                      AppAssets.backArrowIcon,
-                      width: screenWidth * 0.06 * scaleFactor,
-                      height: screenWidth * 0.06 * scaleFactor,
-                      fit: BoxFit.contain,
-                      color: Colors.black,
-                    ),
-                  ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero, // remove default padding
 
-                  SizedBox(width: screenWidth * 0.02 * scaleFactor),
-
-                  Text(
-                    'Services',
-                    style: GoogleFonts.outfit(
-                      color: Colors.black,
-                      fontSize: (screenWidth / 100) * 6.5 * 0.85,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  icon: Image.asset(
+                    AppAssets.backArrowIcon,
+                    width: screenWidth * 0.06,
+                    height: screenWidth * 0.06,
+                    fit: BoxFit.contain,
+                    color: Colors.black,
                   ),
-                ],
-              ),
-            ],
-          ),
+                  onPressed: () => context.go(AppPathsForScreen.userHomePath),
+                  splashRadius: 24, // optional, makes tap area bigger
+                ),
+
+                SizedBox(width: screenWidth * 0.001 * scaleFactor),
+
+                Text(
+                  'Services',
+                  style: GoogleFonts.outfit(
+                    color: Colors.black,
+                    fontSize: (screenWidth / 100) * 6.5 * 0.85,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
 
