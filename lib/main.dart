@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:ama_legal_solutions/api/api_service.dart';
+
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/firebase/fcm/fcm_sync_token_manager.dart';
 import 'package:ama_legal_solutions/firebase/fcm/firebase_messaging_service.dart';
@@ -23,6 +24,7 @@ import 'package:ama_legal_solutions/provider/notifications/scheduled_notificatio
 import 'package:ama_legal_solutions/provider/notifications/weekly_client_count_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
+import 'package:ama_legal_solutions/provider/qr/qr_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/resolve_query_provider.dart';
 import 'package:ama_legal_solutions/provider/teams/team_provider.dart';
@@ -33,6 +35,7 @@ import 'package:ama_legal_solutions/routes/app_router.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:ama_legal_solutions/utils/notification_navigation_helper.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 // import 'package:flutter/rendering.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -140,6 +143,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AnswerProvider()),
         ChangeNotifierProvider(create: (_) => WeeklyClientCountProvider()),
         ChangeNotifierProvider(create: (_) => NotificationHistoryProvider()),
+        ChangeNotifierProvider(create: (_) => QrProvider()..fetchQr()),
       ],
       child: const AmaLegalSolutionsApp(),
     ),
@@ -200,3 +204,4 @@ class _AmaLegalSolutionsAppState extends State<AmaLegalSolutionsApp>
     );
   }
 }
+

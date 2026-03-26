@@ -516,21 +516,21 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                 ),
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Our Services',
-                          style: GoogleFonts.outfit(
-                            color: Colors.black87,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    //   child: Align(
+                    //     alignment: Alignment.centerLeft,
+                    //     child: Text(
+                    //       'Our Services',
+                    //       style: GoogleFonts.outfit(
+                    //         color: Colors.black87,
+                    //         fontSize: 16,
+                    //         fontWeight: FontWeight.w600,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
                     RealtimeImageCarousel(type: "services"),
 
                     Expanded(

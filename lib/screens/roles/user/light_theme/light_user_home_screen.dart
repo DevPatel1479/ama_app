@@ -16,14 +16,16 @@ import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.d
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home_screen.dart'
     show
-        TeamCard,
-        connectLawyerGrid,
-        first10,
-        next10,
-        statOverviewCard,
         CityGrid,
         RealtimeImageCarousel,
-        connectLawyerSecondaryGrid;
+        TeamCard,
+        connectLawyerGrid,
+        connectLawyerSecondaryGrid,
+        first10,
+        next10,
+        openViewMoreReviews,
+        statOverviewCard,
+        viewMoreReviewsButton;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 // import 'package:chewie/chewie.dart';
@@ -610,9 +612,14 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           connectLawyerGrid(context, isLight: true),
                           SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         ],
-                        if (userRole?.toLowerCase() == "user") ...[
+                        if (userRole?.toLowerCase() == "user" ||
+                            userRole?.toLowerCase() == "guest") ...[
                           /// 🔥 Very small spacing between two grids
-                          connectLawyerSecondaryGrid(context, isLight: true),
+                          connectLawyerSecondaryGrid(
+                            context,
+                            isLight: true,
+                            isGuest: userRole?.toLowerCase() == "guest",
+                          ),
                           SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         ],
 
@@ -929,7 +936,12 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           clientImage: AppAssets.googleReviewImg,
                           isLight: true,
                         ),
-
+                        viewMoreReviewsButton(
+                          onTap: () {
+                            openViewMoreReviews();
+                          },
+                          isLight: true,
+                        ),
                         Padding(
                           padding: EdgeInsets.only(
                             top:

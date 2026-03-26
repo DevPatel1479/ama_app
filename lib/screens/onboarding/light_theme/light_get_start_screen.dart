@@ -197,30 +197,18 @@ class _LightGetStartScreen extends State<LightGetStartScreen> {
                           color: const Color.fromRGBO(45, 35, 25, 0.70),
                         ),
                         children: const [
-                          TextSpan(
-                            text: "Trusted ",
-                            style: TextStyle(color: Color(0xFFD29F2A)),
-                          ),
+                          TextSpan(text: "All-in-one legal support for "),
                           TextSpan(
                             text:
-                                "legal support for individuals and businesses managing documentation, ",
-                          ),
-                          TextSpan(
-                            text: "compliance, ",
+                                "banking & finance, loan settlement, trademark registration, cyber law, drafting, and compliance.",
                             style: TextStyle(color: Color(0xFFD29F2A)),
                           ),
-                          TextSpan(text: "and "),
-                          TextSpan(
-                            text: "protection ",
-                            style: TextStyle(color: Color(0xFFD29F2A)),
-                          ),
-                          TextSpan(text: "in one place."),
                         ],
                       ),
                     ),
                   ),
 
-                  SizedBox(height: h * 0.08),
+                  SizedBox(height: h * 0.06),
 
                   GestureDetector(
                     onTapDown: (_) => setState(() => _scale = 0.95),

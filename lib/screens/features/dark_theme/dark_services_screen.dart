@@ -430,22 +430,21 @@ class _DarkServicesScreenState extends State<DarkServicesScreen>
                 child: Column(
                   children: [
                     // "Our Services" label — now safe, won't be overlapped
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Our Services',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
+                    // const Padding(
+                    //   padding: EdgeInsets.symmetric(horizontal: 18.0),
+                    //   child: Align(
+                    //     alignment: Alignment.centerLeft,
+                    //     child: Text(
+                    //       'Our Services',
+                    //       style: TextStyle(
+                    //         color: Colors.white70,
+                    //         fontSize: 16,
+                    //         fontWeight: FontWeight.w500,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
                     RealtimeImageCarousel(type: "services"),
                     // SizedBox(height: screenHeight * 0.2),
                     Expanded(

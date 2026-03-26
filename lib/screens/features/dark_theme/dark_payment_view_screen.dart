@@ -1,10 +1,12 @@
 import 'dart:ui';
 
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+import 'package:ama_legal_solutions/provider/qr/qr_provider.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
 Future<void> openEmail(String email) async {
@@ -18,6 +20,64 @@ Future<void> openEmail(String email) async {
 
   if (!await launchUrl(emailUri, mode: LaunchMode.externalApplication)) {
     debugPrint("Could not open mail app");
+  }
+}
+
+class QrSkeleton extends StatefulWidget {
+  final double width;
+
+  const QrSkeleton({super.key, required this.width});
+
+  @override
+  State<QrSkeleton> createState() => _QrSkeletonState();
+}
+
+class _QrSkeletonState extends State<QrSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+
+    _animation = Tween<double>(begin: -1.5, end: 2.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: widget.width,
+          height: widget.width,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment(_animation.value - 1, -0.3),
+              end: Alignment(_animation.value, 0.3),
+              colors: const [
+                Color(0xFF2A2A2A),
+                Color(0xFF3A3A3A),
+                Color(0xFF2A2A2A),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -102,12 +162,99 @@ class DarkPaymentViewScreen extends StatelessWidget {
               child: Column(
                 children: [
                   /// QR IMAGE
-                  Image.asset(
-                    AppAssets.qrImg,
-                    width: screenWidth * 0.55,
-                    fit: BoxFit.contain,
-                  ),
+                  Consumer<QrProvider>(
+                    builder: (context, qrProvider, _) {
+                      final size = screenWidth * 0.55;
 
+                      /// 🔹 LOADING
+                      if (qrProvider.isLoading) {
+                        return QrSkeleton(width: size);
+                      }
+
+                      /// 🔹 ERROR
+                      if (qrProvider.error != null) {
+                        return Column(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                              size: screenWidth * 0.1,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            Text(
+                              "Failed to load QR",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white70,
+                                fontSize: screenWidth * 0.04,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  context.read<QrProvider>().fetchQr(),
+                              child: const Text("Retry"),
+                            ),
+                          ],
+                        );
+                      }
+
+                      /// 🔹 SUCCESS
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: size,
+                          height: size,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              /// Skeleton stays visible until image fully loads
+                              QrSkeleton(width: size),
+
+                              Image.network(
+                                qrProvider.qrUrl!,
+                                width: size,
+                                height: size,
+                                fit: BoxFit.contain,
+
+                                /// Smooth fade when loaded
+                                frameBuilder:
+                                    (context, child, frame, wasSyncLoaded) {
+                                      if (wasSyncLoaded) return child;
+
+                                      return AnimatedOpacity(
+                                        opacity: frame == null ? 0 : 1,
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        child: child,
+                                      );
+                                    },
+
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image,
+                                        color: Colors.white70,
+                                        size: screenWidth * 0.1,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "Image load failed",
+                                        style: GoogleFonts.outfit(
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   SizedBox(height: screenHeight * 0.035),
 
                   /// ACCOUNT DETAILS TITLE

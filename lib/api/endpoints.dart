@@ -15,7 +15,9 @@ class Endpoints {
   static final String getAllQuestions = "$baseUrl/question/get";
   static String getUserQuestions(String userId) =>
       "$baseUrl/question/user/$userId";
+  static String searchQuestions = "$baseUrl/question/search-questions";
   static final String createQuestion = "$baseUrl/question/create";
+  
   static String addAnswer(String questionId) =>
       "$baseUrl/question/add/$questionId/answer";
 
@@ -111,7 +113,7 @@ class Endpoints {
     if (search != null && search.trim().isNotEmpty) params["search"] = search;
 
     final query = Uri(queryParameters: params).query;
-    
+
     return "$baseUrl/billCut-leads?$query";
   }
 

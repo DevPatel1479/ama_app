@@ -172,11 +172,14 @@ class LoginProvider extends ChangeNotifier {
   }
 
   Future<void> createSession() async {
+    final now = DateTime.now();
+    final expiry = DateTime(now.year, now.month + 2, now.day);
     await LocalStorageHelper.saveString(
       _keySessionExpiry,
-      DateTime.now()
-          .add(const Duration(days: 7)) // 1 week session
-          .toIso8601String(),
+      // DateTime.now()
+      //     .add(const Duration(days: 7)) // 1 week session
+      //     .toIso8601String(),
+      expiry.toIso8601String(),
     );
   }
 
@@ -424,6 +427,20 @@ class LoginProvider extends ChangeNotifier {
   //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   //   }
   // }
+
+  void resetLoginState() {
+    phoneController.clear();
+
+    for (var c in otpControllers) {
+      c.clear();
+    }
+
+    otpSent = false;
+    isLoading = false;
+
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _resendTimer?.cancel();

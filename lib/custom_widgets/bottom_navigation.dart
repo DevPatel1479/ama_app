@@ -148,7 +148,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         child: ClipRRect(
           borderRadius: navCornerRadius,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Container(
               height: totalHeight,
               decoration: BoxDecoration(
@@ -162,7 +162,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                   ),
                   width: 1.8,
                 ),
-                color: Colors.white.withOpacity(0.07),
+                color: const Color.fromRGBO(45, 35, 25, 0.70), // ✅ changed here
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),

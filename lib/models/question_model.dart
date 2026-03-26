@@ -21,6 +21,7 @@ class Question {
     required this.userRole,
     required this.phone,
     this.profileImgUrl,
+
     required this.content,
     required this.timestamp,
     this.commentsCount = 0,
@@ -40,6 +41,7 @@ class Question {
       userRole: (json['userRole'] ?? '').toString(),
       phone: (json['phone'] ?? '').toString(),
       profileImgUrl: json['profileImgUrl']?.toString(),
+
       content: (json['content'] ?? '').toString(),
       timestamp: ts,
       commentsCount: (json['commentsCount'] is int)
@@ -59,6 +61,7 @@ class Question {
       'userRole': userRole,
       'phone': phone,
       'profileImgUrl': profileImgUrl,
+
       'content': content,
       'timestamp': timestamp,
       'commentsCount': commentsCount,
@@ -74,6 +77,7 @@ class Question {
     String? userRole,
     String? phone,
     String? profileImgUrl,
+
     String? content,
     int? timestamp,
     int? commentsCount,
@@ -86,6 +90,7 @@ class Question {
       userRole: userRole ?? this.userRole,
       phone: phone ?? this.phone,
       profileImgUrl: profileImgUrl ?? this.profileImgUrl,
+      
       content: content ?? this.content,
       timestamp: timestamp ?? this.timestamp,
       commentsCount: commentsCount ?? this.commentsCount,

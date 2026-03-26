@@ -64,6 +64,7 @@ class AppAssets {
   static const String appLogoWithText = "assets/images/app_logo_with_text.jpg";
 
   static const String appLogoWithText2 = "assets/icons/app_logo_with_text.png";
+  static const String newappLogoWithText2 = "assets/icons/new_dark_logo.png";
 
   static const String splashLoader = "assets/splash/Loader.gif";
 
@@ -202,5 +203,6 @@ class AppAssets {
   static const String hg4Img = "assets/images/hg4.png";
   static const String hg5Img = "assets/images/hg5.png";
   static const String solutionsTextImg = "assets/images/solutions_text.png";
-  static const String solutionsTextLightImg = "assets/images/solutions_text_light.png";
+  static const String solutionsTextLightImg =
+      "assets/images/solutions_text_light.png";
 }

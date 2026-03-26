@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/solid_border_painter.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
@@ -17,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class LightLoginScreen extends StatefulWidget {
@@ -50,16 +53,16 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF8BD00), // status bar color matches layout
-        statusBarIconBrightness: Brightness.dark, // for Android: dark icons
-        statusBarBrightness: Brightness.light, // for iOS: dark icons
-      ),
-    );
+    // SystemChrome.setSystemUIOverlayStyle(
+    //   const SystemUiOverlayStyle(
+    //     statusBarColor: Color(0xFFF8BD00), // status bar color matches layout
+    //     statusBarIconBrightness: Brightness.dark, // for Android: dark icons
+    //     statusBarBrightness: Brightness.light, // for iOS: dark icons
+    //   ),
+    // );
     final screenWidth = MediaQuery.of(context).size.width;
-    // final screenHeight = MediaQuery.of(context).size.height;
-    final fieldWidth = screenWidth * 0.9;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final fieldWidth = screenWidth;
     final fieldHeight = 50.0;
 
     final loginProvider = context.watch<LoginProvider>();
@@ -68,347 +71,350 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
       appBar: AppBar(
         toolbarHeight: 0, // height becomes 0 → looks invisible
         elevation: 0, // no shadow
-        backgroundColor: const Color(0xFFF8BD00),
+        backgroundColor: Color(0xFFEAE6DB),
+        surfaceTintColor: Colors.transparent,
       ),
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFEAE6DB),
       body: SafeArea(
-        child: GradientTopLayout(
-          // headerContent: Image.asset(
-          //   AppAssets.appLogoWithText2,
-          //   width: screenWidth * 0.4,
-          //   fit: BoxFit.contain,
-          // ),
-          headerContent: SizedBox(
-            height: 140,
-            child: Image.asset(AppAssets.appLogoWithText2, fit: BoxFit.contain),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04,
+            vertical: screenHeight * 0.04,
           ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  "Welcome",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: "Outfit",
-                    fontWeight: FontWeight.w600,
-                    fontSize: 25,
-                    color: Color(0xFF000000),
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: screenHeight * 0.06),
+              Center(
+                child: Image.asset(
+                  AppAssets.lightAppLogo,
+                  fit: BoxFit.contain,
+                  width: screenWidth * 0.5,
                 ),
-                const Text(
-                  "To your 1:1 Legal Advisors",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: "Outfit",
-                    fontWeight: FontWeight.w300,
-                    fontSize: 18,
-                    color: Color(0xFF000000),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Login",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: "Outfit",
+              ),
+              SizedBox(height: screenHeight * 0.07),
+              SizedBox(
+                width: double.infinity, // align-self: stretch
+                child: Text(
+                  "Welcome Back",
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF2D2319),
+                    fontSize:
+                        screenWidth *
+                        0.095, // responsive (~40px on normal screens)
                     fontWeight: FontWeight.w500,
+                    height: 1.0, // line-height: 40px (100%)
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.01),
+              SizedBox(
+                width: double.infinity, // align-self: stretch
+                child: Text(
+                  "Let’s reduce your legal stress.",
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF2D2319),
                     fontSize: 25,
-                    color: Color(0xFF000000),
+                    fontWeight: FontWeight.w400,
+                    height: 38 / 25, // line-height: 38px
                   ),
                 ),
-                const SizedBox(height: 24),
+              ),
+              SizedBox(height: screenHeight * 0.04),
 
-                // Phone Number Input
-                _gradientBorderInput(
-                  "Phone Number",
-                  fieldWidth,
-                  fieldHeight,
-                  loginProvider,
-                ),
-                const SizedBox(height: 16),
+              // Phone Number Input
+              _gradientBorderInput(
+                "Phone Number",
+                fieldWidth,
+                fieldHeight,
+                loginProvider,
+              ),
+              const SizedBox(height: 16),
 
-                // OTP Input Boxes
-                if (loginProvider.otpSent &&
-                    loginProvider.phoneController.text != "8734835064") ...[
-                  _otpInputBoxes(screenWidth, loginProvider),
-                  const SizedBox(height: 14),
-                  Text(
-                    "Check your WhatsApp for OTP",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: "Outfit",
-                      fontWeight: FontWeight.w400,
-                      fontSize:
-                          screenWidth * 0.045, // auto adjusts with screen width
-                      color: Colors.black,
-                    ),
-                  ),
+              // OTP Input Boxes
+              if (loginProvider.otpSent &&
+                  loginProvider.phoneController.text != "8734835064") ...[
+                _otpInputBoxes(screenWidth, loginProvider),
+                SizedBox(height: screenHeight * 0.01),
 
-                  const SizedBox(height: 14),
-                  // 🕒 Timer + Resend Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                // Text(
+                //   "Check your WhatsApp for OTP",
+                //   textAlign: TextAlign.center,
+                //   style: TextStyle(
+                //     fontFamily: "Outfit",
+                //     fontWeight: FontWeight.w400,
+                //     fontSize:
+                //         screenWidth * 0.045, // auto adjusts with screen width
+                //     color: Colors.black,
+                //   ),
+                // ),
+                // const SizedBox(height: 14),
+                // 🕒 Timer + Resend Button
+                SizedBox(
+                  width: fieldWidth,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       if (!loginProvider.isResendAvailable)
-                        Text(
-                          "Resend OTP in ${loginProvider.secondsRemaining}s",
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontFamily: "Outfit",
-                            fontSize: 16,
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "Resend OTP ",
+                                style: GoogleFonts.outfit(
+                                  color: const Color(0xFF2D2319),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                              TextSpan(
+                                text:
+                                    " in ${loginProvider.secondsRemaining} Seconds",
+                                style: GoogleFonts.outfit(
+                                  color: const Color(0xFF2D2319),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       else
                         TextButton(
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            alignment: Alignment
+                                .centerLeft, // align-self: stretch from left
+                          ),
                           onPressed: loginProvider.isResendAvailable
                               ? () => loginProvider.resendOtp(context)
                               : null,
-                          child: const Text(
+                          child: Text(
                             "Resend OTP",
-                            style: TextStyle(
-                              color: Color(0xFFD29F2A),
-                              fontSize: 16,
-                              fontFamily: "Outfit",
-                              fontWeight: FontWeight.w500,
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF2D2319),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              height: 1, // line-height: 100%
+                              decoration: TextDecoration.underline,
+                              decorationColor: const Color(0xFF2D2319),
                             ),
                           ),
                         ),
                     ],
                   ),
-                ] else if (loginProvider.otpSent)
-                  _otpInputBoxes(screenWidth, loginProvider),
-                const SizedBox(height: 25),
+                ),
+              ] else if (loginProvider.otpSent)
+                _otpInputBoxes(screenWidth, loginProvider),
+              SizedBox(height: screenHeight * 0.05),
 
-                // Login Button
-                loginProvider.otpSent
-                    ? _gradientLoginButton(
-                        fieldWidth,
-                        fieldHeight,
-                        () async {
-                          if (loginProvider.isLoading) return;
+              // Login Button
+              loginProvider.otpSent
+                  ? _gradientLoginButton(
+                      fieldWidth,
+                      fieldHeight,
+                      () async {
+                        if (loginProvider.isLoading) return;
 
-                          final phone = loginProvider.phoneController.text
-                              .trim();
-                          final enteredOtp = loginProvider.otpControllers
-                              .map((c) => c.text)
-                              .join()
-                              .trim();
-                          // ✅ Check for Google Play Test scenario
-                          // print(phone);
-                          // print(enteredOtp);
-                          if (phone == "8734835064") {
-                            // final verifyingSnack = SnackBar(
-                            //   duration: const Duration(
-                            //     days: 1,
-                            //   ), // keep until manually hidden
-                            //   backgroundColor: Colors.black87,
-                            //   behavior:
-                            //       SnackBarBehavior.floating, // allows more room
-                            //   margin: const EdgeInsets.all(
-                            //     12,
-                            //   ), // lifts it slightly
-                            //   shape: RoundedRectangleBorder(
-                            //     borderRadius: BorderRadius.circular(12),
-                            //   ),
-                            //   content: Row(
-                            //     mainAxisAlignment: MainAxisAlignment.center,
-                            //     children: const [
-                            //       SizedBox(
-                            //         width: 22,
-                            //         height: 22,
-                            //         child: CircularProgressIndicator(
-                            //           strokeWidth: 2.3,
-                            //           color: Colors.amber,
-                            //         ),
-                            //       ),
-                            //       SizedBox(width: 16),
-                            //       Text(
-                            //         "Verifying...",
-                            //         style: TextStyle(
-                            //           color: Colors.white,
-                            //           fontSize: 16,
-                            //           fontFamily: "Outfit",
-                            //         ),
-                            //       ),
-                            //     ],
-                            //   ),
-                            // );
+                        final phone = loginProvider.phoneController.text.trim();
+                        final enteredOtp = loginProvider.otpControllers
+                            .map((c) => c.text)
+                            .join()
+                            .trim();
+                        // ✅ Check for Google Play Test scenario
+                        // print(phone);
+                        // print(enteredOtp);
+                        if (phone == "8734835064") {
+                          // final verifyingSnack = SnackBar(
+                          //   duration: const Duration(
+                          //     days: 1,
+                          //   ), // keep until manually hidden
+                          //   backgroundColor: Colors.black87,
+                          //   behavior:
+                          //       SnackBarBehavior.floating, // allows more room
+                          //   margin: const EdgeInsets.all(
+                          //     12,
+                          //   ), // lifts it slightly
+                          //   shape: RoundedRectangleBorder(
+                          //     borderRadius: BorderRadius.circular(12),
+                          //   ),
+                          //   content: Row(
+                          //     mainAxisAlignment: MainAxisAlignment.center,
+                          //     children: const [
+                          //       SizedBox(
+                          //         width: 22,
+                          //         height: 22,
+                          //         child: CircularProgressIndicator(
+                          //           strokeWidth: 2.3,
+                          //           color: Colors.amber,
+                          //         ),
+                          //       ),
+                          //       SizedBox(width: 16),
+                          //       Text(
+                          //         "Verifying...",
+                          //         style: TextStyle(
+                          //           color: Colors.white,
+                          //           fontSize: 16,
+                          //           fontFamily: "Outfit",
+                          //         ),
+                          //       ),
+                          //     ],
+                          //   ),
+                          // );
 
-                            // ✅ Show loading snackbar immediately
-                            final messenger = ScaffoldMessenger.of(context);
-                            // messenger
-                            //   ..hideCurrentSnackBar()
-                            //   ..showSnackBar(verifyingSnack);
+                          // ✅ Show loading snackbar immediately
+                          final messenger = ScaffoldMessenger.of(context);
+                          // messenger
+                          //   ..hideCurrentSnackBar()
+                          //   ..showSnackBar(verifyingSnack);
 
-                            const defaultOtp = "453423";
+                          const defaultOtp = "453423";
 
-                            // If OTPs match, treat as verified
-                            if (enteredOtp == defaultOtp) {
-                              updateGlobalUserName("TestDp");
-                              updateGlobalUserEmail("testdp@gmail.com");
-                              await LocalStorageHelper.saveBool(
-                                "isUserLoggedIn",
-                                true,
-                              );
-                              await LocalStorageHelper.saveString(
-                                "userPhone",
-                                phone,
-                              );
-                              await LocalStorageHelper.saveString(
-                                "userName",
-                                "TestDp",
-                              );
-                              await LocalStorageHelper.saveString(
-                                "userRole",
-                                "client",
-                              );
+                          // If OTPs match, treat as verified
+                          if (enteredOtp == defaultOtp) {
+                            updateGlobalUserName("TestDp");
+                            updateGlobalUserEmail("testdp@gmail.com");
+                            await LocalStorageHelper.saveBool(
+                              "isUserLoggedIn",
+                              true,
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userPhone",
+                              phone,
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userName",
+                              "TestDp",
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userRole",
+                              "client",
+                            );
 
-                              await LocalStorageHelper.saveString(
-                                "userEmail",
-                                "testdp@gmail.com",
-                              );
-                              await LocalStorageHelper.saveString(
-                                "userWeekTopic",
-                                "third_week",
-                              );
-                              final userProvider = context.read<UserProvider>();
-                              Provider.of<RealTimeRoleProvider>(
-                                context,
-                                listen: false,
-                              ).setTesterRole();
-                              await userProvider.loadUserRole();
-                              messenger.hideCurrentSnackBar();
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: EdgeInsets.all(12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(12),
-                                    ),
-                                  ),
-                                  content: Text(
-                                    "✅ Test OTP verified successfully!",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  backgroundColor: Colors.green,
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                              // Proceed to home screen
-                              context.go(AppPathsForScreen.userHomePath);
-                              return;
-                            } else {
-                              messenger.hideCurrentSnackBar();
-
-                              // Error message
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: EdgeInsets.all(12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(12),
-                                    ),
-                                  ),
-                                  content: Text(
-                                    "❗Please enter the test OTP: 453423",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          await loginProvider.verifyOtp(context);
-
-                          // print(loginProvider.loginSuccess);
-                          if (loginProvider.loginSuccess) {
-                            String userPhone = "91${phone}";
+                            await LocalStorageHelper.saveString(
+                              "userEmail",
+                              "testdp@gmail.com",
+                            );
+                            await LocalStorageHelper.saveString(
+                              "userWeekTopic",
+                              "third_week",
+                            );
+                            final userProvider = context.read<UserProvider>();
                             Provider.of<RealTimeRoleProvider>(
                               context,
                               listen: false,
-                            ).startRoleListener(userPhone);
-                            // if (loginProvider.weekTopicEnabled) {
-                            //   await FirebaseMessagingService.instance
-                            //       .subscribeToTopicFor(
-                            //         weekEnabled: loginProvider.weekTopicEnabled,
-                            //         weekEnabledValue:
-                            //             loginProvider.weekTopic ?? "",
-                            //       );
-                            // } else {
-                            //   await FirebaseMessagingService.instance
-                            //       .subscribeToTopicFor();
-                            // }
-
-                            context.go(AppPathsForScreen.userHomePath);
-                          }
-                        },
-                        "Verify OTP",
-                        loginProvider,
-                      )
-                    : _gradientLoginButton(
-                        fieldWidth,
-                        fieldHeight,
-                        () {
-                          if (loginProvider.isLoading) return;
-                          // print("calling login side");
-                          final phone = loginProvider.phoneController.text
-                              .trim();
-                          // ✅ Static check before sending OTP
-                          if (phone == "8734835064") {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            ).setTesterRole();
+                            await userProvider.loadUserRole();
+                            messenger.hideCurrentSnackBar();
+                            messenger.showSnackBar(
                               const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
                                 content: Text(
-                                  "⚠️ Test mode detected. Use OTP 453423 for login.",
+                                  "✅ Test OTP verified successfully!",
                                   style: TextStyle(color: Colors.white),
                                 ),
-                                backgroundColor: Colors.blueGrey,
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
                               ),
                             );
-                            loginProvider.otpSent = true;
-                            setState(() {});
+                            // Proceed to home screen
+                            loginProvider.resetLoginState();
+                            context.go(AppPathsForScreen.userHomePath);
+                            return;
+                          } else {
+                            messenger.hideCurrentSnackBar();
+
+                            // Error message
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                content: Text(
+                                  "❗Please enter the test OTP: 453423",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
                             return;
                           }
+                        }
 
-                          loginProvider.login(context);
-                        },
-                        "Login",
-                        loginProvider,
-                      ),
-                const SizedBox(height: 20),
-                continueAsGuestButton(
-                  fieldWidth, // same responsive width
-                  fieldHeight, // same height you used for login
-                  () async {
-                    final ctx = context;
-                    final userProvider = context.read<UserProvider>();
-                    Provider.of<RealTimeRoleProvider>(
-                      context,
-                      listen: false,
-                    ).setGuestRole();
-                    await LocalStorageHelper.saveString("userRole", "guest");
-                    await LocalStorageHelper.saveBool(
-                      "isGuestLoggedOut",
-                      false,
-                    );
-                    await LocalStorageHelper.saveBool("isNormalUser", false);
-                    await userProvider.loadUserRole();
-                    updateGlobalUserName("Guest User");
-                    updateGlobalUserEmail("guest@gmail.com");
+                        await loginProvider.verifyOtp(context);
 
-                    ctx.pushReplacement(AppPathsForScreen.userHomePath);
-                  },
-                  "Continue as Guest",
-                ),
+                        // print(loginProvider.loginSuccess);
+                        if (loginProvider.loginSuccess) {
+                          String userPhone = "91${phone}";
+                          Provider.of<RealTimeRoleProvider>(
+                            context,
+                            listen: false,
+                          ).startRoleListener(userPhone);
+                          // if (loginProvider.weekTopicEnabled) {
+                          //   await FirebaseMessagingService.instance
+                          //       .subscribeToTopicFor(
+                          //         weekEnabled: loginProvider.weekTopicEnabled,
+                          //         weekEnabledValue:
+                          //             loginProvider.weekTopic ?? "",
+                          //       );
+                          // } else {
+                          //   await FirebaseMessagingService.instance
+                          //       .subscribeToTopicFor();
+                          // }
+                          loginProvider.resetLoginState();
+                          context.go(AppPathsForScreen.userHomePath);
+                        }
+                      },
+                      "Log in",
+                      loginProvider,
+                    )
+                  : _gradientLoginButton(
+                      fieldWidth,
+                      fieldHeight,
+                      () {
+                        if (loginProvider.isLoading) return;
+                        // print("calling login side");
+                        final phone = loginProvider.phoneController.text.trim();
+                        // ✅ Static check before sending OTP
+                        if (phone == "8734835064") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "⚠️ Test mode detected. Use OTP 453423 for login.",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.blueGrey,
+                            ),
+                          );
+                          loginProvider.otpSent = true;
+                          setState(() {});
+                          return;
+                        }
 
-                const SizedBox(height: 16),
-                RichText(
+                        loginProvider.login(context);
+                      },
+                      "Continue",
+                      loginProvider,
+                    ),
+              SizedBox(height: screenHeight * 0.035),
+
+              Center(
+                child: RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: const TextStyle(
@@ -420,17 +426,20 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                     ),
                     children: [
                       const TextSpan(
-                        text: "Don't have an account? ",
-                        style: TextStyle(color: Color(0xFF2D2319)),
+                        text: "New here? ",
+                        style: TextStyle(
+                          color: Color(0xFF2D2319),
+                          fontWeight: FontWeight.w300,
+                        ),
                       ),
                       TextSpan(
-                        text: "Sign up",
+                        text: "Create an account",
                         style: const TextStyle(
                           color: Color(
                             0xFFD29F2A,
                           ), // Color for the clickable text
                           fontWeight: FontWeight
-                              .w500, // Optional: make it slightly bolder
+                              .w600, // Optional: make it slightly bolder
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
@@ -443,8 +452,30 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              continueAsGuestButton(
+                fieldWidth, // same responsive width
+                fieldHeight, // same height you used for login
+                () async {
+                  final ctx = context;
+                  final userProvider = context.read<UserProvider>();
+                  Provider.of<RealTimeRoleProvider>(
+                    context,
+                    listen: false,
+                  ).setGuestRole();
+                  await LocalStorageHelper.saveString("userRole", "guest");
+                  await LocalStorageHelper.saveBool("isGuestLoggedOut", false);
+                  await LocalStorageHelper.saveBool("isNormalUser", false);
+                  await userProvider.loadUserRole();
+                  updateGlobalUserName("Guest User");
+                  updateGlobalUserEmail("guest@gmail.com");
+                  loginProvider.resetLoginState();
+                  ctx.pushReplacement(AppPathsForScreen.userHomePath);
+                },
+                "Continue as Guest",
+              ),
+            ],
           ),
         ),
       ),
@@ -457,103 +488,139 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     double height,
     LoginProvider provider,
   ) {
-    return Center(
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(width: 2, color: Colors.transparent),
-        ),
-        child: CustomPaint(
-          painter: GradientBorderPainter(
-            radius: 20,
-            width: 2,
-            gradient: const LinearGradient(
-              colors: [Colors.black, Colors.black],
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Label
+          Text(
+            "Enter your phone number",
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF2D2319),
+              fontSize: 18,
+              fontWeight: FontWeight.w400,
+              height: 1,
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+
+          SizedBox(height: height * 0.25),
+
+          /// Input Field
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: height * 0.02,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              color: const Color(0x80D29F2A), // rgba(210,159,42,0.50)
+            ),
             child: TextField(
               maxLength: 10,
               enabled: !provider.otpSent,
               controller: provider.phoneController,
-              style: const TextStyle(color: Colors.black),
               keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly, // allow only digits
-              ],
+
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF2D2319),
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                height: 1,
+              ),
+
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
 
               decoration: InputDecoration(
                 counterText: "",
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-
                 border: InputBorder.none,
                 hintText: label,
-                hintStyle: const TextStyle(
-                  color: Colors.black,
-                  fontFamily: "Outfit",
+
+                hintStyle: GoogleFonts.outfit(
+                  color: const Color(0xFF2D2319).withOpacity(0.6),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _otpInputBoxes(double screenWidth, LoginProvider provider) {
     final otpLength = provider.otpControllers.length;
-    final boxWidth = (screenWidth - 80) / otpLength;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        otpLength,
-        (index) => Container(
-          width: boxWidth,
-          height: boxWidth,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          child: CustomPaint(
-            painter: SolidBorderPainter(
-              radius: 16,
-              width: 2,
-              color: const Color(0xFF2D2319), // solid color
-            ),
-            child: Center(
-              child: TextField(
-                controller: provider.otpControllers[index],
-                focusNode: otpFocusNodes[index],
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black, fontSize: 20),
-                keyboardType: TextInputType.number,
-                maxLength: 1,
-                decoration: const InputDecoration(
-                  counterText: "",
-                  border: InputBorder.none,
+    /// responsive box width
+    final boxWidth = (screenWidth - (otpLength * 12)) / otpLength;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        /// Label
+        Text(
+          "Enter OTP",
+          style: GoogleFonts.outfit(
+            color: const Color(0xFF2D2319),
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            height: 1,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        /// OTP boxes
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            otpLength,
+            (index) => Container(
+              width: boxWidth,
+              height: boxWidth * 1.05,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: const Color(0x80D29F2A), // rgba(210,159,42,0.50)
+              ),
+              child: Center(
+                child: TextField(
+                  controller: provider.otpControllers[index],
+                  focusNode: otpFocusNodes[index],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  maxLength: 1,
+
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF2D2319),
+                    fontSize: 30,
+                    fontWeight: FontWeight.w300,
+                    height: 1,
+                  ),
+
+                  decoration: const InputDecoration(
+                    counterText: "",
+                    border: InputBorder.none,
+                  ),
+
+                  onChanged: (value) {
+                    if (value.isNotEmpty && index < otpLength - 1) {
+                      FocusScope.of(
+                        context,
+                      ).requestFocus(otpFocusNodes[index + 1]);
+                    } else if (value.isEmpty && index > 0) {
+                      FocusScope.of(
+                        context,
+                      ).requestFocus(otpFocusNodes[index - 1]);
+                    }
+                  },
                 ),
-                onChanged: (value) {
-                  // if (value.isNotEmpty && index < otpLength - 1) {
-                  //   otpFocusNodes[index + 1].requestFocus();
-                  // } else if (value.isEmpty && index > 0) {
-                  //   otpFocusNodes[index - 1].requestFocus();
-                  // }
-                  if (value.isNotEmpty && index < otpLength - 1) {
-                    FocusScope.of(
-                      context,
-                    ).requestFocus(otpFocusNodes[index + 1]);
-                  } else if (value.isEmpty && index > 0) {
-                    FocusScope.of(
-                      context,
-                    ).requestFocus(otpFocusNodes[index - 1]);
-                  }
-                },
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -569,13 +636,13 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(37),
           color: const Color(0xFF2D2319),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(37),
             onTap: onPressed,
             child: Center(
               child: provider.isLoading
@@ -610,28 +677,52 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
     VoidCallback onPressed,
     String text,
   ) {
-    return Center(
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: const Color(0xFF505050), // SAME as login button
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onPressed,
-            child: Center(
-              child: Text(
-                text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: "Outfit",
-                  fontWeight: FontWeight.w500,
-                  fontSize: 20,
-                  color: Colors.white,
+    return GestureDetector(
+      onTap: onPressed,
+      child: Center(
+        child: Container(
+          width: width * 0.5,
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(57),
+            color: const Color(0x7DFFFFFF),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 16,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Color(0x0DEAE6DB),
+                blurRadius: 8.8,
+                offset: Offset(0, -4),
+              ),
+              BoxShadow(
+                color: Color(0x0DEAE6DB),
+                blurRadius: 8.8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(57),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 2.55, sigmaY: 2.55),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF2D2319),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      height: 1,
+                    ),
+                  ),
                 ),
               ),
             ),

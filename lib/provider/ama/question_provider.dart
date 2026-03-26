@@ -16,7 +16,17 @@ class QuestionProvider extends ChangeNotifier {
 
   final List<Question> _questions = [];
   List<Question> get questions => List.unmodifiable(_questions);
+  final List<Question> _searchResults = [];
+  List<Question> get searchResults => List.unmodifiable(_searchResults);
+  bool _isSearching = false;
+  bool get isSearching => _isSearching;
 
+  String? _searchLastVisible;
+  bool _searchHasMore = true;
+  bool get searchHasMore => _searchHasMore;
+
+  String _currentSearchTerm = "";
+  String get currentSearchTerm => _currentSearchTerm;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -29,6 +39,55 @@ class QuestionProvider extends ChangeNotifier {
   _docSubscriptions = {};
 
   /// --- Public API methods ---
+
+  Future<void> searchQuestions(
+    BuildContext context, {
+    required String term,
+    bool reset = false,
+  }) async {
+    if (_isSearching) return;
+
+    if (reset) {
+      _searchLastVisible = null;
+      _searchResults.clear();
+      _searchHasMore = true;
+      _currentSearchTerm = term;
+    }
+
+    if (!_searchHasMore) return;
+
+    _isSearching = true;
+    notifyListeners();
+
+    try {
+      String url = "${Endpoints.searchQuestions}?term=$term&limit=10";
+
+      if (_searchLastVisible != null) {
+        url += "&lastVisible=$_searchLastVisible";
+      }
+
+      final response = await apiService.get(url);
+      final data = jsonDecode(response.body);
+
+      if (data['questions'] != null && (data['questions'] as List).isNotEmpty) {
+        final fetched = (data['questions'] as List)
+            .map((q) => Question.fromJson(q))
+            .toList();
+
+        _searchResults.addAll(fetched);
+
+        _searchLastVisible = data['lastVisible'];
+        _searchHasMore = data['lastVisible'] != null;
+      } else {
+        _searchHasMore = false;
+      }
+    } catch (e) {
+      showCustomMessage(context, "Search error: $e", true);
+    } finally {
+      _isSearching = false;
+      notifyListeners();
+    }
+  }
 
   /// Fetch paginated questions from your REST API
   Future<void> fetchQuestions(
@@ -124,8 +183,10 @@ class QuestionProvider extends ChangeNotifier {
     required String userId,
     required String userName,
     required String userRole,
+
     required String phone,
     String? profileImgUrl,
+
     required String content,
   }) async {
     try {
@@ -141,11 +202,13 @@ class QuestionProvider extends ChangeNotifier {
         "content": content,
       };
 
+      // final response = await apiService.post(Endpoints.createQuestion, body);
       final response = await apiService.post(Endpoints.createQuestion, body);
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final q = Question.fromJson(data);
+
         _questions.insert(0, q);
         // subscribe to this doc so realtime updates reflect immediately
         _subscribeToDocIds([q.id]);
@@ -268,6 +331,7 @@ class QuestionProvider extends ChangeNotifier {
                 'userRole': data['userRole'],
                 'phone': data['phone'],
                 'profileImgUrl': data['profileImgUrl'],
+                'selected_service': data['selected_service'],
                 'content': data['content'],
                 'timestamp': _normalizeTimestampField(data['timestamp']),
                 'answer': data['answer'],
@@ -324,6 +388,14 @@ class QuestionProvider extends ChangeNotifier {
         return 0;
       }
     }
+  }
+
+  void clearSearch() {
+    _searchResults.clear();
+    _searchLastVisible = null;
+    _searchHasMore = true;
+    _currentSearchTerm = "";
+    notifyListeners();
   }
 
   /// Must be called when provider is no longer used

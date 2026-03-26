@@ -20,6 +20,60 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<void> openReviewPage() async {
+  if (Platform.isAndroid) {
+    const marketUrl =
+        'market://details?id=com.ama.ama_legal_solutions&reviewId=0';
+
+    const webUrl =
+        'https://play.google.com/store/apps/details?id=com.ama.ama_legal_solutions&showAllReviews=true';
+
+    if (await canLaunchUrl(Uri.parse(marketUrl))) {
+      await launchUrl(Uri.parse(marketUrl));
+    } else {
+      await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+    }
+  } else if (Platform.isIOS) {
+    const appStoreUrl =
+        'itms-apps://itunes.apple.com/app/id6755156186?action=write-review';
+
+    const webUrl =
+        'https://apps.apple.com/app/id6755156186?action=write-review';
+
+    if (await canLaunchUrl(Uri.parse(appStoreUrl))) {
+      await launchUrl(Uri.parse(appStoreUrl));
+    } else {
+      await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+Future<void> openMap() async {
+  const address =
+      "AMA LEGAL SOLUTIONS, 2493AP, Block G, Sushant Lok 2, Sector 57, Gurugram, Haryana 122011";
+
+  final Uri url = Uri.parse(
+    "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+  );
+
+  await launchUrl(url, mode: LaunchMode.externalApplication);
+}
+
+Future<void> callPhone() async {
+  final Uri phoneUri = Uri.parse("tel:+918700343611");
+
+  await launchUrl(phoneUri);
+}
+
+Future<void> sendEmail() async {
+  final Uri emailUri = Uri.parse(
+    "mailto:notify@amalegalsolutions.com?subject=AMA Legal Solutions Inquiry",
+  );
+
+  await launchUrl(emailUri);
+}
 
 class DarkUserAccountScreen extends StatefulWidget {
   final String name;
@@ -540,8 +594,9 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                       onTap: () async {
                         // final role = await getUserRole();
                         // final phone = await getUserPhone();
-                        final userId = "${widget.role}_${widget.phone}";
-                        showFeedbackBottomSheet(context, userId);
+                        // final userId = "${widget.role}_${widget.phone}";
+                        // showFeedbackBottomSheet(context, userId);
+                        openReviewPage();
                       },
                       child:
                           // Row: Rate AMA Legal Solutions
@@ -594,78 +649,87 @@ class _DarkUserAccountScreenState extends State<DarkUserAccountScreen> {
                     ),
 
                     SizedBox(height: screenHeight * 0.025),
-
-                    // Row: Location
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Image.asset(
-                          AppAssets.locationIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                        ),
-                        SizedBox(width: screenWidth * 0.04),
-                        Expanded(
-                          child: Text(
-                            "2493AP, Block G, Sushant Lok 2, Sector 57, Gurugram, Haryana, 122001",
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.040,
-                              fontWeight: FontWeight.w500,
-                              height: 1.3, // line height
-                              color: Colors.white,
-                            ),
+                    InkWell(
+                      onTap: openMap,
+                      child:
+                          // Row: Location
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Image.asset(
+                                AppAssets.locationIcon,
+                                width: screenWidth * 0.04,
+                                height: screenWidth * 0.04,
+                                fit: BoxFit.contain,
+                              ),
+                              SizedBox(width: screenWidth * 0.04),
+                              Expanded(
+                                child: Text(
+                                  "2493AP, Block G, Sushant Lok 2, Sector 57, Gurugram, Haryana, 122001",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: screenWidth * 0.040,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.3, // line height
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
                     ),
 
                     SizedBox(height: screenHeight * 0.03),
 
                     // Row: Phone
-                    Row(
-                      children: [
-                        Image.asset(
-                          AppAssets.phoneIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                        ),
-                        SizedBox(width: screenWidth * 0.04),
-                        Text(
-                          "+91-8700343611",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.040,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                    InkWell(
+                      onTap: callPhone,
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            AppAssets.phoneIcon,
+                            width: screenWidth * 0.04,
+                            height: screenWidth * 0.04,
+                            fit: BoxFit.contain,
                           ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Row: Company Email
-                    Row(
-                      children: [
-                        Image.asset(
-                          AppAssets.companyEmailIcon,
-                          width: screenWidth * 0.04,
-                          height: screenWidth * 0.04,
-                          fit: BoxFit.contain,
-                        ),
-                        SizedBox(width: screenWidth * 0.04),
-                        Expanded(
-                          child: Text(
-                            "notify@amalegalsolutions.com",
+                          SizedBox(width: screenWidth * 0.04),
+                          Text(
+                            "+91-8700343611",
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.040,
                               fontWeight: FontWeight.w400,
                               color: Colors.white,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.03),
+
+                    // Row: Company Email
+                    InkWell(
+                      onTap: sendEmail,
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            AppAssets.companyEmailIcon,
+                            width: screenWidth * 0.04,
+                            height: screenWidth * 0.04,
+                            fit: BoxFit.contain,
+                          ),
+                          SizedBox(width: screenWidth * 0.04),
+                          Expanded(
+                            child: Text(
+                              "notify@amalegalsolutions.com",
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.040,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     SizedBox(height: screenHeight * 0.02),
