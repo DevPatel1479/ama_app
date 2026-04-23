@@ -29,7 +29,7 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
 
   // Added for dropdown selection
   String? selectedService;
-
+  bool isQuestedPosted = false;
   final List<String> services = [
     "Banking & Finance",
     "Loan Settlement",
@@ -82,7 +82,8 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                     ),
                     onPressed: () =>
                         (widget.isQuestionPosting != null &&
-                            widget.isQuestionPosting == true)
+                            widget.isQuestionPosting == true &&
+                            isQuestedPosted == true)
                         ? context.go(AppPathsForScreen.userHomePath)
                         : Navigator.pop(context),
                     splashRadius: 24, // optional, makes tap area bigger
@@ -210,7 +211,10 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                           left: screenWidth * 0.01 * scaleFactor,
                         ),
                         child: Text(
-                          "Query",
+                          (widget.isQuestionPosting != null &&
+                                  widget.isQuestionPosting == true)
+                              ? "Question"
+                              : "Query",
                           style: GoogleFonts.outfit(
                             fontSize:
                                 screenWidth * 0.055 * scaleFactor, // ~22px
@@ -238,6 +242,7 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                         controller: _queryController,
                         expands: true,
                         maxLines: null,
+                        textInputAction: TextInputAction.done,
                         textAlignVertical: TextAlignVertical.top,
                         style: GoogleFonts.outfit(
                           fontSize: screenWidth * 0.04,
@@ -245,7 +250,11 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                           fontWeight: FontWeight.w300,
                         ),
                         decoration: InputDecoration(
-                          hintText: "Raise your Query...",
+                          hintText:
+                              (widget.isQuestionPosting != null &&
+                                  widget.isQuestionPosting == true)
+                              ? "Ask a Question"
+                              : "Raise your Query...",
                           hintStyle: GoogleFonts.outfit(
                             fontSize: screenWidth * 0.04,
                             color: Colors.white.withOpacity(0.5),
@@ -434,6 +443,10 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                                       );
 
                                       _queryController.clear();
+                                      setState(() {
+                                        isQuestedPosted = true;
+                                        selectedService = null;
+                                      });
                                       await Future.delayed(
                                         Duration(seconds: 2),
                                       );

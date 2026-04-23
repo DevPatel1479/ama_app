@@ -7,6 +7,8 @@ import 'package:ama_legal_solutions/provider/ama/ama_leads_provider.dart';
 import 'package:ama_legal_solutions/provider/billcut/billcut_leads_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart' show GoogleFonts;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -544,37 +546,32 @@ class _LightAdminAmaLeadsScreenState extends State<LightAdminAmaLeadsScreen> {
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
-
+    final topPadding = MediaQuery.of(context).padding.top;
+    final appBarHeight = w * 0.22;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFF8BD00),
 
       /// ✅ LIGHT APPBAR
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          kToolbarHeight + MediaQuery.of(context).padding.top,
-        ),
-        child: AppBar(
-          elevation: 0,
-          backgroundColor: const Color.fromARGB(255, 244, 206, 83),
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading: false,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light,
+        preferredSize: Size.fromHeight(topPadding + appBarHeight),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: topPadding,
+            left: w * 0.04,
+            right: w * 0.04,
           ),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 244, 206, 83),
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(w * 0.07),
               bottomRight: Radius.circular(w * 0.07),
             ),
           ),
-          titleSpacing: 0,
-          toolbarHeight: kToolbarHeight + 10,
-          title: Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: SizedBox(
+            height: appBarHeight,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 IconButton(
                   padding: EdgeInsets.zero,
@@ -585,16 +582,21 @@ class _LightAdminAmaLeadsScreenState extends State<LightAdminAmaLeadsScreen> {
                     fit: BoxFit.contain,
                     color: Colors.black,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   splashRadius: 24,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Leads',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: (w / 100) * 6.5,
-                    fontWeight: FontWeight.w700,
+
+                SizedBox(width: w * 0.02),
+
+                Expanded(
+                  child: Text(
+                    "Leads",
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: Colors.black,
+                      fontSize: w * 0.065,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -602,6 +604,7 @@ class _LightAdminAmaLeadsScreenState extends State<LightAdminAmaLeadsScreen> {
           ),
         ),
       ),
+
       body: Container(
         color: Colors.transparent,
         child: SafeArea(

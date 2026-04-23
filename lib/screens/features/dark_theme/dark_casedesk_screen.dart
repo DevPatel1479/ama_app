@@ -79,29 +79,29 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
     fetchUserRole();
-    Future.microtask(() async {
-      final provider = Provider.of<QueryProvider>(context, listen: false);
-      // final role = await LocalStorageHelper.getString("userRole");
-      // final phone = await LocalStorageHelper.getString("userPhone");
+    // Future.microtask(() async {
+    //   final provider = Provider.of<QueryProvider>(context, listen: false);
+    //   // final role = await LocalStorageHelper.getString("userRole");
+    //   // final phone = await LocalStorageHelper.getString("userPhone");
 
-      if (_role != null && _phone != null) {
-        provider.fetchQueries(
-          context: context,
-          role: _role ?? "",
-          phone: _phone ?? "",
-          status: isPendingActive ? 'pending' : 'resolved',
-        );
-        // attach realtime listener only if My Case active
-        if (isMyCaseActive) {
-          _attachFirestoreListener(
-            context,
-            _role ?? "",
-            _phone ?? "",
-            isMyCaseActive,
-          );
-        }
-      }
-    });
+    //   if (_role != null && _phone != null) {
+    //     provider.fetchQueries(
+    //       context: context,
+    //       role: _role ?? "",
+    //       phone: _phone ?? "",
+    //       status: isPendingActive ? 'pending' : 'resolved',
+    //     );
+    //     // attach realtime listener only if My Case active
+    //     if (isMyCaseActive) {
+    //       _attachFirestoreListener(
+    //         context,
+    //         _role ?? "",
+    //         _phone ?? "",
+    //         isMyCaseActive,
+    //       );
+    //     }
+    //   }
+    // });
   }
 
   @override
@@ -181,6 +181,29 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
     setState(() {
       userRole = _role;
     });
+
+    // final role = await LocalStorageHelper.getString("userRole");
+    // final phone = await LocalStorageHelper.getString("userPhone");
+
+    if (_role != null && _phone != null) {
+      final provider = Provider.of<QueryProvider>(context, listen: false);
+      provider.fetchQueries(
+        context: context,
+        role: _role ?? "",
+        phone: _phone ?? "",
+        status: isPendingActive ? 'pending' : 'resolved',
+      );
+      // attach realtime listener only if My Case active
+      if (isMyCaseActive) {
+        _attachFirestoreListener(
+          context,
+          _role ?? "",
+          _phone ?? "",
+          isMyCaseActive,
+        );
+      }
+    }
+
     if (_phone != null) {
       // Use existing RemarksProvider. Its fetchRemarks signature used Endpoints internally,
       // it previously accepted a baseUrl param — pass empty string because provider uses Endpoints.
@@ -1907,6 +1930,20 @@ class _QueryCardState extends State<QueryCard> {
                               style: GoogleFonts.outfit(
                                 fontSize: screenWidth * 0.033 * scaleFactor,
                                 color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                        if (query.primaryAllocAdv != null)
+                          Padding(
+                            padding: EdgeInsets.only(top: screenHeight * 0.003),
+                            child: Text(
+                              "Primary Adv: ${(query.primaryAllocAdv!.isEmpty) ? "N/A" : query.primaryAllocAdv}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.035 * scaleFactor,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ),

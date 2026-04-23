@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -20,7 +21,7 @@ class _AutoScrollSliderState extends State<AutoScrollSlider>
   final ScrollController _controller = ScrollController();
   late final Ticker _ticker;
 
-  late final List<String> loopedAssets;
+  List<String> get loopedAssets => [...widget.assets, ...widget.assets];
 
   double _offset = 0;
   Duration _last = Duration.zero;
@@ -30,8 +31,6 @@ class _AutoScrollSliderState extends State<AutoScrollSlider>
   @override
   void initState() {
     super.initState();
-
-    loopedAssets = [...widget.assets, ...widget.assets];
 
     _ticker = createTicker((elapsed) {
       if (!_controller.hasClients) return;
@@ -105,14 +104,19 @@ class _ImageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
-      child: Image.asset(
-        asset,
+      child: CachedNetworkImage(
+        imageUrl: asset,
         width: size,
         height: size,
         fit: BoxFit.cover,
-        cacheWidth: 300,
-        cacheHeight: 300,
-        filterQuality: FilterQuality.low,
+
+        memCacheWidth: 300,
+        memCacheHeight: 300,
+
+        placeholder: (_, __) => Container(color: Colors.grey[800]),
+        errorWidget: (_, __, ___) => Icon(Icons.error),
+
+        fadeInDuration: Duration(milliseconds: 200),
       ),
     );
   }

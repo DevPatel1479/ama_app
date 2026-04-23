@@ -1,6 +1,10 @@
+import 'package:ama_legal_solutions/custom_widgets/legacy_shimmer.dart';
+import 'package:ama_legal_solutions/provider/our_legacy/legacy_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
+
+import 'package:provider/provider.dart';
 
 class OurLegacySection extends StatefulWidget {
   final double screenWidth;
@@ -102,29 +106,60 @@ class _OurLegacySection extends State<OurLegacySection> {
               controller: _scrollController,
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  _buildLegacyCard(
-                    context,
-                    imagePath: AppAssets.ourFoundImg,
-                    title: "Anuj Anand Malik",
-                    subtitle: "Founder",
-                    description:
-                        "Anuj Anand Malik, advocate and founder of AMA Legal Solutions, leads with a mission to simplify and modernize legal services. His focus on client-centric solutions and financial law continues the legacy of innovation and integrity.",
-                  ),
-                  SizedBox(
-                    width: widget.screenWidth * 0.04 * widget.scaleFactor,
-                  ),
-                  _buildLegacyCard(
-                    context,
-                    imagePath: AppAssets.ourLegacyImg,
-                    title: "Late Adv. R.C. Malik",
-                    subtitle:
-                        "Ex-Comptroller and Auditor General of India\nDirector General of Audit (Central-Receipt)",
-                    description:
-                        "R.C. Malik started his professional journey as a gazetted officer at DGACR, progressing through different roles within the Income Tax Department before taking on administrative duties at the Office of the Comptroller and Auditor General (CAG) of India.",
-                  ),
-                ],
+              child: Consumer<LegacyProvider>(
+                builder: (context, provider, _) {
+                  // 🔥 LOADING STATE
+                  if (provider.loading) {
+                    return Row(
+                      children: List.generate(2, (_) {
+                        return Row(
+                          children: [
+                            LegacyShimmer(
+                              width: widget.screenWidth * 0.9,
+                              height: widget.screenHeight * 0.25,
+                            ),
+                            SizedBox(width: widget.screenWidth * 0.04),
+                          ],
+                        );
+                      }),
+                    );
+                  }
+                  final items = provider.items;
+
+                  if (items.isEmpty) return const SizedBox();
+                  items.sort((a, b) {
+                    bool aIsFounder = a.subtitle.toLowerCase().contains(
+                      "founder",
+                    );
+                    bool bIsFounder = b.subtitle.toLowerCase().contains(
+                      "founder",
+                    );
+
+                    if (aIsFounder && !bIsFounder) return -1;
+                    if (!aIsFounder && bIsFounder) return 1;
+                    return 0;
+                  });
+                  return Row(
+                    children: List.generate(items.length, (index) {
+                      final item = items[index];
+
+                      return Row(
+                        children: [
+                          _buildLegacyCard(
+                            context,
+                            imagePath: item.imgUrl, // 🔥 NOW FROM FIRESTORE
+                            title: item.title,
+                            subtitle: item.subtitle,
+                            description: item.description,
+                          ),
+
+                          if (index != items.length - 1)
+                            SizedBox(width: widget.screenWidth * 0.04),
+                        ],
+                      );
+                    }),
+                  );
+                },
               ),
             ),
             // 🔹 Left arrow
@@ -213,7 +248,12 @@ class _OurLegacySection extends State<OurLegacySection> {
               padding: const EdgeInsets.all(2),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(25),
-                child: Image.asset(imagePath, fit: BoxFit.cover),
+                child: CachedNetworkImage(
+                  imageUrl: imagePath,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(color: Colors.grey[800]),
+                  errorWidget: (_, __, ___) => Icon(Icons.error),
+                ),
               ),
             ),
 

@@ -42,6 +42,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 final loginProvider = LoginProvider();
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 final GoRouter appRouter = GoRouter(
   initialLocation: AppPathsForScreen.splashPath,
   refreshListenable: loginProvider,
@@ -62,6 +64,7 @@ final GoRouter appRouter = GoRouter(
 
     return null;
   },
+  observers: [routeObserver],
   routes: [
     GoRoute(
       path: AppPathsForScreen.splashPath,

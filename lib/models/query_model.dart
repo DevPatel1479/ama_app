@@ -40,6 +40,7 @@ class QueryModel {
   final int submittedAt; // unix seconds (non-null)
   final String postedBy;
   final String status;
+  final String? primaryAllocAdv;
   final String? role;
   final String? phone;
   final String? parentDocId;
@@ -61,6 +62,7 @@ class QueryModel {
     this.resolvedAt,
     this.resolvedBy,
     this.remarks,
+    this.primaryAllocAdv,
   });
 
   // Helpers for safe conversion
@@ -136,7 +138,7 @@ class QueryModel {
       final String? remarksVal = m.containsKey('remarks')
           ? _toNullableString(m['remarks'])
           : null;
-
+      final String? primaryAllocAdv = m['alloc_adv'] ?? "";
       return QueryModel(
         id: idVal,
         query: queryText,
@@ -150,6 +152,7 @@ class QueryModel {
         resolvedBy: resolvedByVal,
         remarks: remarksVal,
         postedBy: json["posted_by"],
+        primaryAllocAdv: primaryAllocAdv,
       );
     } catch (e, st) {
       // If a parsing bug still happens, log the raw payload to help debugging
@@ -174,6 +177,7 @@ class QueryModel {
       if (resolvedAt != null) 'resolved_at': resolvedAt,
       if (resolvedBy != null) 'resolved_by': resolvedBy!.toJson(),
       if (remarks != null) 'remarks': remarks,
+      if (primaryAllocAdv != null) 'alloc_adv': primaryAllocAdv,
     };
     return map;
   }

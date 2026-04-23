@@ -3,7 +3,6 @@ import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -27,10 +26,12 @@ class _AcceptPoliciesScreenState extends State<AcceptPoliciesScreen> {
     final size = MediaQuery.of(context).size;
 
     // Theme colors
-    final Color bgColor = widget.isDark ? Colors.black : Colors.white;
+    final Color bgColor = widget.isDark
+        ? const Color(0xFF1A1107)
+        : const Color(0xFFEAE6DB);
     final Color cardColor = widget.isDark
-        ? Colors.grey[900]!
-        : Colors.grey[100]!;
+        ? const Color(0xFF1A1107)
+        : const Color(0xFFEAE6DB);
     final Color textColor = widget.isDark ? Colors.grey[200]! : Colors.black87;
     final Color accentColor = Colors.blueAccent;
     final Color disabledColor = widget.isDark
@@ -60,7 +61,9 @@ class _AcceptPoliciesScreenState extends State<AcceptPoliciesScreen> {
             // 🟢 Center logo
             Center(
               child: Image.asset(
-                AppAssets.appLogoWithText,
+                widget.isDark
+                    ? AppAssets.appLogoWithText2
+                    : AppAssets.lightAppLogo,
                 width: size.width * 0.55,
                 fit: BoxFit.contain,
                 // color: !(widget.isDark) ? Colors.black : null,

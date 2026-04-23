@@ -1,22 +1,29 @@
 import 'dart:async' show Timer;
+import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/client_testimonial_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
+import 'package:ama_legal_solutions/custom_widgets/leading_organisation_shimmer.dart';
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/realtime_image_carousel.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
+import 'package:ama_legal_solutions/custom_widgets/stats_shimmer.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/models/case_stats_model.dart';
+import 'package:ama_legal_solutions/models/image_model.dart' show ImageModel;
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
+import 'package:ama_legal_solutions/provider/leading_organisation/leading_organisation_slider_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_read_state_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/routes/app_router.dart' show routeObserver;
 
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
@@ -24,6 +31,7 @@ import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -165,6 +173,7 @@ Widget connectLawyerGrid(BuildContext context, {bool isLight = false}) {
 Widget connectLawyerSecondaryGrid(
   BuildContext context, {
   bool isLight = false,
+  bool isGuest = false,
 }) {
   final screenWidth = MediaQuery.of(context).size.width;
   final screenHeight = MediaQuery.of(context).size.height;
@@ -192,6 +201,19 @@ Widget connectLawyerSecondaryGrid(
             ? "Need help? We’re here to assist you"
             : "Legal answers within 45 minutes",
         onTap: () {
+          if (isGuest && index == 0) {
+            showDialog(
+              context: context,
+              builder: (_) => LoginRequiredDialog(
+                isDarkTheme: !isLight,
+                onLoginPressed: () {
+                  Navigator.pop(context);
+                  context.goNamed(AppScreenNames.logIn);
+                },
+              ),
+            );
+            return;
+          }
           if (index == 0) {
             context.pushNamed(
               AppScreenNames.raiseQuery,
@@ -343,31 +365,76 @@ Widget statOverviewCard(BuildContext context, {bool isLight = false}) {
   );
 }
 
-final List<String> first10 = const [
-  AppAssets.s1Icon,
-  AppAssets.s2Icon,
-  AppAssets.s3Icon,
-  AppAssets.s4Icon,
-  AppAssets.s5Icon,
-  AppAssets.s6Icon,
-  AppAssets.s7Icon,
-  AppAssets.s8Icon,
-  AppAssets.s9Icon,
-  AppAssets.s10Icon,
-];
+Widget statOverviewCardDynamic(
+  BuildContext context,
+  CaseStatsModel stats, {
+  bool isLight = false,
+}) {
+  final size = MediaQuery.of(context).size;
+  final double dividerHeight = size.height * 0.085;
 
-final List<String> next10 = const [
-  AppAssets.s11Icon,
-  AppAssets.s12Icon,
-  AppAssets.s13Icon,
-  AppAssets.s14Icon,
-  AppAssets.s15Icon,
-  AppAssets.s16Icon,
-  AppAssets.s17Icon,
-  AppAssets.s18Icon,
-  AppAssets.s19Icon,
-  AppAssets.s20Icon,
-];
+  return Container(
+    width: double.infinity,
+    padding: EdgeInsets.symmetric(
+      horizontal: size.width * 0.06,
+      vertical: size.height * 0.02,
+    ),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(
+        color: isLight ? const Color(0xFF2D2319) : const Color(0xFFFFDD00),
+      ),
+      color: isLight
+          ? const Color.fromARGB(255, 217, 188, 121)
+          : const Color.fromRGBO(210, 159, 42, 0.06),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        statItem(context, stats.caseHandled, "Case\nHandled", isLight: isLight),
+
+        verticalDivider(context, dividerHeight, isLight: isLight),
+
+        statItem(context, stats.yrExp, "Year\nExperience", isLight: isLight),
+
+        verticalDivider(context, dividerHeight, isLight: isLight),
+
+        statItem(
+          context,
+          stats.clientServed,
+          "Client\nServed",
+          isLight: isLight,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget statOverviewRealtime(BuildContext context, {bool isLight = false}) {
+  return StreamBuilder(
+    stream: FirebaseFirestore.instance
+        .collection("cases_ui_data")
+        .doc("case_data")
+        .snapshots(),
+    builder: (context, snapshot) {
+      /// ⏳ LOADING → SHIMMER
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const StatsShimmerCard();
+      }
+
+      if (!snapshot.hasData || !snapshot.data!.exists) {
+        return const SizedBox(); // or fallback UI
+      }
+
+      final data = snapshot.data!.data() as Map<String, dynamic>;
+      final info = data["info"] ?? {};
+
+      final stats = CaseStatsModel.fromMap(info);
+
+      return statOverviewCardDynamic(context, stats, isLight: isLight);
+    },
+  );
+}
 
 class TeamCard extends StatelessWidget {
   final String topImage;
@@ -506,168 +573,320 @@ class TeamCard extends StatelessWidget {
   }
 }
 
-class CityGrid extends StatelessWidget {
-  final List<String> row1 = ["New Delhi", "Mumbai", "Kolkata"];
-
-  final List<String> row2 = ["Chennai", "Bengaluru"];
-
-  final List<String> row3 = ["Jaipur", "Gurugram", "Hyderabad"];
+class CityGrid extends StatefulWidget {
   final bool isLight;
-  CityGrid({super.key, this.isLight = false});
+
+  const CityGrid({super.key, this.isLight = false});
+
+  @override
+  State<CityGrid> createState() => _CityGridState();
+}
+
+class _CityGridState extends State<CityGrid> {
+  int visibleItems = 10;
+  bool _isLoading = false;
+
+  int getColumns(double width) {
+    if (width > 1100) return 5;
+    if (width > 800) return 4;
+    if (width > 600) return 3;
+    return 2;
+  }
+
+  Future<void> loadMore() async {
+    if (_isLoading) return;
+    if (visibleItems >= locations.length) return;
+
+    setState(() => _isLoading = true);
+
+    // simulate small loading delay (better UX)
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    setState(() {
+      visibleItems = (visibleItems + 10).clamp(0, locations.length);
+      _isLoading = false;
+    });
+  }
+
+  void resetGrid() {
+    if (visibleItems != 10) {
+      setState(() => visibleItems = 10);
+    }
+  }
+
+  final List<Map<String, String>> locations = [
+    {
+      "name": "Andhra Pradesh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/andhra-pradesh",
+    },
+    {
+      "name": "Arunachal Pradesh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/arunachal-pradesh",
+    },
+    {
+      "name": "Assam",
+      "url": "https://www.amalegalsolutions.com/services/loan-settlement/assam",
+    },
+    {
+      "name": "Bihar",
+      "url": "https://www.amalegalsolutions.com/services/loan-settlement/bihar",
+    },
+    {
+      "name": "Chhattisgarh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/chhattisgarh",
+    },
+    {
+      "name": "Goa",
+      "url": "https://www.amalegalsolutions.com/services/loan-settlement/goa",
+    },
+    {
+      "name": "Gujarat",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/gujarat",
+    },
+    {
+      "name": "Haryana",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/haryana",
+    },
+    {
+      "name": "Himachal Pradesh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/himachal-pradesh",
+    },
+    {
+      "name": "Jharkhand",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/jharkhand",
+    },
+    {
+      "name": "Karnataka",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/karnataka",
+    },
+    {
+      "name": "Kerala",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/kerala",
+    },
+    {
+      "name": "Madhya Pradesh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/madhya-pradesh",
+    },
+    {
+      "name": "Maharashtra",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/maharashtra",
+    },
+    {
+      "name": "Manipur",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/manipur",
+    },
+    {
+      "name": "Meghalaya",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/meghalaya",
+    },
+    {
+      "name": "Mizoram",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/mizoram",
+    },
+    {
+      "name": "Nagaland",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/nagaland",
+    },
+    {
+      "name": "Odisha",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/odisha",
+    },
+    {
+      "name": "Punjab",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/punjab",
+    },
+    {
+      "name": "Rajasthan",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/rajasthan",
+    },
+    {
+      "name": "Sikkim",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/sikkim",
+    },
+    {
+      "name": "Tamil Nadu",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/tamil-nadu",
+    },
+    {
+      "name": "Telangana",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/telangana",
+    },
+    {
+      "name": "Tripura",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/tripura",
+    },
+    {
+      "name": "Uttar Pradesh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/uttar-pradesh",
+    },
+    {
+      "name": "Uttarakhand",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/uttarakhand",
+    },
+    {
+      "name": "West Bengal",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/west-bengal",
+    },
+    {
+      "name": "Andaman and Nicobar",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/andaman-nicobar",
+    },
+    {
+      "name": "Chandigarh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/chandigarh",
+    },
+    {
+      "name": "Daman and Diu",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/daman-diu",
+    },
+    {
+      "name": "Delhi",
+      "url": "https://www.amalegalsolutions.com/services/loan-settlement/delhi",
+    },
+    {
+      "name": "Jammu and Kashmir",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/jammu-and-kashmir",
+    },
+    {
+      "name": "Ladakh",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/ladakh",
+    },
+    {
+      "name": "Lakshadweep",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/lakshadweep",
+    },
+    {
+      "name": "Puducherry",
+      "url":
+          "https://www.amalegalsolutions.com/services/loan-settlement/puducherry",
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final columns = getColumns(width);
 
-    final double cardWidth = size.width * 0.27;
-    final double cardHeight = size.height * 0.05;
-    final double spacing = size.width * 0.03;
+        const spacing = 12.0;
+        final totalSpacing = spacing * (columns - 1);
+        final itemWidth = (width - totalSpacing) / columns;
 
-    return Column(
-      // crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        /// ───────── ROW 1 (3 ITEMS)
-        _buildRow(
-          context,
-          cities: row1,
-          cardWidth: cardWidth,
-          cardHeight: cardHeight,
-          spacing: spacing,
-          alignCenter: false,
-          isLight: isLight,
-        ),
-
-        SizedBox(height: size.height * 0.015),
-
-        /// ───────── ROW 2 (2 ITEMS CENTERED)
-        _buildRow(
-          context,
-          cities: row2,
-          cardWidth: cardWidth,
-          cardHeight: cardHeight,
-          spacing: spacing,
-          alignCenter: true,
-          isLight: isLight,
-        ),
-
-        SizedBox(height: size.height * 0.015),
-
-        /// ───────── ROW 3 (3 ITEMS)
-        _buildRow(
-          context,
-          cities: row3,
-          cardWidth: cardWidth,
-          cardHeight: cardHeight,
-          spacing: spacing,
-          alignCenter: false,
-          isLight: isLight,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRow(
-    BuildContext context, {
-    required List<String> cities,
-    required double cardWidth,
-    required double cardHeight,
-    required double spacing,
-    required bool alignCenter,
-    bool isLight = false,
-  }) {
-    return Row(
-      mainAxisAlignment: alignCenter
-          ? MainAxisAlignment.center
-          : MainAxisAlignment.center,
-      children: List.generate(cities.length * 2 - 1, (index) {
-        if (index.isOdd) {
-          return SizedBox(width: spacing);
-        }
-
-        final city = cities[index ~/ 2];
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(9),
-          onTap: () {
-            if (city == "New Delhi") {
-              LocationLauncher.launchByIndex(0);
-            } else if (city == "Mumbai") {
-              LocationLauncher.launchByIndex(1);
-            } else if (city == "Kolkata") {
-              LocationLauncher.launchByIndex(2);
-            } else if (city == "Chennai") {
-              LocationLauncher.launchByIndex(3);
-            } else if (city == "Bengaluru") {
-              LocationLauncher.launchByIndex(4);
-            } else if (city == "Jaipur") {
-              LocationLauncher.launchByIndex(5);
-            } else if (city == "Gurugram") {
-              LocationLauncher.launchByIndex(6);
-            } else if (city == "Hyderabad") {
-              LocationLauncher.launchByIndex(7);
+        return NotificationListener<ScrollNotification>(
+          onNotification: (scroll) {
+            if (scroll.metrics.pixels < 100 && visibleItems > 10) {
+              resetGrid();
             }
+            return false;
           },
-          child: Container(
-            width: cardWidth,
-            height: cardHeight,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isLight ? const Color(0xFF2D2319) : Colors.white,
-              borderRadius: BorderRadius.circular(9),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color.fromRGBO(0, 0, 0, 0.33),
-                  blurRadius: 12.5,
-                ),
-              ],
-            ),
-            child: Text(
-              city,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: cardWidth * 0.13,
-                fontWeight: FontWeight.w500,
-                color: isLight ? Colors.white : Colors.black,
+          child: Column(
+            children: [
+              Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: List.generate(visibleItems, (index) {
+                  final location = locations[index];
+
+                  return SizedBox(
+                    width: itemWidth,
+                    height: 50,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () {
+                        LocationLauncher.launchByIndex(location["url"]!);
+                      },
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: widget.isLight
+                              ? const Color(0xFF2D2319)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color.fromRGBO(0, 0, 0, 0.2),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          location["name"]!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: (width * 0.035).clamp(12, 16),
+                            fontWeight: FontWeight.w500,
+                            color: widget.isLight ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
               ),
-            ),
+
+              const SizedBox(height: 20),
+
+              if (visibleItems < locations.length)
+                ElevatedButton(
+                  onPressed: loadMore,
+                  child: const Text("View More"),
+                ),
+            ],
           ),
         );
-      }),
+      },
     );
   }
 }
 
 class LocationLauncher {
   // List of URLs
-  static const List<String> urls = [
-    'https://www.amalegalsolutions.com/locations/newdelhi',
-    'https://www.amalegalsolutions.com/locations/mumbai',
-    'https://www.amalegalsolutions.com/locations/kolkata',
-    'https://www.amalegalsolutions.com/locations/chennai',
-    'https://www.amalegalsolutions.com/locations/bengaluru',
-    'https://www.amalegalsolutions.com/locations/jaipur',
-    'https://www.amalegalsolutions.com/services/loan-settlement/Gurugram',
-    'https://www.amalegalsolutions.com/services/loan-settlement/Hyderabad',
-  ];
 
   // Launch URL by index
-  static Future<void> launchByIndex(int index) async {
-    if (index < 0 || index >= urls.length) {
-      debugPrint('Invalid index: $index');
-      return;
-    }
-
-    final Uri url = Uri.parse(urls[index]);
+  static Future<void> launchByIndex(String url) async {
+    final Uri urll = Uri.parse(url);
 
     try {
       // Use launchUrl with external application mode
       final launched = await launchUrl(
-        url,
+        urll,
         mode: LaunchMode.externalApplication,
       );
 
       if (!launched) {
-        debugPrint('Could not launch ${urls[index]}');
+        debugPrint('Could not launch $url');
       }
     } catch (e) {
       debugPrint('Error launching URL: $e');
@@ -689,7 +908,8 @@ class RealtimeImageCarousel extends StatefulWidget {
   State<RealtimeImageCarousel> createState() => _RealtimeImageCarouselState();
 }
 
-class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
+class _RealtimeImageCarouselState extends State<RealtimeImageCarousel>
+    with RouteAware {
   late final PageController _controller;
   Timer? _timer;
   int _current = 0;
@@ -701,21 +921,30 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RealtimeImageProvider>().listenImages(widget.type);
+
       _startAutoSlide();
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
   void _startAutoSlide() {
+    _timer?.cancel(); // 🔥 MUST (prevents duplicate timers)
+
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!mounted) {
-        timer.cancel(); // safety: stop timer if unmounted
-        return;
-      }
+      if (!mounted) return;
+
+      if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
 
       final provider = context.read<RealtimeImageProvider>();
       if (provider.images.isEmpty) return;
 
       final nextPage = (_current + 1) % provider.images.length;
+
       _controller.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 600),
@@ -727,7 +956,36 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
   }
 
   @override
+  void didPushNext() {
+    _timer?.cancel(); // stop when new screen opens
+  }
+
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final provider = context.read<RealtimeImageProvider>();
+
+      // 🔥 Only attach listener if different type
+      if (provider.imgType != widget.type) {
+        provider.listenImages(widget.type);
+      }
+
+      _current = 0;
+
+      if (_controller.hasClients) {
+        _controller.jumpToPage(0);
+      }
+
+      _startAutoSlide();
+    });
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
+
     _timer?.cancel(); // cancel auto-slide
     _controller.dispose();
     super.dispose();
@@ -743,7 +1001,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
         if (provider.isLoading) return _shimmer();
         if (provider.error != null) return _errorBox(provider.error!);
 
-        final images = provider.images;
+        final images = provider.imagesByType[widget.type] ?? provider.images;
         if (images.isEmpty) return const SizedBox.shrink();
 
         return Column(
@@ -808,7 +1066,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // DOT INDICATOR
             SizedBox(
@@ -908,6 +1166,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
   @override
   void initState() {
     super.initState();
+
     fetchUserNameAndRole();
     _initNotifications();
   }
@@ -932,8 +1191,8 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
       // replace with correct identifiers
       provider.fetchProfilePhoto(
         context,
-        phone: fetchedPhone!, // or actual phone if available
-        role: userRole!,
+        phone: fetchedPhone ?? "", // or actual phone if available
+        role: userRole ?? "",
       );
       // print(provider.profilePhotoUrl);
     }
@@ -1356,14 +1615,20 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                 height: screenHeight * 0.02 * scaleFactor,
                               ),
                             ],
-                            if (userRole?.toLowerCase() == "user") ...[
+                            if (userRole?.toLowerCase() == "user" ||
+                                userRole?.toLowerCase() == "guest") ...[
                               /// 🔥 Very small spacing between two grids
-                              connectLawyerSecondaryGrid(context),
+                              connectLawyerSecondaryGrid(
+                                context,
+                                isGuest: userRole?.toLowerCase() == "guest",
+                              ),
                               SizedBox(
                                 height: screenHeight * 0.02 * scaleFactor,
                               ),
                             ],
-                            statOverviewCard(context),
+                            // statOverviewCard(context),
+                            statOverviewRealtime(context),
+
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
                             Padding(
@@ -1389,140 +1654,189 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              height: screenHeight * 0.02 * scaleFactor,
-                            ), // spacing
-                            SizedBox(
-                              height: MediaQuery.of(context).size.width * 0.20,
-                              child: Stack(
-                                children: [
-                                  RepaintBoundary(
-                                    child: AutoScrollSlider(
-                                      assets: first10,
-                                      reverse: false,
-                                    ),
-                                  ),
-                                  // Left fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                            // effectively "fading into image"
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+
+                            Consumer<LeadingOrganisationSliderProvider>(
+                              builder: (context, provider, _) {
+                                final width = MediaQuery.of(context).size.width;
+                                final height = width * 0.20;
+
+                                // 🔥 SHOW SHIMMER
+                                if (provider.loading) {
+                                  return Column(
+                                    children: [
+                                      LeadingOrganisationShimmer(),
+                                      SizedBox(
+                                        height:
+                                            screenHeight * 0.03 * scaleFactor,
+                                      ),
+                                      LeadingOrganisationShimmer(),
+                                    ],
+                                  );
+                                }
+
+                                final images = provider.images;
+
+                                if (images.isEmpty) return const SizedBox();
+
+                                // 🔥 SPLIT LIKE YOUR OLD LOGIC
+                                final first10 = images.take(10).toList();
+                                final next10 = images.skip(10).toList();
+
+                                // spacing
+                                return Column(
+                                  children: [
+                                    /// 🔹 FIRST SLIDER
+                                    SizedBox(
+                                      height: height,
+                                      child: Stack(
+                                        children: [
+                                          RepaintBoundary(
+                                            child: AutoScrollSlider(
+                                              assets: first10,
+                                              reverse: false,
+                                            ),
+                                          ),
+                                          // Left fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                    // effectively "fading into image"
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Right fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerRight,
+                                                  end: Alignment.centerLeft,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
 
-                                  // Right fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerRight,
-                                          end: Alignment.centerLeft,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
+                                    SizedBox(
+                                      height: screenHeight * 0.03 * scaleFactor,
+                                    ), // spacing
+
+                                    SizedBox(
+                                      height: height,
+                                      child: Stack(
+                                        children: [
+                                          RepaintBoundary(
+                                            child: AutoScrollSlider(
+                                              assets: next10,
+                                              reverse: true,
+                                            ),
+                                          ),
+                                          // Left fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                    // effectively "fading into image"
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Right fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerRight,
+                                                  end: Alignment.centerLeft,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            SizedBox(
-                              height: screenHeight * 0.03 * scaleFactor,
-                            ), // spacing
-
-                            SizedBox(
-                              height: MediaQuery.of(context).size.width * 0.20,
-                              child: Stack(
-                                children: [
-                                  RepaintBoundary(
-                                    child: AutoScrollSlider(
-                                      assets: next10,
-                                      reverse: true,
-                                    ),
-                                  ),
-
-                                  // Left fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                            // effectively "fading into image"
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Right fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerRight,
-                                          end: Alignment.centerLeft,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                );
+                              },
                             ),
 
                             // Below the Padding containing "Our Team" and "See all"
@@ -1606,6 +1920,14 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                               testimonial:
                                   "Outstanding consultation! Ama Legal Solutions prioritizes client satisfaction and delivers quick, effective results.",
                               clientImage: AppAssets.googleReviewImg,
+                            ),
+                            // SizedBox(
+                            //   height: screenHeight * 0.001 * scaleFactor,
+                            // ),
+                            viewMoreReviewsButton(
+                              onTap: () {
+                                openViewMoreReviews();
+                              },
                             ),
                             Padding(
                               padding: EdgeInsets.only(
@@ -1693,4 +2015,76 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
       // bottomNavigationBar: const CustomBottomNav(),
     );
   }
+}
+
+Future<void> openViewMoreReviews() async {
+  if (Platform.isAndroid) {
+    const reviewsUrl =
+        'https://play.google.com/store/apps/details?id=com.ama.ama_legal_solutions&showAllReviews=true';
+
+    await launchUrl(
+      Uri.parse(reviewsUrl),
+      mode: LaunchMode.externalApplication,
+    );
+  } else if (Platform.isIOS) {
+    const reviewsUrl =
+        'https://apps.apple.com/in/app/ama-legal-solutions/id6755156186?see-all=reviews';
+
+    await launchUrl(
+      Uri.parse(reviewsUrl),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+}
+
+Widget viewMoreReviewsButton({
+  required VoidCallback onTap,
+  bool isLight = false,
+}) {
+  return Builder(
+    builder: (context) {
+      final size = MediaQuery.of(context).size;
+
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: size.width * 0.02,
+          vertical: size.height * 0.01,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: isLight
+                    ? const Color.fromARGB(255, 217, 188, 121)
+                    : const Color.fromRGBO(210, 159, 42, 0.06),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.33),
+                    blurRadius: 12.5,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  "View More Reviews",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: size.width * 0.045,
+                    fontWeight: FontWeight.w600,
+                    color: isLight ? const Color(0xFF2D2319) : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

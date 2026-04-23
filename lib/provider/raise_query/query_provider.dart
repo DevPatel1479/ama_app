@@ -153,7 +153,7 @@ class QueryProvider with ChangeNotifier {
           _isFileDisputerLoading = false;
           _successMessage = data["message"];
           notifyListeners();
-          // showCustomMessage(context, data['message'], false);
+          showCustomMessage(context, data['message'], false);
           return true;
         } else {
           _isFileDisputerLoading = false;
@@ -252,7 +252,7 @@ class QueryProvider with ChangeNotifier {
           final rawQueryId = (map['queryId'] ?? map['id'] ?? '').toString();
           map['queryId'] = rawQueryId;
           map['id'] = (map['id'] ?? rawQueryId).toString();
-
+          map['alloc_adv'] = (map['alloc_adv'] ?? "").toString();
           final dynamic submittedRaw =
               map['submitted_at'] ?? map['submittedAt'];
           if (submittedRaw is int) {
@@ -289,6 +289,7 @@ class QueryProvider with ChangeNotifier {
           }
 
           final model = QueryModel.fromJson(map);
+
           pageQueries.add(model);
         } catch (e) {
           debugPrint("⚠️ Failed to parse one query item: $e");

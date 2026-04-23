@@ -28,6 +28,7 @@ class LightRaiseQueryScreen extends StatefulWidget {
 class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
   final TextEditingController _queryController = TextEditingController();
   String? selectedService;
+  bool isQuestedPosted = false;
 
   final List<String> services = [
     "Banking & Finance",
@@ -97,7 +98,10 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                 fit: BoxFit.contain,
                 color: Colors.black,
               ),
-              onPressed: () => (widget.isQuestionPosting == true)
+              onPressed: () =>
+                  (widget.isQuestionPosting != null &&
+                      widget.isQuestionPosting == true &&
+                      isQuestedPosted == true)
                   ? context.go(AppPathsForScreen.userHomePath)
                   : Navigator.pop(context),
               splashRadius: 24, // optional, makes tap area bigger
@@ -282,7 +286,10 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                       ),
 
                       child: Text(
-                        "Query",
+                        (widget.isQuestionPosting != null &&
+                                widget.isQuestionPosting == true)
+                            ? "Question"
+                            : "Query",
                         style: GoogleFonts.outfit(
                           fontSize: screenWidth * 0.055 * scaleFactor, // ~22px
                           fontWeight: FontWeight.w500,
@@ -315,6 +322,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                             controller: _queryController,
                             expands: true,
                             maxLines: null,
+                            textInputAction: TextInputAction.done,
                             textAlignVertical: TextAlignVertical.top,
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.04,
@@ -322,7 +330,11 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                               fontWeight: FontWeight.w300,
                             ),
                             decoration: InputDecoration(
-                              hintText: "Raise your Query...",
+                              hintText:
+                                  (widget.isQuestionPosting != null &&
+                                      widget.isQuestionPosting == true)
+                                  ? "Ask a Question"
+                                  : "Raise your Query...",
                               hintStyle: GoogleFonts.outfit(
                                 fontSize: screenWidth * 0.04,
                                 color: Colors.black.withOpacity(0.5),
@@ -502,6 +514,11 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                                     );
 
                                     _queryController.clear();
+
+                                    setState(() {
+                                      isQuestedPosted = true;
+                                      selectedService = null;
+                                    });
                                     await Future.delayed(Duration(seconds: 2));
                                     Navigator.pop(context);
                                   },

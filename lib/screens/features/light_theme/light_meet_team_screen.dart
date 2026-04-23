@@ -45,7 +45,10 @@ class _LightMeetTeamScreenState extends State<LightMeetTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final screenHeight = media.size.height;
+    final topPadding = media.padding.top;
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -53,41 +56,30 @@ class _LightMeetTeamScreenState extends State<LightMeetTeamScreen> {
     final double spacing = 16;
     final double itemWidth = (screenWidth - spacing * (crossAxisCount + 1)) / 2;
     final double itemHeight = itemWidth * 1.1;
+    final appBarHeight = screenWidth * 0.22;
     return Scaffold(
       extendBody: true,
-      extendBodyBehindAppBar: true,
+
       // <-- IMPORTANT: make scaffold transparent so page background can extend under system UI/home indicator
       backgroundColor: Color(0xFFF8BD00),
 
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          kToolbarHeight + MediaQuery.of(context).padding.top,
-        ),
-        child: AppBar(
-          elevation: 0,
-          backgroundColor: const Color.fromARGB(255, 244, 206, 83),
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading: false,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light,
+        preferredSize: Size.fromHeight(topPadding + appBarHeight),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: topPadding,
+            left: screenWidth * 0.04,
+            right: screenWidth * 0.04,
           ),
-
-          // Rounded bottom corners
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 244, 206, 83),
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(screenWidth * 0.07),
               bottomRight: Radius.circular(screenWidth * 0.07),
             ),
           ),
-
-          titleSpacing: 0,
-          toolbarHeight:
-              kToolbarHeight + 10, // match preferredSize extra height
-
-          title: Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: SizedBox(
+            height: appBarHeight,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -103,13 +95,18 @@ class _LightMeetTeamScreenState extends State<LightMeetTeamScreen> {
                   onPressed: () => context.pop(),
                   splashRadius: 24,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Meet the Team',
-                  style: GoogleFonts.outfit(
-                    color: Colors.black,
-                    fontSize: (screenWidth / 100) * 6.5,
-                    fontWeight: FontWeight.w700,
+
+                SizedBox(width: screenWidth * 0.02),
+
+                Expanded(
+                  child: Text(
+                    "Meet the Team",
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: Colors.black,
+                      fontSize: screenWidth * 0.065,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

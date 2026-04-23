@@ -13,6 +13,8 @@ import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.d
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/features/profile/dark_theme/dark_user_account_screen.dart'
+    show callPhone, openMap, openReviewPage, sendEmail;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:flutter/material.dart';
@@ -627,10 +629,11 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                       SizedBox(height: screenHeight * 0.025),
                       GestureDetector(
                         onTap: () async {
-                          final phone = await getUserPhone();
-                          final role = await getUserRole();
-                          final userId = "${role}_$phone";
-                          showFeedbackBottomSheet(context, userId);
+                          // final phone = await getUserPhone();
+                          // final role = await getUserRole();
+                          // final userId = "${role}_$phone";
+                          // showFeedbackBottomSheet(context, userId);
+                          openReviewPage();
                         },
                         child:
                             // Row: Rate AMA Legal Solutions
@@ -686,79 +689,88 @@ class _LightUserAccountScreenState extends State<LightUserAccountScreen> {
                       SizedBox(height: screenHeight * 0.025),
 
                       // Row: Location
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Image.asset(
-                            AppAssets.locationIcon,
-                            width: screenWidth * 0.04,
-                            height: screenWidth * 0.04,
-                            fit: BoxFit.contain,
-                            color: Colors.black,
-                          ),
-                          SizedBox(width: screenWidth * 0.04),
-                          Expanded(
-                            child: Text(
-                              "2493AP, Block G, Sushant Lok 2, Sector 57, Gurugram, Haryana, 122001",
-                              style: GoogleFonts.outfit(
-                                fontSize: screenWidth * 0.040,
-                                fontWeight: FontWeight.w500,
-                                height: 1.3, // line height
-                                color: Colors.black,
+                      InkWell(
+                        onTap: openMap,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.asset(
+                              AppAssets.locationIcon,
+                              width: screenWidth * 0.04,
+                              height: screenWidth * 0.04,
+                              fit: BoxFit.contain,
+                              color: Colors.black,
+                            ),
+                            SizedBox(width: screenWidth * 0.04),
+                            Expanded(
+                              child: Text(
+                                "2493AP, Block G, Sushant Lok 2, Sector 57, Gurugram, Haryana, 122001",
+                                style: GoogleFonts.outfit(
+                                  fontSize: screenWidth * 0.040,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.3, // line height
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
                       SizedBox(height: screenHeight * 0.03),
 
                       // Row: Phone
-                      Row(
-                        children: [
-                          Image.asset(
-                            AppAssets.phoneIcon,
-                            width: screenWidth * 0.04,
-                            height: screenWidth * 0.04,
-                            fit: BoxFit.contain,
-                            color: Colors.black,
-                          ),
-                          SizedBox(width: screenWidth * 0.04),
-                          Text(
-                            "+91-8700343611",
-                            style: GoogleFonts.outfit(
-                              fontSize: screenWidth * 0.040,
-                              fontWeight: FontWeight.w400,
+                      InkWell(
+                        onTap: callPhone,
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              AppAssets.phoneIcon,
+                              width: screenWidth * 0.04,
+                              height: screenWidth * 0.04,
+                              fit: BoxFit.contain,
                               color: Colors.black,
                             ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: screenHeight * 0.03),
-
-                      // Row: Company Email
-                      Row(
-                        children: [
-                          Image.asset(
-                            AppAssets.companyEmailIcon,
-                            width: screenWidth * 0.04,
-                            height: screenWidth * 0.04,
-                            fit: BoxFit.contain,
-                            color: Colors.black,
-                          ),
-                          SizedBox(width: screenWidth * 0.04),
-                          Expanded(
-                            child: Text(
-                              "notify@amalegalsolutions.com",
+                            SizedBox(width: screenWidth * 0.04),
+                            Text(
+                              "+91-8700343611",
                               style: GoogleFonts.outfit(
                                 fontSize: screenWidth * 0.040,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black,
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: screenHeight * 0.03),
+                      InkWell(
+                        onTap: sendEmail,
+                        child:
+                            // Row: Company Email
+                            Row(
+                              children: [
+                                Image.asset(
+                                  AppAssets.companyEmailIcon,
+                                  width: screenWidth * 0.04,
+                                  height: screenWidth * 0.04,
+                                  fit: BoxFit.contain,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: screenWidth * 0.04),
+                                Expanded(
+                                  child: Text(
+                                    "notify@amalegalsolutions.com",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: screenWidth * 0.040,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                       ),
 
                       SizedBox(height: screenHeight * 0.02),

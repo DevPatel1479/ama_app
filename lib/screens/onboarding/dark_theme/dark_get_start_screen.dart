@@ -219,20 +219,14 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
                         ),
                         children:
                             const [
-                              TextSpan(text: "Trusted "),
+                              TextSpan(text: "All-in-one legal support for "),
                               TextSpan(
                                 text:
-                                    "legal support for individuals and businesses managing documentation, ",
+                                    "banking & finance, loan settlement, trademark registration, cyber law, drafting, and compliance.",
                               ),
-                              TextSpan(text: "compliance, "),
-                              TextSpan(text: "and "),
-                              TextSpan(text: "protection "),
-                              TextSpan(text: "in one place."),
                             ].map((span) {
-                              if ([
-                                "Trusted ",
-                                "compliance, ",
-                                "protection ",
+                              if (![
+                                "All-in-one legal support for ",
                               ].contains(span.text)) {
                                 return TextSpan(
                                   text: span.text,
@@ -388,14 +382,15 @@ class _DarkGetStartedScreen extends State<DarkGetStartedScreen> {
             padding: EdgeInsets.symmetric(vertical: h * 0.017),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(37),
-              border: Border.all(color: const Color(0xFFD29F2A), width: 1.5),
+              // border: Border.all(color: const Color(0xFFD29F2A), width: 1.5),
+              border: Border.all(color: Colors.yellow, width: 1.5),
               color: Colors.white.withOpacity(0.08), // IMPORTANT for glass
             ),
             child: Center(
               child: Text(
                 "Sign In",
                 style: TextStyle(
-                  color: Color(0xFFD29F2A),
+                  color: Color(0xFFFFFFFF),
                   fontFamily: 'Outfit',
                   fontSize: w * 0.04,
                   fontWeight: FontWeight.w400,
