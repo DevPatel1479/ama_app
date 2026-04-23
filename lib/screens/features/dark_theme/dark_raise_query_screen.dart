@@ -242,6 +242,7 @@ class _DarkRaiseQueryScreenState extends State<DarkRaiseQueryScreen> {
                         controller: _queryController,
                         expands: true,
                         maxLines: null,
+                        textInputAction: TextInputAction.done,
                         textAlignVertical: TextAlignVertical.top,
                         style: GoogleFonts.outfit(
                           fontSize: screenWidth * 0.04,

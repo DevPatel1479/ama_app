@@ -1933,6 +1933,20 @@ class _QueryCardState extends State<QueryCard> {
                               ),
                             ),
                           ),
+                        if (query.primaryAllocAdv != null)
+                          Padding(
+                            padding: EdgeInsets.only(top: screenHeight * 0.003),
+                            child: Text(
+                              "Primary Adv: ${(query.primaryAllocAdv!.isEmpty) ? "N/A" : query.primaryAllocAdv}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.035 * scaleFactor,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

@@ -6,18 +6,24 @@ import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/client_testimonial_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
+import 'package:ama_legal_solutions/custom_widgets/leading_organisation_shimmer.dart';
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/realtime_image_carousel.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
+import 'package:ama_legal_solutions/custom_widgets/stats_shimmer.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/models/case_stats_model.dart';
+import 'package:ama_legal_solutions/models/image_model.dart' show ImageModel;
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
+import 'package:ama_legal_solutions/provider/leading_organisation/leading_organisation_slider_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_read_state_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
+import 'package:ama_legal_solutions/routes/app_router.dart' show routeObserver;
 
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
@@ -25,6 +31,7 @@ import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -358,31 +365,76 @@ Widget statOverviewCard(BuildContext context, {bool isLight = false}) {
   );
 }
 
-final List<String> first10 = const [
-  AppAssets.s1Icon,
-  AppAssets.s2Icon,
-  AppAssets.s3Icon,
-  AppAssets.s4Icon,
-  AppAssets.s5Icon,
-  AppAssets.s6Icon,
-  AppAssets.s7Icon,
-  AppAssets.s8Icon,
-  AppAssets.s9Icon,
-  AppAssets.s10Icon,
-];
+Widget statOverviewCardDynamic(
+  BuildContext context,
+  CaseStatsModel stats, {
+  bool isLight = false,
+}) {
+  final size = MediaQuery.of(context).size;
+  final double dividerHeight = size.height * 0.085;
 
-final List<String> next10 = const [
-  AppAssets.s11Icon,
-  AppAssets.s12Icon,
-  AppAssets.s13Icon,
-  AppAssets.s14Icon,
-  AppAssets.s15Icon,
-  AppAssets.s16Icon,
-  AppAssets.s17Icon,
-  AppAssets.s18Icon,
-  AppAssets.s19Icon,
-  AppAssets.s20Icon,
-];
+  return Container(
+    width: double.infinity,
+    padding: EdgeInsets.symmetric(
+      horizontal: size.width * 0.06,
+      vertical: size.height * 0.02,
+    ),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(
+        color: isLight ? const Color(0xFF2D2319) : const Color(0xFFFFDD00),
+      ),
+      color: isLight
+          ? const Color.fromARGB(255, 217, 188, 121)
+          : const Color.fromRGBO(210, 159, 42, 0.06),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        statItem(context, stats.caseHandled, "Case\nHandled", isLight: isLight),
+
+        verticalDivider(context, dividerHeight, isLight: isLight),
+
+        statItem(context, stats.yrExp, "Year\nExperience", isLight: isLight),
+
+        verticalDivider(context, dividerHeight, isLight: isLight),
+
+        statItem(
+          context,
+          stats.clientServed,
+          "Client\nServed",
+          isLight: isLight,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget statOverviewRealtime(BuildContext context, {bool isLight = false}) {
+  return StreamBuilder(
+    stream: FirebaseFirestore.instance
+        .collection("cases_ui_data")
+        .doc("case_data")
+        .snapshots(),
+    builder: (context, snapshot) {
+      /// ⏳ LOADING → SHIMMER
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const StatsShimmerCard();
+      }
+
+      if (!snapshot.hasData || !snapshot.data!.exists) {
+        return const SizedBox(); // or fallback UI
+      }
+
+      final data = snapshot.data!.data() as Map<String, dynamic>;
+      final info = data["info"] ?? {};
+
+      final stats = CaseStatsModel.fromMap(info);
+
+      return statOverviewCardDynamic(context, stats, isLight: isLight);
+    },
+  );
+}
 
 class TeamCard extends StatelessWidget {
   final String topImage;
@@ -856,7 +908,8 @@ class RealtimeImageCarousel extends StatefulWidget {
   State<RealtimeImageCarousel> createState() => _RealtimeImageCarouselState();
 }
 
-class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
+class _RealtimeImageCarouselState extends State<RealtimeImageCarousel>
+    with RouteAware {
   late final PageController _controller;
   Timer? _timer;
   int _current = 0;
@@ -868,21 +921,30 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<RealtimeImageProvider>().listenImages(widget.type);
+
       _startAutoSlide();
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
   void _startAutoSlide() {
+    _timer?.cancel(); // 🔥 MUST (prevents duplicate timers)
+
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!mounted) {
-        timer.cancel(); // safety: stop timer if unmounted
-        return;
-      }
+      if (!mounted) return;
+
+      if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
 
       final provider = context.read<RealtimeImageProvider>();
       if (provider.images.isEmpty) return;
 
       final nextPage = (_current + 1) % provider.images.length;
+
       _controller.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 600),
@@ -894,7 +956,36 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
   }
 
   @override
+  void didPushNext() {
+    _timer?.cancel(); // stop when new screen opens
+  }
+
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final provider = context.read<RealtimeImageProvider>();
+
+      // 🔥 Only attach listener if different type
+      if (provider.imgType != widget.type) {
+        provider.listenImages(widget.type);
+      }
+
+      _current = 0;
+
+      if (_controller.hasClients) {
+        _controller.jumpToPage(0);
+      }
+
+      _startAutoSlide();
+    });
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
+
     _timer?.cancel(); // cancel auto-slide
     _controller.dispose();
     super.dispose();
@@ -910,7 +1001,7 @@ class _RealtimeImageCarouselState extends State<RealtimeImageCarousel> {
         if (provider.isLoading) return _shimmer();
         if (provider.error != null) return _errorBox(provider.error!);
 
-        final images = provider.images;
+        final images = provider.imagesByType[widget.type] ?? provider.images;
         if (images.isEmpty) return const SizedBox.shrink();
 
         return Column(
@@ -1075,6 +1166,7 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
   @override
   void initState() {
     super.initState();
+
     fetchUserNameAndRole();
     _initNotifications();
   }
@@ -1534,7 +1626,9 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                 height: screenHeight * 0.02 * scaleFactor,
                               ),
                             ],
-                            statOverviewCard(context),
+                            // statOverviewCard(context),
+                            statOverviewRealtime(context),
+
                             SizedBox(height: screenHeight * 0.02 * scaleFactor),
 
                             Padding(
@@ -1560,140 +1654,189 @@ class _DarkHomeScreenState extends State<DarkHomeScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              height: screenHeight * 0.02 * scaleFactor,
-                            ), // spacing
-                            SizedBox(
-                              height: MediaQuery.of(context).size.width * 0.20,
-                              child: Stack(
-                                children: [
-                                  RepaintBoundary(
-                                    child: AutoScrollSlider(
-                                      assets: first10,
-                                      reverse: false,
-                                    ),
-                                  ),
-                                  // Left fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                            // effectively "fading into image"
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
+                            SizedBox(height: screenHeight * 0.02 * scaleFactor),
+
+                            Consumer<LeadingOrganisationSliderProvider>(
+                              builder: (context, provider, _) {
+                                final width = MediaQuery.of(context).size.width;
+                                final height = width * 0.20;
+
+                                // 🔥 SHOW SHIMMER
+                                if (provider.loading) {
+                                  return Column(
+                                    children: [
+                                      LeadingOrganisationShimmer(),
+                                      SizedBox(
+                                        height:
+                                            screenHeight * 0.03 * scaleFactor,
+                                      ),
+                                      LeadingOrganisationShimmer(),
+                                    ],
+                                  );
+                                }
+
+                                final images = provider.images;
+
+                                if (images.isEmpty) return const SizedBox();
+
+                                // 🔥 SPLIT LIKE YOUR OLD LOGIC
+                                final first10 = images.take(10).toList();
+                                final next10 = images.skip(10).toList();
+
+                                // spacing
+                                return Column(
+                                  children: [
+                                    /// 🔹 FIRST SLIDER
+                                    SizedBox(
+                                      height: height,
+                                      child: Stack(
+                                        children: [
+                                          RepaintBoundary(
+                                            child: AutoScrollSlider(
+                                              assets: first10,
+                                              reverse: false,
+                                            ),
+                                          ),
+                                          // Left fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                    // effectively "fading into image"
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Right fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerRight,
+                                                  end: Alignment.centerLeft,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
 
-                                  // Right fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerRight,
-                                          end: Alignment.centerLeft,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
+                                    SizedBox(
+                                      height: screenHeight * 0.03 * scaleFactor,
+                                    ), // spacing
+
+                                    SizedBox(
+                                      height: height,
+                                      child: Stack(
+                                        children: [
+                                          RepaintBoundary(
+                                            child: AutoScrollSlider(
+                                              assets: next10,
+                                              reverse: true,
+                                            ),
+                                          ),
+                                          // Left fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                    // effectively "fading into image"
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Right fade (opaque)
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Container(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.02,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerRight,
+                                                  end: Alignment.centerLeft,
+                                                  colors: [
+                                                    Color(
+                                                      0xFF171717,
+                                                    ), // full background color
+                                                    Color(
+                                                      0xFF171717,
+                                                    ).withOpacity(
+                                                      0.0,
+                                                    ), // fading
+                                                  ],
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            SizedBox(
-                              height: screenHeight * 0.03 * scaleFactor,
-                            ), // spacing
-
-                            SizedBox(
-                              height: MediaQuery.of(context).size.width * 0.20,
-                              child: Stack(
-                                children: [
-                                  RepaintBoundary(
-                                    child: AutoScrollSlider(
-                                      assets: next10,
-                                      reverse: true,
-                                    ),
-                                  ),
-
-                                  // Left fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                            // effectively "fading into image"
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Right fade (opaque)
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Container(
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.02,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerRight,
-                                          end: Alignment.centerLeft,
-                                          colors: [
-                                            Color(
-                                              0xFF171717,
-                                            ), // full background color
-                                            Color(
-                                              0xFF171717,
-                                            ).withOpacity(0.0), // fading
-                                          ],
-                                          stops: [0.0, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                );
+                              },
                             ),
 
                             // Below the Padding containing "Our Team" and "See all"

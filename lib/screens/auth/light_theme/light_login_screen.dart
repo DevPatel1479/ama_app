@@ -9,6 +9,7 @@ import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.d
 import 'package:ama_legal_solutions/provider/user_role/user_role_provider.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
+import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_login_screen.dart';
 import 'package:ama_legal_solutions/screens/auth/dark_theme/dark_signup_screen.dart'
     show GradientBorderPainter;
 import 'package:ama_legal_solutions/utils/global_notifiers.dart'
@@ -604,7 +605,7 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                     border: InputBorder.none,
                   ),
 
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     if (value.isNotEmpty && index < otpLength - 1) {
                       FocusScope.of(
                         context,
@@ -613,6 +614,17 @@ class _LightLoginScreenState extends State<LightLoginScreen> {
                       FocusScope.of(
                         context,
                       ).requestFocus(otpFocusNodes[index - 1]);
+                    }
+                    final allFilled = provider.otpControllers.every(
+                      (c) => c.text.trim().isNotEmpty,
+                    );
+
+                    if (allFilled) {
+                      FocusScope.of(context).unfocus(); // close keyboard
+                      await autoVerify(
+                        provider,
+                        context,
+                      ); // 🔥 trigger auto login
                     }
                   },
                 ),

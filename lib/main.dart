@@ -17,16 +17,19 @@ import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/provider/billcut/billcut_leads_provider.dart';
 import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
+import 'package:ama_legal_solutions/provider/leading_organisation/leading_organisation_slider_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_history_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/scheduled_notification_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/weekly_client_count_provider.dart';
+import 'package:ama_legal_solutions/provider/our_legacy/legacy_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/qr/qr_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/resolve_query_provider.dart';
+import 'package:ama_legal_solutions/provider/services/service_provider.dart';
 import 'package:ama_legal_solutions/provider/teams/team_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
@@ -101,6 +104,9 @@ void main() async {
         ChangeNotifierProvider<RealTimeRoleProvider>.value(
           value: realTimeRoleProvider,
         ),
+        ChangeNotifierProvider(
+          create: (_) => LeadingOrganisationSliderProvider()..init(),
+        ),
         ChangeNotifierProxyProvider<
           RealTimeRoleProvider,
           RealtimeNotificationProvider
@@ -114,7 +120,8 @@ void main() async {
             return notificationProvider;
           },
         ),
-
+        ChangeNotifierProvider(create: (_) => ServicesProvider()),
+        ChangeNotifierProvider(create: (_) => LegacyProvider()..init()),
         ChangeNotifierProvider(create: (_) => RealtimeImageProvider()),
         ChangeNotifierProvider(create: (_) => DeleteQuestionProvider()),
         ChangeNotifierProvider(create: (_) => DeleteCommentProvider()),
@@ -204,4 +211,3 @@ class _AmaLegalSolutionsAppState extends State<AmaLegalSolutionsApp>
     );
   }
 }
-

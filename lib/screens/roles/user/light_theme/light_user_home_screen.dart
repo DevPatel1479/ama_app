@@ -3,10 +3,12 @@ import 'package:ama_legal_solutions/custom_widgets/client_testimonial_widget.dar
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/image_slider.dart'
     show AutoScrollSlider;
+import 'package:ama_legal_solutions/custom_widgets/leading_organisation_shimmer.dart';
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
 import 'package:ama_legal_solutions/custom_widgets/our_legacy_widget.dart';
 import 'package:ama_legal_solutions/custom_widgets/send_notification_sheet.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/leading_organisation/leading_organisation_slider_provider.dart';
 import 'package:ama_legal_solutions/provider/notifications/realtime_notification_provider.dart';
 
 import 'package:ama_legal_solutions/provider/profile/profile_photo_provider.dart';
@@ -21,11 +23,10 @@ import 'package:ama_legal_solutions/screens/roles/user/dark_theme/dark_user_home
         TeamCard,
         connectLawyerGrid,
         connectLawyerSecondaryGrid,
-        first10,
-        next10,
         openViewMoreReviews,
         statOverviewCard,
-        viewMoreReviewsButton;
+        viewMoreReviewsButton,
+        statOverviewRealtime;
 import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 import 'package:ama_legal_solutions/utils/global_notifiers.dart';
 // import 'package:chewie/chewie.dart';
@@ -594,7 +595,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                     padding:
                         EdgeInsets.symmetric(
                           horizontal: screenWidth * 0.04 * scaleFactor,
-                          vertical: screenHeight * 0.015 * scaleFactor,
+                          vertical: screenHeight * 0.008 * scaleFactor,
                         ).copyWith(
                           // ensure the scrollable content has extra bottom padding equal
                           // to the visible nav footprint so last items can scroll above it
@@ -623,7 +624,7 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                           SizedBox(height: screenHeight * 0.02 * scaleFactor),
                         ],
 
-                        statOverviewCard(context, isLight: true),
+                        statOverviewRealtime(context, isLight: true),
 
                         SizedBox(height: screenHeight * 0.01 * scaleFactor),
 
@@ -653,71 +654,118 @@ class _LightHomeScreen extends State<LightHomeScreen> {
                         SizedBox(
                           height: screenHeight * 0.02 * scaleFactor,
                         ), // spacing
-                        SizedBox(
-                          height: MediaQuery.of(context).size.width * 0.20,
-                          child: Stack(
-                            children: [
-                              RepaintBoundary(
-                                child: AutoScrollSlider(
-                                  assets: first10,
-                                  reverse: false,
-                                ),
-                              ),
-                              // Left fade (opaque)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.02,
-                                ),
-                              ),
 
-                              // Right fade (opaque)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.02,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        Consumer<LeadingOrganisationSliderProvider>(
+                          builder: (context, provider, _) {
+                            final width = MediaQuery.of(context).size.width;
+                            final height = width * 0.20;
 
-                        SizedBox(
-                          height: screenHeight * 0.03 * scaleFactor,
-                        ), // spacing
+                            // 🔥 SHOW SHIMMER
+                            if (provider.loading) {
+                              return Column(
+                                children: [
+                                  LeadingOrganisationShimmer(),
+                                  SizedBox(
+                                    height: screenHeight * 0.03 * scaleFactor,
+                                  ),
+                                  LeadingOrganisationShimmer(),
+                                ],
+                              );
+                            }
 
-                        SizedBox(
-                          height: MediaQuery.of(context).size.width * 0.20,
-                          child: Stack(
-                            children: [
-                              RepaintBoundary(
-                                child: AutoScrollSlider(
-                                  assets: next10,
-                                  reverse: true,
-                                ),
-                              ),
+                            final images = provider.images;
 
-                              // Left fade (opaque)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.02,
-                                ),
-                              ),
+                            if (images.isEmpty) return const SizedBox();
 
-                              // Right fade (opaque)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.02,
+                            // 🔥 SPLIT LIKE YOUR OLD LOGIC
+                            final first10 = images.take(10).toList();
+                            final next10 = images.skip(10).toList();
+
+                            // spacing
+                            return Column(
+                              children: [
+                                /// 🔹 FIRST SLIDER
+                                SizedBox(
+                                  height: height,
+                                  child: Stack(
+                                    children: [
+                                      RepaintBoundary(
+                                        child: AutoScrollSlider(
+                                          assets: first10,
+                                          reverse: false,
+                                        ),
+                                      ),
+
+                                      // Left fade (opaque)
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.02,
+                                        ),
+                                      ),
+
+                                      // Right fade (opaque)
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.02,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+
+                                SizedBox(
+                                  height: screenHeight * 0.03 * scaleFactor,
+                                ), // spacing
+
+                                SizedBox(
+                                  height: height,
+                                  child: Stack(
+                                    children: [
+                                      RepaintBoundary(
+                                        child: AutoScrollSlider(
+                                          assets: next10,
+                                          reverse: true,
+                                        ),
+                                      ),
+                                      // Left fade (opaque)
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.02,
+                                        ),
+                                      ),
+
+                                      // Right fade (opaque)
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.02,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
 
                         SizedBox(

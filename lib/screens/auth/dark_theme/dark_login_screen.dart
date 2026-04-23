@@ -17,6 +17,117 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+Future<void> autoVerify(
+  LoginProvider loginProvider,
+  BuildContext context,
+) async {
+  if (loginProvider.isLoading) return;
+
+  final phone = loginProvider.phoneController.text.trim();
+  final enteredOtp = loginProvider.otpControllers
+      .map((c) => c.text)
+      .join()
+      .trim();
+
+  if (enteredOtp.length != 6) return;
+
+  if (loginProvider.isLoading) return;
+
+  // ✅ Check for Google Play Test scenario
+  // print(phone);
+  // print(enteredOtp);
+  if (phone == "8734835064") {
+    // ✅ Show loading snackbar immediately
+    final messenger = ScaffoldMessenger.of(context);
+    // messenger
+    //   ..hideCurrentSnackBar()
+    //   ..showSnackBar(verifyingSnack);
+
+    const defaultOtp = "453423";
+
+    // If OTPs match, treat as verified
+    if (enteredOtp == defaultOtp) {
+      updateGlobalUserName("TestDp");
+      updateGlobalUserEmail("testdp@gmail.com");
+      await LocalStorageHelper.saveBool("isUserLoggedIn", true);
+      await LocalStorageHelper.saveString("userPhone", phone);
+      await LocalStorageHelper.saveString("userName", "TestDp");
+      await LocalStorageHelper.saveString("userRole", "client");
+      await LocalStorageHelper.saveString("userEmail", "testdp@gmail.com");
+      await LocalStorageHelper.saveString("userWeekTopic", "third_week");
+      final userProvider = context.read<UserProvider>();
+
+      Provider.of<RealTimeRoleProvider>(context, listen: false).setTesterRole();
+      await userProvider.loadUserRole();
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          content: Text(
+            "✅ Test OTP verified successfully!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      loginProvider.resetLoginState();
+
+      await Future.delayed(const Duration(microseconds: 800));
+      // Proceed to home screen
+      context.go(AppPathsForScreen.userHomePath);
+      return;
+    } else {
+      messenger.hideCurrentSnackBar();
+
+      // Error message
+      messenger.showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          content: Text(
+            "❗Please enter the test OTP: 453423",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+  }
+
+  await loginProvider.verifyOtp(context);
+
+  // print(loginProvider.loginSuccess);
+  if (loginProvider.loginSuccess) {
+    String userPhone = "91${phone}";
+    Provider.of<RealTimeRoleProvider>(
+      context,
+      listen: false,
+    ).startRoleListener(userPhone);
+    // if (loginProvider.weekTopicEnabled) {
+    //   await FirebaseMessagingService.instance
+    //       .subscribeToTopicFor(
+    //         weekEnabled: loginProvider.weekTopicEnabled,
+    //         weekEnabledValue:
+    //             loginProvider.weekTopic ?? "",
+    //       );
+    // } else {
+    //   await FirebaseMessagingService.instance
+    //       .subscribeToTopicFor();
+    // }
+    loginProvider.resetLoginState();
+    context.go(AppPathsForScreen.userHomePath);
+  }
+}
+
 class DarkLoginScreen extends StatefulWidget {
   const DarkLoginScreen({super.key});
 
@@ -566,7 +677,7 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                     border: InputBorder.none,
                   ),
 
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     if (value.isNotEmpty && index < otpLength - 1) {
                       FocusScope.of(
                         context,
@@ -575,6 +686,17 @@ class _DarkLoginScreenState extends State<DarkLoginScreen> {
                       FocusScope.of(
                         context,
                       ).requestFocus(otpFocusNodes[index - 1]);
+                    }
+                    final allFilled = provider.otpControllers.every(
+                      (c) => c.text.trim().isNotEmpty,
+                    );
+
+                    if (allFilled) {
+                      FocusScope.of(context).unfocus(); // close keyboard
+                      await autoVerify(
+                        provider,
+                        context,
+                      ); // 🔥 trigger auto login
                     }
                   },
                 ),

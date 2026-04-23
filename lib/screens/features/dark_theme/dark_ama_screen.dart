@@ -2543,7 +2543,12 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         "No comments yet",
-                        style: TextStyle(color: Color(0xFF2D2319)),
+                        style: TextStyle(
+                          color: Color(0xFF2D2319),
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
                       ),
                     )
                   else
@@ -2747,9 +2752,9 @@ class _InlineCommentsSectionState extends State<InlineCommentsSection> {
                                 c.content ?? "",
                                 style: GoogleFonts.outfit(
                                   color: Color(0xFF2D2319),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w300,
-                                  height: 1.0,
+                                  fontSize: screenWidth * 0.035,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.25,
                                 ),
                               ),
                             ],

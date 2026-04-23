@@ -17,7 +17,7 @@ class Endpoints {
       "$baseUrl/question/user/$userId";
   static String searchQuestions = "$baseUrl/question/search-questions";
   static final String createQuestion = "$baseUrl/question/create";
-  
+
   static String addAnswer(String questionId) =>
       "$baseUrl/question/add/$questionId/answer";
 

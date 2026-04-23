@@ -1158,7 +1158,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBody: true,
-      extendBodyBehindAppBar: true,
+
       backgroundColor: Color(0xFFF8BD00),
       appBar: AppBar(
         elevation: 0,
@@ -1180,13 +1180,13 @@ class _LightAmaScreenState extends State<LightAmaScreen>
         ),
 
         titleSpacing: 0,
-        toolbarHeight: kToolbarHeight + screenHeight * 0.06,
+        toolbarHeight: kToolbarHeight + screenHeight * 0.07,
 
         title: Padding(
           padding: EdgeInsets.only(
             top: MediaQuery.of(context).padding.top,
             right: screenWidth * 0.04 * scaleFactor,
-            // bottom: screenHeight * 0.015 * scaleFactor,
+            bottom: screenHeight * 0.012 * scaleFactor,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1283,6 +1283,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
           Positioned.fill(
             child: SafeArea(
               bottom: false,
+
               child: GradientTopLayout(
                 screenName: "home",
                 keepExpanded: false,
@@ -1403,7 +1404,7 @@ class _LightAmaScreenState extends State<LightAmaScreen>
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.01 * scaleFactor,
-                    vertical: screenHeight * 0.009 * scaleFactor,
+                    // vertical: screenHeight * 0.012 * scaleFactor,
                   ),
                   child: Column(
                     children: [

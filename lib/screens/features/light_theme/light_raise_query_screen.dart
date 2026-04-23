@@ -322,6 +322,7 @@ class _LightRaiseQueryScreenState extends State<LightRaiseQueryScreen> {
                             controller: _queryController,
                             expands: true,
                             maxLines: null,
+                            textInputAction: TextInputAction.done,
                             textAlignVertical: TextAlignVertical.top,
                             style: GoogleFonts.outfit(
                               fontSize: screenWidth * 0.04,

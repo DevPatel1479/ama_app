@@ -4,6 +4,9 @@ import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/custom_widgets/login_required_dialog.dart';
+import 'package:ama_legal_solutions/custom_widgets/services_shimmer.dart';
+import 'package:ama_legal_solutions/models/services_model.dart';
+import 'package:ama_legal_solutions/provider/services/service_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
@@ -70,6 +73,7 @@ class _LightServicesScreenState extends State<LightServicesScreen>
   };
 
   int? _focusedIndex;
+  ServiceModel? _selectedService;
   late final AnimationController _overlayController;
   late final Animation<double> _overlayOpacity;
   late final Animation<double> _cardScale;
@@ -104,113 +108,111 @@ class _LightServicesScreenState extends State<LightServicesScreen>
     super.dispose();
   }
 
-  Future<void> _openCard(int index) async {
-    setState(() => _focusedIndex = index);
+  void _openCard(ServiceModel service) async {
+    setState(() => _selectedService = service);
     await _overlayController.forward(from: 0.0);
   }
 
-  Future<void> _closeCard() async {
+  void _closeCard() async {
     await _overlayController.reverse();
     if (!mounted) return;
-    setState(() => _focusedIndex = null);
+    setState(() => _selectedService = null);
   }
 
-  Widget _buildGridCard(BuildContext context, int index) {
-    final title = services[index];
-    final preview = _preview[title] ?? "Quick summary about this service.";
+  // Widget _buildGridCard(BuildContext context, int index) {
+  //   final title = services[index];
+  //   final preview = _preview[title] ?? "Quick summary about this service.";
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 200;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => _openCard(index),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD29F2A), Color(0xFF3A2B1F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(1.2),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2D2319),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: isWide ? 17 : 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Expanded(
-                    child: Text(
-                      preview,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        height: 1.25,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
-                        "View More",
-                        style: TextStyle(
-                          color: Color(0xFFD29F2A),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 6),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 13,
-                        color: Color(0xFFD29F2A),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  //   return LayoutBuilder(
+  //     builder: (context, constraints) {
+  //       final isWide = constraints.maxWidth > 200;
+  //       return GestureDetector(
+  //         behavior: HitTestBehavior.opaque,
+  //         onTap: () => _openCard(index),
+  //         child: AnimatedContainer(
+  //           duration: const Duration(milliseconds: 300),
+  //           curve: Curves.easeOutCubic,
+  //           decoration: BoxDecoration(
+  //             borderRadius: BorderRadius.circular(16),
+  //             gradient: const LinearGradient(
+  //               colors: [Color(0xFFD29F2A), Color(0xFF3A2B1F)],
+  //               begin: Alignment.topLeft,
+  //               end: Alignment.bottomRight,
+  //             ),
+  //             boxShadow: [
+  //               BoxShadow(
+  //                 color: Colors.black.withOpacity(0.12),
+  //                 blurRadius: 6,
+  //                 offset: Offset(0, 3),
+  //               ),
+  //             ],
+  //           ),
+  //           padding: const EdgeInsets.all(1.2),
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: const Color(0xFF2D2319),
+  //               borderRadius: BorderRadius.circular(14),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.max,
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   title,
+  //                   style: GoogleFonts.outfit(
+  //                     color: Colors.white,
+  //                     fontSize: isWide ? 17 : 15,
+  //                     fontWeight: FontWeight.w700,
+  //                   ),
+  //                   maxLines: 2,
+  //                   overflow: TextOverflow.ellipsis,
+  //                 ),
+  //                 const SizedBox(height: 6),
+  //                 Expanded(
+  //                   child: Text(
+  //                     preview,
+  //                     style: GoogleFonts.outfit(
+  //                       color: Colors.white70,
+  //                       fontSize: 13,
+  //                       fontWeight: FontWeight.w300,
+  //                       height: 1.25,
+  //                     ),
+  //                     maxLines: 3,
+  //                     overflow: TextOverflow.ellipsis,
+  //                     softWrap: true,
+  //                   ),
+  //                 ),
+  //                 const SizedBox(height: 8),
+  //                 Row(
+  //                   mainAxisAlignment: MainAxisAlignment.end,
+  //                   mainAxisSize: MainAxisSize.min,
+  //                   children: const [
+  //                     Text(
+  //                       "View More",
+  //                       style: TextStyle(
+  //                         color: Color(0xFFD29F2A),
+  //                         fontWeight: FontWeight.w600,
+  //                       ),
+  //                     ),
+  //                     SizedBox(width: 6),
+  //                     Icon(
+  //                       Icons.arrow_forward_ios,
+  //                       size: 13,
+  //                       color: Color(0xFFD29F2A),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
-  Widget _buildFocusedCard(BuildContext context, int index) {
-    final title = services[index];
-    final description = _preview[title] ?? "Description not available.";
+  Widget _buildFocusedCard(ServiceModel service) {
     final screenWidth = MediaQuery.of(context).size.width;
     final topPadding = MediaQuery.of(context).padding.top;
 
@@ -234,8 +236,6 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                   borderRadius: BorderRadius.circular(18),
                   gradient: const LinearGradient(
                     colors: [Color(0xFFD29F2A), Color(0xFFFFFFFF)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                   ),
                 ),
                 padding: const EdgeInsets.all(1.4),
@@ -248,10 +248,9 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          title,
+                          service.title,
                           style: GoogleFonts.outfit(
                             color: Colors.white,
                             fontSize: 24,
@@ -260,67 +259,63 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          description,
+                          service.description ?? service.preview,
                           style: GoogleFonts.outfit(
                             color: Colors.white70,
                             fontSize: 15,
-                            fontWeight: FontWeight.w300,
                           ),
                         ),
                         const SizedBox(height: 20),
-                        // Raise a Query button
+
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () async {
                               final userRole = await getUserRole();
+
+                              if (!mounted) return;
+
                               if (userRole?.toLowerCase() == "guest") {
                                 final isDark = Provider.of<ThemeProvider>(
                                   context,
                                   listen: false,
                                 ).isDarkMode;
+
                                 showDialog(
                                   context: context,
                                   builder: (_) => LoginRequiredDialog(
                                     isDarkTheme: isDark,
-
                                     onLoginPressed: () {
                                       Navigator.pop(context);
                                       context.goNamed(AppScreenNames.logIn);
-                                      // context.pushNamed(AppScreenNames.l);
                                     },
                                   ),
                                 );
                                 return;
                               }
-                              // Add your Raise a Query logic here
-                              _closeCard();
 
-                              Future.delayed(
-                                const Duration(milliseconds: 300),
-                                () {
-                                  showRaiseQueryBottomSheet(context, title);
-                                },
+                              // ✅ Smooth UX fix (important)
+                              await _overlayController.reverse();
+
+                              if (!mounted) return;
+
+                              setState(() => _selectedService = null);
+
+                              // slight delay to avoid UI clash
+                              await Future.delayed(
+                                const Duration(milliseconds: 120),
                               );
+
+                              if (!mounted) return;
+
+                              showRaiseQueryBottomSheet(context, service.title);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFD29F2A),
-                              padding: EdgeInsets.symmetric(
-                                vertical:
-                                    screenWidth * 0.035, // responsive height
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
-                            child: Text(
-                              'Raise a Query',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize:
-                                    screenWidth * 0.045, // responsive font
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: const Text(
+                              "Raise a Query",
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
@@ -550,22 +545,48 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: RepaintBoundary(
-                              child: GridView.builder(
-                                padding: EdgeInsets.only(
-                                  bottom: contentBottomPadding,
-                                ),
-                                physics: _focusedIndex == null
-                                    ? const BouncingScrollPhysics()
-                                    : const NeverScrollableScrollPhysics(),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
-                                      childAspectRatio: safeAspect,
+                              child: Consumer<ServicesProvider>(
+                                builder: (context, provider, _) {
+                                  if (provider.loading) {
+                                    return const ServicesShimmerGrid();
+                                  }
+
+                                  final services = provider.services;
+
+                                  if (services.isEmpty) {
+                                    return const Center(
+                                      child: Text(
+                                        "No Services Available",
+                                        style: TextStyle(color: Colors.white54),
+                                      ),
+                                    );
+                                  }
+
+                                  return GridView.builder(
+                                    physics: _selectedService == null
+                                        ? const BouncingScrollPhysics()
+                                        : const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: childAspectRatio
+                                              .clamp(0.9, 1.8),
+                                        ),
+                                    itemCount: services.length,
+                                    itemBuilder: (context, index) {
+                                      final service = services[index];
+                                      return _buildGridCardDynamic(
+                                        context,
+                                        service,
+                                      );
+                                    },
+                                    padding: EdgeInsets.only(
+                                      bottom: contentBottomPadding,
                                     ),
-                                itemCount: services.length,
-                                itemBuilder: _buildGridCard,
+                                  );
+                                },
                               ),
                             ),
                           );
@@ -608,7 +629,8 @@ class _LightServicesScreenState extends State<LightServicesScreen>
             //   ),
             // ],
             Offstage(
-              offstage: _focusedIndex == null,
+              offstage: _selectedService == null,
+
               child: Stack(
                 children: [
                   // Semi-transparent backdrop
@@ -623,15 +645,14 @@ class _LightServicesScreenState extends State<LightServicesScreen>
                   // Focused card
                   Positioned.fill(
                     child: IgnorePointer(
-                      ignoring: _focusedIndex == null,
-                      child: _focusedIndex != null
-                          ? _buildFocusedCard(context, _focusedIndex!)
+                      ignoring: _selectedService == null,
+                      child: _selectedService != null
+                          ? _buildFocusedCard(_selectedService!)
                           : const SizedBox.shrink(),
                     ),
                   ),
-
                   // Close button
-                  if (_focusedIndex != null)
+                  if (_selectedService != null)
                     Positioned(
                       top: MediaQuery.of(context).padding.top + 12,
                       right: 18,
@@ -663,6 +684,91 @@ class _LightServicesScreenState extends State<LightServicesScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGridCardDynamic(BuildContext context, ServiceModel service) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 200;
+
+        return GestureDetector(
+          onTap: () => _openCard(service),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFD29F2A), Color(0xFF3A2B1F)],
+              ),
+            ),
+            padding: const EdgeInsets.all(1.2),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D2319),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// TITLE
+                  Text(
+                    service.title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: isWide ? 17 : 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// PREVIEW
+                  Expanded(
+                    child: Text(
+                      service.preview,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        height: 1.25,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  /// 🔥 VIEW MORE (FIXED)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        "View More",
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFD29F2A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 13,
+                        color: Color(0xFFD29F2A),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
