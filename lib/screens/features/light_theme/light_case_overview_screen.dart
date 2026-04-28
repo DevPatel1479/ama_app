@@ -2,6 +2,7 @@ import 'package:ama_legal_solutions/config/constants/app_assets_constants.dart';
 import 'package:ama_legal_solutions/custom_widgets/bottom_navigation.dart';
 import 'package:ama_legal_solutions/custom_widgets/golden_light_theme_layout.dart';
 import 'package:ama_legal_solutions/db/storage/local/local_storage_helper.dart';
+import 'package:ama_legal_solutions/provider/client/check_service_type_provider.dart';
 import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
@@ -81,10 +82,17 @@ class _LightOverViewCaseDeskScreenState
       _lastRole = _role;
     });
     if (_phone != null) {
+      final serviceTypeProvider = Provider.of<CheckServiceTypeProvider>(
+        context,
+        listen: false,
+      );
       // Use existing RemarksProvider. Its fetchRemarks signature used Endpoints internally,
       // it previously accepted a baseUrl param — pass empty string because provider uses Endpoints.
       final remarksProv = Provider.of<RemarksProvider>(context, listen: false);
-      await remarksProv.fetchRemarks("", _phone!);
+      await Future.wait([
+        remarksProv.fetchRemarks("", _phone!),
+        serviceTypeProvider.checkServiceType(context, _phone!),
+      ]);
     }
   }
 
@@ -661,10 +669,90 @@ class _LightOverViewCaseDeskScreenState
                     ),
 
                     SizedBox(height: screenHeight * 0.02),
-                    bankingDetailsCard(
-                      context,
-                      onTap: () {
-                        context.pushNamed(AppScreenNames.bankDetailsScreen);
+                    Consumer<CheckServiceTypeProvider>(
+                      builder: (context, serviceTypeProvider, _) {
+                        // Loading State - Shimmer
+                        if (serviceTypeProvider.isLoading) {
+                          return Column(
+                            children: [
+                              Shimmer.fromColors(
+                                baseColor: const Color.fromARGB(
+                                  255,
+                                  144,
+                                  156,
+                                  105,
+                                ),
+                                highlightColor: const Color.fromARGB(
+                                  255,
+                                  136,
+                                  90,
+                                  43,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.fromLTRB(
+                                    screenWidth * 0.04,
+                                    screenHeight * 0.02,
+                                    screenWidth * 0.05,
+                                    screenHeight * 0.02,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: screenWidth * 0.35,
+                                        height: screenHeight * 0.03,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: screenHeight * 0.02),
+                                      Container(
+                                        width: screenWidth * 0.55,
+                                        height: screenHeight * 0.022,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.02),
+                            ],
+                          );
+                        }
+
+                        // Hide card for non-loan-settlement users
+                        if (!serviceTypeProvider.isLoanSettlement) {
+                          return const SizedBox.shrink();
+                        }
+
+                        // Actual Card
+                        return Column(
+                          children: [
+                            bankingDetailsCard(
+                              context,
+                              onTap: () {
+                                context.pushNamed(
+                                  AppScreenNames.bankDetailsScreen,
+                                );
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                          ],
+                        );
                       },
                     ),
 

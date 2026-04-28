@@ -10,11 +10,13 @@ import 'package:ama_legal_solutions/models/query_model.dart';
 import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
+import 'package:ama_legal_solutions/provider/resolve_query/query_remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
 import 'package:ama_legal_solutions/provider/user_role/real_time_role_provider.dart';
 
 import 'package:ama_legal_solutions/routes/app_paths_screen.dart';
 import 'package:ama_legal_solutions/routes/app_screen_names.dart';
+import 'package:ama_legal_solutions/screens/roles/user/data_fetch_methods/user_data_fetch.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -736,6 +738,7 @@ class _DarkCasedeskScreenState extends State<DarkCasedeskScreen> {
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       body: Consumer<UserInfoProvider>(
@@ -1729,6 +1732,25 @@ class QueryCard extends StatefulWidget {
 
 class _QueryCardState extends State<QueryCard> {
   bool _isExpanded = false;
+  bool isEditingRemarks = false;
+  bool isSavingRemarks = false;
+  String? localRemarks;
+  late TextEditingController remarksController;
+  late QueryRemarksProvider remarksProvider;
+  @override
+  void initState() {
+    super.initState();
+    localRemarks = widget.query.remarks;
+    remarksController = TextEditingController(text: widget.query.remarks ?? "");
+
+    remarksProvider = context.read<QueryRemarksProvider>();
+  }
+
+  @override
+  void dispose() {
+    remarksController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2249,23 +2271,198 @@ class _QueryCardState extends State<QueryCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Remarks",
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.037 * scaleFactor,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white70,
-                          ),
+                        // 🔵 Header with edit button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Remarks",
+                              style: GoogleFonts.outfit(
+                                fontSize: screenWidth * 0.037 * scaleFactor,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white70,
+                              ),
+                            ),
+
+                            IconButton(
+                              icon: Icon(
+                                isEditingRemarks ? Icons.close : Icons.edit,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  if (isEditingRemarks) {
+                                    // cancel → reset text
+                                    remarksController.text =
+                                        query.remarks ?? "";
+                                  }
+                                  isEditingRemarks = !isEditingRemarks;
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        SizedBox(height: screenHeight * 0.006 * scaleFactor),
-                        Text(
-                          query.remarks!,
-                          style: GoogleFonts.outfit(
-                            fontSize: screenWidth * 0.034 * scaleFactor,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
+
+                        // SizedBox(height: screenHeight * 0.006 * scaleFactor),
+                        isEditingRemarks
+                            ? Column(
+                                children: [
+                                  TextField(
+                                    controller: remarksController,
+                                    maxLines: 4,
+                                    textInputAction: TextInputAction.done,
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize:
+                                          screenWidth * 0.034 * scaleFactor,
+                                    ),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white.withOpacity(0.08),
+                                      hintText: "Edit remarks...",
+                                      hintStyle: TextStyle(
+                                        color: Colors.white38,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+
+                                  SizedBox(height: 10),
+
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            remarksController.text =
+                                                query.remarks ?? "";
+                                            isEditingRemarks = false;
+                                          });
+                                        },
+                                        child: Text(
+                                          "Cancel",
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: isSavingRemarks
+                                            ? null
+                                            : () async {
+                                                final newRemarks =
+                                                    remarksController.text
+                                                        .trim();
+
+                                                // 🚨 EDGE CASE 1: empty remarks
+                                                if (newRemarks.isEmpty) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        "Remarks cannot be empty",
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+
+                                                // 🚨 EDGE CASE 2: no change
+                                                if (newRemarks ==
+                                                    (query.remarks ?? "")) {
+                                                  setState(() {
+                                                    isEditingRemarks = false;
+                                                  });
+                                                  return;
+                                                }
+                                                final role =
+                                                    await getUserRole();
+                                                setState(() {
+                                                  isSavingRemarks = true;
+                                                });
+
+                                                final success =
+                                                    await remarksProvider
+                                                        .updateRemarks(
+                                                          queryId: query.id,
+                                                          parentDocId:
+                                                              query.parentDocId,
+                                                          remarks: newRemarks,
+                                                          operatorRole: role,
+                                                        );
+
+                                                setState(() {
+                                                  isSavingRemarks = false;
+                                                });
+
+                                                if (success) {
+                                                  setState(() {
+                                                    localRemarks = newRemarks;
+                                                    isEditingRemarks = false;
+                                                  });
+
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        "Remarks updated successfully",
+                                                      ),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        remarksProvider
+                                                                .errorMessage ??
+                                                            "Failed to update remarks",
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFD29F2A,
+                                          ),
+                                        ),
+                                        child: isSavingRemarks
+                                            ? SizedBox(
+                                                height: 18,
+                                                width: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                              )
+                                            : Text(
+                                                "Save",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                localRemarks ?? "",
+                                style: GoogleFonts.outfit(
+                                  fontSize: screenWidth * 0.034 * scaleFactor,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                       ],
                     ),
                   ),

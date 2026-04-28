@@ -705,6 +705,7 @@ class _LightMyCasedeskScreenState extends State<LightMyCasedeskScreen> {
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       backgroundColor: Color(0xFFF8BD00),
       appBar: AppBar(

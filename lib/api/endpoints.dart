@@ -51,6 +51,9 @@ class Endpoints {
   static String clientRemarks(String phone) =>
       "$baseUrl/clients/remarks?phone=$phone";
 
+  static String checkServiceType(String phone) =>
+      "$baseUrl/clients/check-service-type?phone=$phone";
+
   static final String sendNotificationToAllAdvocates =
       "$baseUrl/notification/advocate/send";
 
@@ -131,4 +134,6 @@ class Endpoints {
     final query = Uri(queryParameters: params).query;
     return "$baseUrl/billCut-leads/admin?$query";
   }
+
+  static String updateQueryRemarks = "$baseUrl/query/update/remarks";
 }

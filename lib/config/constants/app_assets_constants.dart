@@ -22,31 +22,31 @@ class AppAssets {
 
   static const String commentBtn = "assets/images/comment.png";
 
-  static const String locationImg1 = "assets/images/location_img1.png";
-  static const String locationImg2 = "assets/images/location_img2.png";
-  static const String locationImg3 = "assets/images/location_img3.png";
-  static const String locationImg4 = "assets/images/location_img4.png";
-  static const String locationImg5 = "assets/images/location_img5.png";
-  static const String locationImg6 = "assets/images/location_img6.png";
+  // static const String locationImg1 = "assets/images/location_img1.png";
+  // static const String locationImg2 = "assets/images/location_img2.png";
+  // static const String locationImg3 = "assets/images/location_img3.png";
+  // static const String locationImg4 = "assets/images/location_img4.png";
+  // static const String locationImg5 = "assets/images/location_img5.png";
+  // static const String locationImg6 = "assets/images/location_img6.png";
 
   static const String ourLegacyImg = "assets/images/our_legacy_img.png";
   static const String ourFoundImg = "assets/images/founder.png";
-  static const String teamMemberImg1 = "assets/images/tm_img1.png";
-  static const String teamMemberImg2 = "assets/images/tm_img2.png";
-  static const String teamMemberImg3 = "assets/images/tm_img3.png";
-  static const String teamMemberImg4 = "assets/images/tm_img4.png";
-  static const String teamMemberImg5 = "assets/images/tm_img5.png";
-  static const String teamMemberImg6 = "assets/images/tm_img6.png";
-  static const String teamMemberImg7 = "assets/images/tm_img7.png";
-  static const String teamMemberImg8 = "assets/images/tm_img8.png";
-  static const String teamMemberImg9 = "assets/images/tm_img9.png";
-  static const String teamMemberImg10 = "assets/images/tm_img10.png";
-  static const String teamMemberImg11 = "assets/images/tm_img11.png";
-  static const String teamMemberImg12 = "assets/images/tm_img12.png";
-  static const String teamMemberImg13 = "assets/images/tm_img13.png";
-  static const String teamMemberImg14 = "assets/images/tm_img14.png";
-  static const String teamMemberImg15 = "assets/images/tm_img15.png";
-  static const String teamMemberImg16 = "assets/images/tm_img16.png";
+  // static const String teamMemberImg1 = "assets/images/tm_img1.png";
+  // static const String teamMemberImg2 = "assets/images/tm_img2.png";
+  // static const String teamMemberImg3 = "assets/images/tm_img3.png";
+  // static const String teamMemberImg4 = "assets/images/tm_img4.png";
+  // static const String teamMemberImg5 = "assets/images/tm_img5.png";
+  // static const String teamMemberImg6 = "assets/images/tm_img6.png";
+  // static const String teamMemberImg7 = "assets/images/tm_img7.png";
+  // static const String teamMemberImg8 = "assets/images/tm_img8.png";
+  // static const String teamMemberImg9 = "assets/images/tm_img9.png";
+  // static const String teamMemberImg10 = "assets/images/tm_img10.png";
+  // static const String teamMemberImg11 = "assets/images/tm_img11.png";
+  // static const String teamMemberImg12 = "assets/images/tm_img12.png";
+  // static const String teamMemberImg13 = "assets/images/tm_img13.png";
+  // static const String teamMemberImg14 = "assets/images/tm_img14.png";
+  // static const String teamMemberImg15 = "assets/images/tm_img15.png";
+  // static const String teamMemberImg16 = "assets/images/tm_img16.png";
 
   static const String launchLightImg = "assets/images/launch_light_image.png";
   static const String launchDarkImg = "assets/images/launch_dark_image.png";

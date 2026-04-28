@@ -15,6 +15,7 @@ import 'package:ama_legal_solutions/provider/ama/delete_question_provider.dart';
 import 'package:ama_legal_solutions/provider/ama/question_provider.dart';
 import 'package:ama_legal_solutions/provider/auth/login_screen_provider.dart';
 import 'package:ama_legal_solutions/provider/billcut/billcut_leads_provider.dart';
+import 'package:ama_legal_solutions/provider/client/check_service_type_provider.dart';
 import 'package:ama_legal_solutions/provider/client/remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/images/realtime_image_provider.dart';
 import 'package:ama_legal_solutions/provider/leading_organisation/leading_organisation_slider_provider.dart';
@@ -29,6 +30,7 @@ import 'package:ama_legal_solutions/provider/profile/user_info_provider.dart';
 import 'package:ama_legal_solutions/provider/qr/qr_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/query_provider.dart';
 import 'package:ama_legal_solutions/provider/raise_query/resolve_query_provider.dart';
+import 'package:ama_legal_solutions/provider/resolve_query/query_remarks_provider.dart';
 import 'package:ama_legal_solutions/provider/services/service_provider.dart';
 import 'package:ama_legal_solutions/provider/teams/team_provider.dart';
 import 'package:ama_legal_solutions/provider/theme/theme_provider.dart';
@@ -129,7 +131,14 @@ void main() async {
           create: (_) => TeamProvider(apiService: ApiService()),
         ), // added profile provider
         ChangeNotifierProvider(
+          create: (_) => QueryRemarksProvider(apiService: ApiService()),
+        ), // added profile provider
+        ChangeNotifierProvider(
           create: (_) => ProfileProvider(),
+        ), // added profile provider
+
+        ChangeNotifierProvider(
+          create: (_) => CheckServiceTypeProvider(),
         ), // added profile provider
         ChangeNotifierProvider(create: (_) => ScheduledNotificationProvider()),
         ChangeNotifierProvider(

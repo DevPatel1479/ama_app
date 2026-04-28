@@ -117,14 +117,14 @@ class _LightHomeScreen extends State<LightHomeScreen> {
     stops: [0.0, 0.406],
   );
 
-  Widget _img(String asset) {
-    return Image.asset(
-      asset,
-      fit: BoxFit.cover,
-      cacheWidth: 600, // decode smaller bitmap
-      filterQuality: FilterQuality.low,
-    );
-  }
+  // Widget _img(String asset) {
+  //   return Image.asset(
+  //     asset,
+  //     fit: BoxFit.cover,
+  //     cacheWidth: 600, // decode smaller bitmap
+  //     filterQuality: FilterQuality.low,
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
